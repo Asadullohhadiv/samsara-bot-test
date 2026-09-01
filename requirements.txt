@@ -1,0 +1,9 @@
+python-telegram-bot
+requests
+fastapi
+uvicorn
+pydantic
+openrouteservice
+polyline
+python-multipart
+psycopg2-binary
