@@ -3,35 +3,74 @@ import sqlite3
 import requests
 import os
 import csv
+import threading
+import uvicorn
 from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes, ChatMemberHandler
+
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackQueryHandler,
+    MessageHandler,
+    filters,
+    ContextTypes,
+    ChatMemberHandler,
+)
+
 import config
 from database import (
-    init_db, get_driver_by_chat, get_all_drivers, get_truck_number_from_group,
-    get_mapping_by_truck_number, register_driver_auto, register_truck_mapping,
-    set_dispatch, get_dispatch, set_truck_specs, get_truck_specs, DB_PATH,
-    set_dispatch_route, add_user_fuel_stop,
-    # new functions
-    add_points, get_points_balance, get_points_history,
-    add_pti, get_pti_history,
-    add_fuel_station_usage, get_fuel_station_usage, confirm_fuel_station_usage,
-    submit_verification, get_verification,
-    add_cashout, get_cashouts,
-    get_all_points_summary, get_all_pti_summary, get_all_fuel_usage
+    init_db,
+    get_driver_by_chat,
+    get_all_drivers,
+    get_truck_number_from_group,
+    get_mapping_by_truck_number,
+    register_driver_auto,
+    register_truck_mapping,
+    set_dispatch,
+    get_dispatch,
+    set_truck_specs,
+    get_truck_specs,
+    DB_PATH,
+    set_dispatch_route,
+    add_user_fuel_stop,
+    # New functions
+    add_points,
+    get_points_balance,
+    get_points_history,
+    add_pti,
+    get_pti_history,
+    add_fuel_station_usage,
+    get_fuel_station_usage,
+    confirm_fuel_station_usage,
+    submit_verification,
+    get_verification,
+    add_cashout,
+    get_cashouts,
+    get_all_points_summary,
+    get_all_pti_summary,
+    get_all_fuel_usage,
 )
-from samsara_client import get_vehicle_fuel_level, get_vehicle_location, get_vehicle_stats, find_vehicle_by_truck_number, get_driver_for_vehicle
-from fuel_service import (
-    get_comprehensive_fuel_info,
-    format_fuel_report_with_map,
+from samsara_client import (
+    get_vehicle_fuel_level,
+    get_vehicle_location,
+    get_vehicle_stats,
+    find_vehicle_by_truck_number,
+    get_driver_for_vehicle,
 )
+from fuel_service import get_comprehensive_fuel_info, format_fuel_report_with_map
 from route_service import geocode_address_to_coords
 from utils import parse_dispatch_message
-# No scheduler import!
 
 TOKEN = config.TELEGRAM_TOKEN
 
-# ================== Commands ==================
+# ======================== BEAUTIFUL START MESSAGE ========================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Welcome message with buttons."""
@@ -70,6 +109,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(welcome_text, parse_mode="Markdown", reply_markup=reply_markup)
 
+# ======================== CALLBACKS ========================
+
 async def points_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -95,10 +136,18 @@ async def donate_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = f"💖 **Support the Developer**\n\nDonate to keep this bot running:\n{config.DONATION_WALLET}"
     await query.edit_message_text(text, parse_mode="Markdown")
 
+# ======================== COMMANDS ========================
+
 async def fuel_search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Open the web app."""
     web_app_url = config.WEB_APP_URL
-    await update.message.reply_text("Please use the Driver App for fuel search.", reply_markup=ReplyKeyboardMarkup([[KeyboardButton("⛽ Open Driver App", web_app={"url": web_app_url})]], resize_keyboard=True))
+    await update.message.reply_text(
+        "Please use the Driver App for fuel search.",
+        reply_markup=ReplyKeyboardMarkup(
+            [[KeyboardButton("⛽ Open Driver App", web_app={"url": web_app_url})]],
+            resize_keyboard=True,
+        ),
+    )
 
 async def submit_pti_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ask for PTI number."""
@@ -133,7 +182,13 @@ async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Prompt user to verify via mini app."""
     web_app_url = config.WEB_APP_URL + "?tab=verify"
-    await update.message.reply_text("Please use the Driver App to verify your truck.", reply_markup=ReplyKeyboardMarkup([[KeyboardButton("📷 Verify Truck", web_app={"url": web_app_url})]], resize_keyboard=True))
+    await update.message.reply_text(
+        "Please use the Driver App to verify your truck.",
+        reply_markup=ReplyKeyboardMarkup(
+            [[KeyboardButton("📷 Verify Truck", web_app={"url": web_app_url})]],
+            resize_keyboard=True,
+        ),
+    )
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -172,6 +227,8 @@ async def cashout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     add_points(driver_id, -balance, "cashout", f"Monthly cashout {month}")
     await update.message.reply_text(f"✅ Cashout processed: {balance} pts -> ${amount_usd:.2f}")
 
+# ======================== PHOTO HANDLER ========================
+
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle truck front photo (for verification)."""
     chat_id = update.effective_chat.id
@@ -186,7 +243,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await file.download_to_drive(file_path)
     await update.message.reply_text("📷 Truck photo received. If you haven't submitted verification, please use the app.")
 
-# ================== Main ==================
+# ======================== AUTO-REGISTER ON GROUP JOIN ========================
 
 async def auto_register_on_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.my_chat_member:
@@ -241,14 +298,18 @@ async def auto_register_on_join(update: Update, context: ContextTypes.DEFAULT_TY
         else:
             await context.bot.send_message(chat_id, "⚠️ Could not detect truck number from group name. Rename group to start with truck number.")
 
+# ======================== TEXT HANDLER (UNUSED) ========================
+
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Keep for dispatch commands? Might not be needed.
     pass
+
+# ======================== MAIN ========================
 
 def main():
     init_db()
     app = Application.builder().token(TOKEN).build()
 
+    # Register handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("fuel", fuel_search_command))
     app.add_handler(CommandHandler("pti", submit_pti_command))
@@ -256,17 +317,23 @@ def main():
     app.add_handler(CommandHandler("verify", verify_command))
     app.add_handler(CommandHandler("cashout", cashout_command))
     app.add_handler(CommandHandler("admin", admin_command))
+
     app.add_handler(CallbackQueryHandler(points_callback, pattern="points"))
     app.add_handler(CallbackQueryHandler(donate_callback, pattern="donate"))
+
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(ChatMemberHandler(auto_register_on_join, ChatMemberHandler.MY_CHAT_MEMBER))
 
-    # No scheduler start
+    # Start the FastAPI web server in a background thread (port 10000 for Render)
+    from webapp import app as web_app
+    def run_web():
+        uvicorn.run(web_app, host="0.0.0.0", port=10000, log_level="warning")
+    web_thread = threading.Thread(target=run_web, daemon=True)
+    web_thread.start()
+    print("🌐 Web server running on http://0.0.0.0:10000")
+
     print("✅ Bot started with Driver App support!")
-
-
-
     app.run_polling()
 
 if __name__ == "__main__":
