@@ -2,6 +2,7 @@ import os
 import json
 import hmac
 import hashlib
+from fastapi import Response
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -51,6 +52,10 @@ def get_user_from_init_data(init_data: str):
     except:
         return None
 
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check():
+    return Response(content="OK", status_code=200)
 # ---- Routes ----
 
 @app.get("/", response_class=HTMLResponse)
