@@ -325,16 +325,17 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_handler(ChatMemberHandler(auto_register_on_join, ChatMemberHandler.MY_CHAT_MEMBER))
 
-    # Start the FastAPI web server in a background thread (port 10000 for Render)
+    # Start the FastAPI web server in a background thread using Render's PORT
     from webapp import app as web_app
     def run_web():
-        uvicorn.run(web_app, host="0.0.0.0", port=10000, log_level="warning")
+        render_port = int(os.environ.get("PORT", 10000))  # Use Render's provided port
+        uvicorn.run(web_app, host="0.0.0.0", port=render_port, log_level="warning")
     web_thread = threading.Thread(target=run_web, daemon=True)
     web_thread.start()
-    print("🌐 Web server running on http://0.0.0.0:10000")
+    print("🌐 Web server running on port", os.environ.get("PORT", 10000))
 
     print("✅ Bot started with Driver App support!")
-    app.run_polling()
+    app.infinity_polling()  # Use infinity_polling for long-running reliability
 
 if __name__ == "__main__":
     main()
