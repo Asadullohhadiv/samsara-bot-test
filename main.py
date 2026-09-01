@@ -37,7 +37,6 @@ from database import (
     get_dispatch,
     set_truck_specs,
     get_truck_specs,
-    DB_PATH,
     set_dispatch_route,
     add_user_fuel_stop,
     # New functions
