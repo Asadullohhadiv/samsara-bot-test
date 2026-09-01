@@ -23,7 +23,12 @@ from route_service import geocode_address_to_coords
 import shutil
 
 app = FastAPI()
+# in webapp.py
+from fastapi import FastAPI, Request, Response
 
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check(request: Request):
+    return Response(content="OK", status_code=200)
 # ---- Helper functions ----
 
 def verify_init_data(init_data: str) -> bool:
