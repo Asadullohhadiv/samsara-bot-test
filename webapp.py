@@ -2,7 +2,6 @@ import os
 import json
 import hmac
 import hashlib
-from fastapi import Response
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -16,7 +15,9 @@ from database import (
     submit_verification,
     add_cashout,
     get_all_points_summary, get_all_pti_summary, get_all_fuel_usage,
-    get_driver_by_chat
+    get_driver_by_chat,
+    verify_driver_login,
+    set_driver_credentials
 )
 from samsara_client import find_vehicle_by_truck_number, get_vehicle_stats
 from fuel_service import get_comprehensive_fuel_info
@@ -24,12 +25,7 @@ from route_service import geocode_address_to_coords
 import shutil
 
 app = FastAPI()
-# in webapp.py
-from fastapi import FastAPI, Request, Response
 
-@app.api_route("/health", methods=["GET", "HEAD"])
-async def health_check(request: Request):
-    return Response(content="OK", status_code=200)
 # ---- Helper functions ----
 
 def verify_init_data(init_data: str) -> bool:
@@ -52,10 +48,6 @@ def get_user_from_init_data(init_data: str):
     except:
         return None
 
-
-@app.api_route("/health", methods=["GET", "HEAD"])
-async def health_check():
-    return Response(content="OK", status_code=200)
 # ---- Routes ----
 
 @app.get("/", response_class=HTMLResponse)
@@ -84,7 +76,31 @@ async def get_user(telegram_user_id: int):
         return user
     return {"driver_name": "", "truck_number": ""}
 
-# ---- API endpoints ----
+# ---- Login API ----
+
+class LoginRequest(BaseModel):
+    truck_number: str
+    password: str
+    init_data: str
+
+@app.post("/api/login")
+async def login_api(req: LoginRequest):
+    if not verify_init_data(req.init_data):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    # Verify credentials
+    if not verify_driver_login(req.truck_number, req.password):
+        return {"error": "Invalid truck number or password"}
+    
+    # Save user info
+    user = get_user_from_init_data(req.init_data)
+    if user:
+        tg_id = user.get("id")
+        save_mini_app_user(tg_id, "", req.truck_number)
+    
+    return {"success": True, "truck_number": req.truck_number}
+
+# ---- Fuel Search API ----
 
 class FuelSearchRequest(BaseModel):
     destination: Optional[str] = None
@@ -100,7 +116,7 @@ async def fuel_search_api(req: FuelSearchRequest):
     tg_id = user.get("id")
     mini_user = get_mini_app_user(tg_id)
     if not mini_user:
-        return {"error": "Please verify your truck first."}
+        return {"error": "Please login first."}
     truck_number = mini_user["truck_number"]
     vehicle_id = find_vehicle_by_truck_number(truck_number)
     if not vehicle_id:
@@ -132,6 +148,8 @@ async def fuel_search_api(req: FuelSearchRequest):
         })
     return {"stations": output, "fuel_level": stats.get("fuel")}
 
+# ---- Use Station API ----
+
 class UseStationRequest(BaseModel):
     station_name: str
     station_address: str
@@ -154,17 +172,9 @@ async def use_station_api(req: UseStationRequest):
     driver_id = driver_info["driver_id"]
     add_fuel_station_usage(driver_id, req.station_name, req.station_address, req.station_lat, req.station_lng, req.price)
     add_points(driver_id, config.POINTS_PER_FUEL_STOP, "fuel", f"Fuel stop at {req.station_name}")
-    # Send admin notification (optional)
-    import requests
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{config.TELEGRAM_TOKEN}/sendMessage",
-            json={"chat_id": config.ADMIN_GROUP_ID, "text": f"🚛 Driver {driver_id} used fuel station: {req.station_name}. Points +{config.POINTS_PER_FUEL_STOP}"},
-            timeout=5
-        )
-    except:
-        pass
     return {"message": f"Recorded! You earned {config.POINTS_PER_FUEL_STOP} points."}
+
+# ---- PTI API ----
 
 class PTIRequest(BaseModel):
     pti_number: str
@@ -184,17 +194,9 @@ async def submit_pti_api(req: PTIRequest):
     driver_id = driver_info["driver_id"]
     add_pti(driver_id, req.pti_number)
     add_points(driver_id, config.POINTS_PER_PTI, "pti", f"PTI {req.pti_number}")
-    # Send admin notification
-    import requests
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{config.TELEGRAM_TOKEN}/sendMessage",
-            json={"chat_id": config.ADMIN_GROUP_ID, "text": f"📋 Driver {driver_id} submitted PTI: {req.pti_number}. Points +{config.POINTS_PER_PTI}"},
-            timeout=5
-        )
-    except:
-        pass
     return {"message": f"PTI submitted! You earned {config.POINTS_PER_PTI} points."}
+
+# ---- Points API ----
 
 class PointsRequest(BaseModel):
     init_data: str
@@ -218,6 +220,8 @@ async def points_api(req: PointsRequest):
         history_list.append({"amount": row[0], "type": row[1], "date": row[3]})
     return {"balance": balance, "history": history_list}
 
+# ---- Verification API ----
+
 @app.post("/api/verify")
 async def verify_api(driver_name: str = Form(...), truck_number: str = Form(...), photo: UploadFile = File(...), init_data: str = Form(...)):
     if not verify_init_data(init_data):
@@ -233,6 +237,8 @@ async def verify_api(driver_name: str = Form(...), truck_number: str = Form(...)
         shutil.copyfileobj(photo.file, buffer)
     submit_verification(tg_id, driver_name, truck_number, photo_path)
     return {"message": "Verification submitted. Await admin approval."}
+
+# ---- History API ----
 
 @app.post("/api/history")
 async def history_api(req: PointsRequest):
@@ -256,7 +262,8 @@ async def history_api(req: PointsRequest):
         pti_list.append({"pti_number": row[0], "submitted_at": row[1]})
     return {"fuel_usage": fuel_list, "pti_history": pti_list}
 
-# Admin endpoints (simplified)
+# ---- Admin endpoints (simplified) ----
+
 @app.get("/admin")
 async def admin_page():
     return """
