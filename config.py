@@ -35,7 +35,7 @@ POINTS_PER_PTI = int(os.environ.get("POINTS_PER_PTI", "20"))
 DONATION_WALLET = os.environ.get("DONATION_WALLET", "your_wallet_address")
 
 # Web app URL (must be HTTPS)
-WEB_APP_URL = os.environ.get("WEB_APP_URL", "")
+WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://samsara-bot-test.onrender.com")
 
 # Minimum points to convert to money (monthly)
 MIN_POINTS_FOR_CASHOUT = int(os.environ.get("MIN_POINTS_FOR_CASHOUT", "100"))
