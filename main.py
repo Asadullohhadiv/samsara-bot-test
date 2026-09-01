@@ -1,28 +1,12 @@
-import re
+import os
 import sqlite3
 import requests
-import os
-import csv
 import threading
 import uvicorn
 from datetime import datetime
 
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-)
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-    ContextTypes,
-    ChatMemberHandler,
-)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes, ChatMemberHandler
 
 import config
 from database import (
@@ -39,7 +23,6 @@ from database import (
     get_truck_specs,
     set_dispatch_route,
     add_user_fuel_stop,
-    # New functions
     add_points,
     get_points_balance,
     get_points_history,
@@ -55,6 +38,8 @@ from database import (
     get_all_points_summary,
     get_all_pti_summary,
     get_all_fuel_usage,
+    set_driver_credentials,
+    verify_driver_login,
 )
 from samsara_client import (
     get_vehicle_fuel_level,
@@ -69,7 +54,7 @@ from utils import parse_dispatch_message
 
 TOKEN = config.TELEGRAM_TOKEN
 
-# ======================== BEAUTIFUL START MESSAGE ========================
+# ======================== START COMMAND ========================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Welcome message with buttons."""
@@ -226,6 +211,21 @@ async def cashout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     add_points(driver_id, -balance, "cashout", f"Monthly cashout {month}")
     await update.message.reply_text(f"✅ Cashout processed: {balance} pts -> ${amount_usd:.2f}")
 
+# ======================== SET CREDENTIALS (ADMIN ONLY) ========================
+
+async def set_credentials_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Admin sets driver's truck number and password for mini app login."""
+    chat_id = update.effective_chat.id
+    if chat_id != config.ADMIN_GROUP_ID:
+        await update.message.reply_text("❌ Not authorized.")
+        return
+    if len(context.args) != 2:
+        await update.message.reply_text("Usage: /set_credentials TRUCK_NUMBER PASSWORD")
+        return
+    truck_number, password = context.args[0], context.args[1]
+    set_driver_credentials(truck_number, password)
+    await update.message.reply_text(f"✅ Credentials set for truck {truck_number}")
+
 # ======================== PHOTO HANDLER ========================
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -316,6 +316,7 @@ def main():
     app.add_handler(CommandHandler("verify", verify_command))
     app.add_handler(CommandHandler("cashout", cashout_command))
     app.add_handler(CommandHandler("admin", admin_command))
+    app.add_handler(CommandHandler("set_credentials", set_credentials_command))
 
     app.add_handler(CallbackQueryHandler(points_callback, pattern="points"))
     app.add_handler(CallbackQueryHandler(donate_callback, pattern="donate"))
@@ -327,14 +328,14 @@ def main():
     # Start the FastAPI web server in a background thread using Render's PORT
     from webapp import app as web_app
     def run_web():
-        render_port = int(os.environ.get("PORT", 10000))  # Use Render's provided port
+        render_port = int(os.environ.get("PORT", 10000))
         uvicorn.run(web_app, host="0.0.0.0", port=render_port, log_level="warning")
     web_thread = threading.Thread(target=run_web, daemon=True)
     web_thread.start()
     print("🌐 Web server running on port", os.environ.get("PORT", 10000))
 
     print("✅ Bot started with Driver App support!")
-    app.run_polling()  # Use infinity_polling for long-running reliability
+    app.run_polling()  # Use run_polling (not infinity_polling)
 
 if __name__ == "__main__":
     main()
