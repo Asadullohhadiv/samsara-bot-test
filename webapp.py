@@ -85,14 +85,18 @@ class LoginRequest(BaseModel):
 
 @app.post("/api/login")
 async def login_api(req: LoginRequest):
+    print(f"🔍 LOGIN ATTEMPT: truck={req.truck_number}, pass={req.password}")
+    
     if not verify_init_data(req.init_data):
+        print("❌ INIT DATA INVALID")
         raise HTTPException(status_code=403, detail="Unauthorized")
     
-    # Verify credentials
-    if not verify_driver_login(req.truck_number, req.password):
+    result = verify_driver_login(req.truck_number, req.password)
+    print(f"🔍 LOGIN RESULT: {result}")
+    
+    if not result:
         return {"error": "Invalid truck number or password"}
     
-    # Save user info
     user = get_user_from_init_data(req.init_data)
     if user:
         tg_id = user.get("id")
