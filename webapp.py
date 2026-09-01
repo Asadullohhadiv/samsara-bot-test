@@ -262,7 +262,7 @@ async def history_api(req: PointsRequest):
         pti_list.append({"pti_number": row[0], "submitted_at": row[1]})
     return {"fuel_usage": fuel_list, "pti_history": pti_list}
 
-# ---- Admin endpoints (simplified) ----
+# ---- Admin endpoints ----
 
 @app.get("/admin")
 async def admin_page():
