@@ -105,12 +105,17 @@ def init_db():
         truck_number TEXT,
         last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS driver_credentials (
+        truck_number TEXT PRIMARY KEY,
+        password TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
     
     conn.commit()
     conn.close()
     print("✅ Database initialized on Supabase!")
 
-# ==================== TRUCK MAPPING ====================
+# ============ TRUCK MAPPING ============
 
 def get_truck_number_from_group(group_name: str):
     if not group_name:
@@ -141,7 +146,7 @@ def get_mapping_by_truck_number(truck_number):
         return {"driver_id": r["samsara_driver_id"], "vehicle_id": r["vehicle_id"], "truck_license": r["truck_license"] or ""}
     return None
 
-# ==================== DRIVER REGISTRATION ====================
+# ============ DRIVER REGISTRATION ============
 
 def register_driver_auto(chat_id, truck_number, driver_id, vehicle_id, truck_license=""):
     conn = get_connection()
@@ -186,7 +191,7 @@ def get_all_drivers():
     conn.close()
     return rows
 
-# ==================== DISPATCH ====================
+# ============ DISPATCH ============
 
 def set_dispatch(driver_id, stop1, stop2, time1="", time2=""):
     conn = get_connection()
@@ -217,7 +222,7 @@ def get_dispatch(driver_id):
         return {"stop1": r["stop1_address"], "stop2": r["stop2_address"], "time1": r["stop1_time"], "time2": r["stop2_time"]}
     return None
 
-# ==================== TRUCK SPECS ====================
+# ============ TRUCK SPECS ============
 
 def set_truck_specs(vehicle_id, tank, mpg):
     conn = get_connection()
@@ -241,7 +246,7 @@ def get_truck_specs(vehicle_id):
         return {"tank": r["tank_capacity_gallons"], "mpg": r["avg_mpg"]}
     return {"tank": 100, "mpg": 6.0}
 
-# ==================== TRUCK STOPS ====================
+# ============ TRUCK STOPS ============
 
 def get_truck_stops_near(lat, lng, radius_miles=100, brands=None):
     conn = get_connection()
@@ -280,7 +285,7 @@ def add_user_fuel_stop(name, brand, address, city, state, lat, lng, price, user_
     conn.commit()
     conn.close()
 
-# ==================== MINI APP USERS ====================
+# ============ MINI APP USERS ============
 
 def save_mini_app_user(telegram_user_id, driver_name, truck_number):
     conn = get_connection()
@@ -305,7 +310,28 @@ def get_mini_app_user(telegram_user_id):
         return {"driver_name": r["driver_name"], "truck_number": r["truck_number"]}
     return None
 
-# ==================== POINTS ====================
+# ============ DRIVER CREDENTIALS ============
+
+def set_driver_credentials(truck_number, password):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('''INSERT INTO driver_credentials (truck_number, password)
+                 VALUES (%s, %s)
+                 ON CONFLICT (truck_number) DO UPDATE SET password = EXCLUDED.password''', 
+              (truck_number, password))
+    conn.commit()
+    conn.close()
+
+def verify_driver_login(truck_number, password):
+    conn = get_connection()
+    c = conn.cursor(cursor_factory=RealDictCursor)
+    c.execute('SELECT * FROM driver_credentials WHERE truck_number = %s AND password = %s', 
+              (truck_number, password))
+    r = c.fetchone()
+    conn.close()
+    return r is not None
+
+# ============ POINTS ============
 
 def add_points(driver_id, amount, type, description=""):
     conn = get_connection()
@@ -332,7 +358,7 @@ def get_points_history(driver_id, limit=20):
     conn.close()
     return rows
 
-# ==================== PTI ====================
+# ============ PTI ============
 
 def add_pti(driver_id, pti_number):
     conn = get_connection()
@@ -350,7 +376,7 @@ def get_pti_history(driver_id, limit=20):
     conn.close()
     return rows
 
-# ==================== FUEL STATION USAGE ====================
+# ============ FUEL STATION USAGE ============
 
 def add_fuel_station_usage(driver_id, station_name, station_address, station_lat, station_lng, price):
     conn = get_connection()
@@ -377,7 +403,7 @@ def confirm_fuel_station_usage(usage_id):
     conn.commit()
     conn.close()
 
-# ==================== VERIFICATION ====================
+# ============ VERIFICATION ============
 
 def submit_verification(telegram_user_id, driver_name, truck_number, truck_photo_path):
     conn = get_connection()
@@ -404,7 +430,7 @@ def get_verification(telegram_user_id):
         return {"driver_name": r["driver_name"], "truck_number": r["truck_number"], "truck_photo_path": r["truck_photo_path"], "verified": r["verified"]}
     return None
 
-# ==================== CASHOUTS ====================
+# ============ CASHOUTS ============
 
 def add_cashout(driver_id, points_used, amount_usd, month):
     conn = get_connection()
@@ -422,7 +448,7 @@ def get_cashouts(driver_id):
     conn.close()
     return rows
 
-# ==================== ADMIN ====================
+# ============ ADMIN ============
 
 def get_all_points_summary():
     conn = get_connection()
