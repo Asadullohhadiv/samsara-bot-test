@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Driver Hub</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f2f4f7;
+            min-height: 100vh;
+        }
+        .app-header {
+            background: #2c3e50;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .app-header h1 { font-size: 20px; font-weight: 600; }
+        .app-header .user-info { font-size: 14px; opacity: 0.9; }
+
+        .tab-bar {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            margin: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 0 20px 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card h3 { margin-bottom: 12px; color: #2c3e50; }
+        .form-group { margin-bottom: 14px; }
+        label { font-size: 14px; color: #555; margin-bottom: 5px; display: block; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            background: #fafafa;
+            outline: none;
+            transition: border 0.3s;
+        }
+        input:focus { border-color: #3498db; background: white; }
+        button.primary {
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button.primary:hover { background: #2980b9; }
+        .result-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+        .list-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .price { color: #27ae60; font-weight: bold; }
+        .distance { color: #95a5a6; font-size: 13px; }
+        .action-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+        .loading { text-align: center; color: #7f8c8d; padding: 20px; }
+        .hidden { display: none; }
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: #95a5a6;
+        }
+        footer a { color: #3498db; }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>⛽ Driver Hub</h1>
+    <div class="user-info" id="userName"></div>
+</div>
+
+<div class="tab-bar">
+    <div class="tab active" data-tab="fuel" onclick="showTab('fuel')">⛽ Fuel</div>
+    <div class="tab" data-tab="pti" onclick="showTab('pti')">📋 PTI</div>
+    <div class="tab" data-tab="points" onclick="showTab('points')">💰 Points</div>
+    <div class="tab" data-tab="verify" onclick="showTab('verify')">✅ Verify</div>
+    <div class="tab" data-tab="history" onclick="showTab('history')">📜 History</div>
+</div>
+
+<div class="content">
+
+    <!-- Fuel Tab -->
+    <div id="fuel" class="tab-content">
+        <div class="card">
+            <h3>Search Fuel Stations</h3>
+            <div class="form-group">
+                <label>Destination (optional)</label>
+                <input type="text" id="fuelDest" placeholder="e.g., 123 Main St, LA">
+            </div>
+            <button class="primary" onclick="searchFuel()">🔍 Find Fuel</button>
+            <div id="fuelResult" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <!-- PTI Tab -->
+    <div id="pti" class="tab-content hidden">
+        <div class="card">
+            <h3>Submit PTI</h3>
+            <div class="form-group">
+                <label>PTI Number</label>
+                <input type="text" id="ptiNum" placeholder="e.g., PTI-12345">
+            </div>
+            <button class="primary" onclick="submitPTI()">📤 Submit PTI</button>
+            <div id="ptiResult" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <!-- Points Tab -->
+    <div id="points" class="tab-content hidden">
+        <div class="card">
+            <h3>My Points</h3>
+            <button class="primary" onclick="showPoints()">💰 View Balance</button>
+            <div id="pointsResult" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <!-- Verify Tab -->
+    <div id="verify" class="tab-content hidden">
+        <div class="card">
+            <h3>Verify Your Truck</h3>
+            <div class="form-group">
+                <label>Driver Name</label>
+                <input type="text" id="verifyName" placeholder="e.g., John Doe">
+            </div>
+            <div class="form-group">
+                <label>Truck Number</label>
+                <input type="text" id="verifyTruck" placeholder="e.g., 88817">
+            </div>
+            <div class="form-group">
+                <label>Truck Front Photo</label>
+                <input type="file" id="verifyPhoto" accept="image/*">
+            </div>
+            <button class="primary" onclick="submitVerification()">📷 Submit Verification</button>
+            <div id="verifyResult" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <!-- History Tab -->
+    <div id="history" class="tab-content hidden">
+        <div class="card">
+            <h3>Fuel & PTI History</h3>
+            <button class="primary" onclick="showHistory()">📂 Load History</button>
+            <div id="historyResult" class="result-box hidden"></div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <a href="https://t.me/YourBotUsername" target="_blank">Need help? Contact support</a><br>
+    <a href="/donate" target="_blank">💖 Donate to developer</a>
+</footer>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    const initData = tg.initData;
+    const user = tg.initDataUnsafe?.user;
+
+    if (user) {
+        document.getElementById('userName').textContent = user.first_name || '';
+        fetch('/api/user/' + user.id)
+            .then(res => res.json())
+            .then(data => {
+                if (data.driver_name) {
+                    document.getElementById('verifyName').value = data.driver_name;
+                    document.getElementById('verifyTruck').value = data.truck_number;
+                }
+            })
+            .catch(() => {});
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    async function searchFuel() {
+        const dest = document.getElementById('fuelDest').value.trim();
+        const resDiv = document.getElementById('fuelResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">⏳ Searching...</div>';
+
+        try {
+            const resp = await fetch('/api/fuel-search', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({destination: dest, init_data: initData})
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                resDiv.innerHTML = `<div class="error">❌ ${data.error || 'Error'}</div>`;
+                return;
+            }
+            let html = '<h4>Fuel Stations</h4>';
+            if (data.stations && data.stations.length > 0) {
+                data.stations.forEach(s => {
+                    html += `<div class="list-item">
+                        <div>
+                            <b>${s.name || 'Unknown'}</b><br>
+                            <span class="price">${s.price ? '$' + s.price.toFixed(2) : 'N/A'}</span>
+                            <span class="distance"> | ${s.distance_from_truck} mi</span><br>
+                            <small>${s.address || ''}</small>
+                        </div>
+                        <button class="action-btn" onclick="useStation('${s.name}', '${s.address}', ${s.lat}, ${s.lng}, ${s.price})">I used this</button>
+                    </div>`;
+                });
+            } else {
+                html += '<p>No stations found.</p>';
+            }
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function useStation(name, address, lat, lng, price) {
+        if (!confirm('Confirm you used this station?')) return;
+        try {
+            const resp = await fetch('/api/use-station', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    station_name: name,
+                    station_address: address,
+                    station_lat: lat,
+                    station_lng: lng,
+                    price: price,
+                    init_data: initData
+                })
+            });
+            const data = await resp.json();
+            alert(data.message || 'Recorded!');
+        } catch (err) {
+            alert('Error recording station');
+        }
+    }
+
+    async function submitPTI() {
+        const pti = document.getElementById('ptiNum').value.trim();
+        if (!pti) { alert('Enter PTI number'); return; }
+        const resDiv = document.getElementById('ptiResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Submitting...</div>';
+        try {
+            const resp = await fetch('/api/submit-pti', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({pti_number: pti, init_data: initData})
+            });
+            const data = await resp.json();
+            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">❌ ${data.error}</div>`;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function showPoints() {
+        const resDiv = document.getElementById('pointsResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/points', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({init_data: initData})
+            });
+            const data = await resp.json();
+            let html = `<h3>Balance: <span style="color:#27ae60;">${data.balance} pts</span></h3><br>`;
+            if (data.history && data.history.length) {
+                html += '<h4>Recent Transactions:</h4>';
+                data.history.forEach(t => {
+                    html += `<div class="list-item">
+                        <span>${t.type}</span>
+                        <span>${t.amount > 0 ? '+' : ''}${t.amount} pts</span>
+                    </div>`;
+                });
+            } else {
+                html += '<p>No transactions yet.</p>';
+            }
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function submitVerification() {
+        const name = document.getElementById('verifyName').value.trim();
+        const truck = document.getElementById('verifyTruck').value.trim();
+        const photoInput = document.getElementById('verifyPhoto');
+        if (!name || !truck || !photoInput.files.length) {
+            alert('Fill all fields and upload photo');
+            return;
+        }
+        const resDiv = document.getElementById('verifyResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Uploading...</div>';
+
+        const formData = new FormData();
+        formData.append('driver_name', name);
+        formData.append('truck_number', truck);
+        formData.append('photo', photoInput.files[0]);
+        formData.append('init_data', initData);
+
+        try {
+            const resp = await fetch('/api/verify', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">❌ ${data.error}</div>`;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function showHistory() {
+        const resDiv = document.getElementById('historyResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/history', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({init_data: initData})
+            });
+            const data = await resp.json();
+            let html = '<h3>Fuel Usage</h3>';
+            if (data.fuel_usage && data.fuel_usage.length) {
+                data.fuel_usage.forEach(u => {
+                    html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`;
+                });
+            } else {
+                html += '<p>No fuel usage recorded.</p>';
+            }
+            html += '<h3>PTI Submissions</h3>';
+            if (data.pti_history && data.pti_history.length) {
+                data.pti_history.forEach(p => {
+                    html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`;
+                });
+            } else {
+                html += '<p>No PTIs submitted.</p>';
+            }
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+</script>
+</body>
+</html>
