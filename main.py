@@ -334,7 +334,7 @@ def main():
     print("🌐 Web server running on port", os.environ.get("PORT", 10000))
 
     print("✅ Bot started with Driver App support!")
-    app.infinity_polling()  # Use infinity_polling for long-running reliability
+    app.run_polling()  # Use infinity_polling for long-running reliability
 
 if __name__ == "__main__":
     main()
