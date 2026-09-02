@@ -26,6 +26,10 @@ import shutil
 
 app = FastAPI()
 
+# Admin credentials (hardcoded for now)
+ADMIN_TRUCK = "1234"
+ADMIN_PASSWORD = "Mytrucksafetypassword3223"
+
 # ---- Helper functions ----
 
 def verify_init_data(init_data: str) -> bool:
@@ -76,6 +80,18 @@ async def get_user(telegram_user_id: int):
         return user
     return {"driver_name": "", "truck_number": ""}
 
+# ---- Admin Login API ----
+
+class AdminLoginRequest(BaseModel):
+    truck_number: str
+    password: str
+
+@app.post("/api/admin-login")
+async def admin_login_api(req: AdminLoginRequest):
+    if req.truck_number == ADMIN_TRUCK and req.password == ADMIN_PASSWORD:
+        return {"success": True, "role": "admin"}
+    return {"error": "Invalid admin credentials"}
+
 # ---- Login API ----
 
 class LoginRequest(BaseModel):
@@ -83,7 +99,6 @@ class LoginRequest(BaseModel):
     password: str
     init_data: str
 
-@app.post("/api/login")
 @app.post("/api/login")
 async def login_api(req: LoginRequest):
     print(f"🔍 LOGIN ATTEMPT: truck={req.truck_number}, pass={req.password}")
@@ -236,7 +251,6 @@ async def verify_api(driver_name: str = Form(...), truck_number: str = Form(...)
     if not user:
         raise HTTPException(status_code=400, detail="No user")
     tg_id = user.get("id")
-    # Save photo
     os.makedirs("uploads", exist_ok=True)
     photo_path = f"uploads/{tg_id}_{photo.filename}"
     with open(photo_path, "wb") as buffer:
