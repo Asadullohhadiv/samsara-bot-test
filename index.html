@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Truck Safety Assistant</title>
+    <title>FleetPro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
@@ -27,7 +27,7 @@
         .login-btn:hover { background: #2563eb; }
         .error-msg { color: #ef4444; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
 
-        /* ========== MAIN APP ========== */
+        /* ========== DRIVER APP ========== */
         .app-screen { display: none; min-height: 100vh; background: #f0f2f5; }
         .top-bar { background: #1e293b; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
         .top-bar h2 { font-size: 18px; font-weight: 600; }
@@ -59,11 +59,23 @@
         .admin-screen { display: none; min-height: 100vh; background: #f0f2f5; }
         .admin-topbar { background: #1e293b; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
         .admin-topbar h2 { font-size: 18px; font-weight: 600; }
-        .admin-tabs { display: flex; background: white; border-bottom: 1px solid #e2e8f0; overflow-x: auto; scrollbar-width: none; }
-        .admin-tabs::-webkit-scrollbar { display: none; }
-        .admin-tab { flex: 1; min-width: 80px; padding: 14px 6px; text-align: center; font-size: 12px; font-weight: 500; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
-        .admin-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; font-weight: 600; }
-        .admin-content { padding: 20px; }
+        .admin-logout-btn { background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; border: none; color: white; font-weight: 600; }
+        .admin-logout-btn:hover { background: rgba(255,255,255,0.3); }
+
+        /* Horizontal Columns */
+        .admin-cols { display: flex; background: white; border-bottom: 1px solid #e2e8f0; overflow-x: auto; scrollbar-width: none; padding: 0; }
+        .admin-cols::-webkit-scrollbar { display: none; }
+        .admin-col { flex: 1; min-width: 90px; padding: 16px 10px; text-align: center; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .admin-col:hover { color: #3b82f6; }
+        .admin-col .col-icon { display: block; font-size: 24px; margin-bottom: 6px; }
+
+        /* Admin Page (separate page for each column) */
+        .admin-page { display: none; min-height: 100vh; background: #f0f2f5; }
+        .admin-page-header { background: #1e293b; color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .admin-page-title { font-size: 18px; font-weight: 600; }
+        .admin-page-content { padding: 20px; }
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
         .stat-card { background: white; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .stat-card .stat-value { font-size: 28px; font-weight: 800; color: #1e293b; }
@@ -75,7 +87,6 @@
         tr:last-child td { border-bottom: none; }
         .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
         .badge-success { background: #dcfce7; color: #16a34a; }
-        .badge-warning { background: #fef3c7; color: #d97706; }
         .badge-info { background: #e0f2fe; color: #0284c7; }
     </style>
 </head>
@@ -121,7 +132,6 @@
         <div class="tab" data-tab="history" onclick="showTab('history')"><span class="tab-icon">📜</span>History</div>
     </div>
     <div class="content">
-        <!-- Fuel -->
         <div id="fuel" class="tab-content">
             <div class="card">
                 <h3>Search Fuel</h3>
@@ -130,7 +140,6 @@
                 <div id="fuelResult" class="result-box hidden"></div>
             </div>
         </div>
-        <!-- PTI -->
         <div id="pti" class="tab-content hidden">
             <div class="card">
                 <h3>Submit PTI</h3>
@@ -139,7 +148,6 @@
                 <div id="ptiResult" class="result-box hidden"></div>
             </div>
         </div>
-        <!-- Points -->
         <div id="points" class="tab-content hidden">
             <div class="card">
                 <h3>My Points</h3>
@@ -147,7 +155,6 @@
                 <div id="pointsResult" class="result-box hidden"></div>
             </div>
         </div>
-        <!-- Verify -->
         <div id="verify" class="tab-content hidden">
             <div class="card">
                 <h3>Verify Truck</h3>
@@ -157,7 +164,6 @@
                 <div id="verifyResult" class="result-box hidden"></div>
             </div>
         </div>
-        <!-- History -->
         <div id="history" class="tab-content hidden">
             <div class="card">
                 <h3>History</h3>
@@ -169,64 +175,93 @@
     <div class="footer"><a href="#" onclick="logout()">Logout</a> • <a href="/donate">Donate</a></div>
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- ADMIN MAIN SCREEN -->
 <div id="adminScreen" class="admin-screen">
     <div class="admin-topbar">
         <h2>Admin Panel</h2>
-        <div class="info-chip">Admin</div>
+        <button class="admin-logout-btn" onclick="logout()">Logout</button>
     </div>
-    <div class="admin-tabs">
-        <div class="admin-tab active" data-atab="overview" onclick="showAdminTab('overview')">📊 Overview</div>
-        <div class="admin-tab" data-atab="drivers" onclick="showAdminTab('drivers')">🚛 Drivers</div>
-        <div class="admin-tab" data-atab="pti" onclick="showAdminTab('pti')">📋 PTI List</div>
-        <div class="admin-tab" data-atab="fuel" onclick="showAdminTab('fuel')">⛽ Fuel Log</div>
-        <div class="admin-tab" data-atab="details" onclick="showAdminTab('details')">🔍 Details</div>
+    <div class="admin-cols">
+        <div class="admin-col" onclick="openAdminPage('overview')"><span class="col-icon">📊</span>Overview</div>
+        <div class="admin-col" onclick="openAdminPage('drivers')"><span class="col-icon">🚛</span>Drivers</div>
+        <div class="admin-col" onclick="openAdminPage('pti')"><span class="col-icon">📋</span>PTI List</div>
+        <div class="admin-col" onclick="openAdminPage('fuel')"><span class="col-icon">⛽</span>Fuel Log</div>
+        <div class="admin-col" onclick="openAdminPage('details')"><span class="col-icon">🔍</span>Details</div>
     </div>
-    <div class="admin-content">
-        <!-- Overview -->
-        <div id="overview" class="admin-section">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Drivers</div></div>
-                <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">PTIs</div></div>
-                <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Stops</div></div>
-            </div>
-            <button class="btn-primary" onclick="loadOverview()">Load Stats</button>
+    <div class="content">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Drivers</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">PTIs</div></div>
+            <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Stops</div></div>
         </div>
-        <!-- Drivers -->
-        <div id="drivers" class="admin-section hidden">
-            <div class="card">
-                <h3>Registered Drivers</h3>
-                <button class="btn-primary" onclick="loadDrivers()">Load Drivers</button>
-                <div id="driversResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <!-- PTI -->
-        <div id="pti" class="admin-section hidden">
-            <div class="card">
-                <h3>PTI Submissions</h3>
-                <button class="btn-primary" onclick="loadPTIs()">Load PTIs</button>
-                <div id="ptiResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <!-- Fuel -->
-        <div id="fuel" class="admin-section hidden">
-            <div class="card">
-                <h3>Fuel Usage Log</h3>
-                <button class="btn-primary" onclick="loadFuelLog()">Load Fuel Log</button>
-                <div id="fuelLogResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <!-- Details -->
-        <div id="details" class="admin-section hidden">
-            <div class="card">
-                <h3>Driver Details</h3>
-                <div class="field"><input type="text" id="searchTruck" placeholder="Enter Truck Number"></div>
-                <button class="btn-primary" onclick="loadDriverDetails()">Search</button>
-                <div id="detailsResult" class="result-box hidden"></div>
-            </div>
-        </div>
+        <button class="btn-primary" onclick="loadOverview()">Load Stats</button>
     </div>
-    <div class="footer"><a href="#" onclick="logout()">Logout</a></div>
+</div>
+
+<!-- ADMIN PAGES (separate pages for each column) -->
+<div id="adminOverviewPage" class="admin-page">
+    <div class="admin-page-header">
+        <button class="back-btn" onclick="closeAdminPage()">← Back</button>
+        <div class="admin-page-title">Overview</div>
+        <div style="width: 60px;"></div>
+    </div>
+    <div class="admin-page-content">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="overviewDrivers">0</div><div class="stat-label">Drivers</div></div>
+            <div class="stat-card"><div class="stat-value" id="overviewPTIs">0</div><div class="stat-label">PTIs</div></div>
+            <div class="stat-card"><div class="stat-value" id="overviewFuel">0</div><div class="stat-label">Fuel Stops</div></div>
+        </div>
+        <button class="btn-primary" onclick="loadOverviewPage()">Load Overview</button>
+    </div>
+</div>
+
+<div id="adminDriversPage" class="admin-page">
+    <div class="admin-page-header">
+        <button class="back-btn" onclick="closeAdminPage()">← Back</button>
+        <div class="admin-page-title">Registered Drivers</div>
+        <div style="width: 60px;"></div>
+    </div>
+    <div class="admin-page-content">
+        <button class="btn-primary" onclick="loadDriversPage()">Load Drivers</button>
+        <div id="driversPageResult" class="result-box hidden"></div>
+    </div>
+</div>
+
+<div id="adminPtiPage" class="admin-page">
+    <div class="admin-page-header">
+        <button class="back-btn" onclick="closeAdminPage()">← Back</button>
+        <div class="admin-page-title">PTI Submissions</div>
+        <div style="width: 60px;"></div>
+    </div>
+    <div class="admin-page-content">
+        <button class="btn-primary" onclick="loadPtiPage()">Load PTIs</button>
+        <div id="ptiPageResult" class="result-box hidden"></div>
+    </div>
+</div>
+
+<div id="adminFuelPage" class="admin-page">
+    <div class="admin-page-header">
+        <button class="back-btn" onclick="closeAdminPage()">← Back</button>
+        <div class="admin-page-title">Fuel Usage Log</div>
+        <div style="width: 60px;"></div>
+    </div>
+    <div class="admin-page-content">
+        <button class="btn-primary" onclick="loadFuelPage()">Load Fuel Log</button>
+        <div id="fuelPageResult" class="result-box hidden"></div>
+    </div>
+</div>
+
+<div id="adminDetailsPage" class="admin-page">
+    <div class="admin-page-header">
+        <button class="back-btn" onclick="closeAdminPage()">← Back</button>
+        <div class="admin-page-title">Driver Details</div>
+        <div style="width: 60px;"></div>
+    </div>
+    <div class="admin-page-content">
+        <div class="field"><input type="text" id="searchTruck" placeholder="Enter Truck Number"></div>
+        <button class="btn-primary" onclick="loadDetailsPage()">Search Driver</button>
+        <div id="detailsPageResult" class="result-box hidden"></div>
+    </div>
 </div>
 
 <script>
@@ -319,12 +354,111 @@
         document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
     }
 
-    // Admin tabs
-    function showAdminTab(tabId) {
-        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.admin-section').forEach(c => c.classList.add('hidden'));
-        document.getElementById(tabId).classList.remove('hidden');
-        document.querySelector(`.admin-tab[data-atab="${tabId}"]`).classList.add('active');
+    // ===== ADMIN OPEN/CLOSE PAGES =====
+    function openAdminPage(page) {
+        document.getElementById('adminScreen').style.display = 'none';
+        document.getElementById('adminOverviewPage').style.display = 'none';
+        document.getElementById('adminDriversPage').style.display = 'none';
+        document.getElementById('adminPtiPage').style.display = 'none';
+        document.getElementById('adminFuelPage').style.display = 'none';
+        document.getElementById('adminDetailsPage').style.display = 'none';
+        
+        document.getElementById('admin' + page.charAt(0).toUpperCase() + page.slice(1) + 'Page').style.display = 'block';
+        
+        // Load data for the page
+        if (page === 'overview') loadOverviewPage();
+        if (page === 'drivers') loadDriversPage();
+        if (page === 'pti') loadPtiPage();
+        if (page === 'fuel') loadFuelPage();
+        if (page === 'details') loadDetailsPage();
+    }
+
+    function closeAdminPage() {
+        document.getElementById('adminOverviewPage').style.display = 'none';
+        document.getElementById('adminDriversPage').style.display = 'none';
+        document.getElementById('adminPtiPage').style.display = 'none';
+        document.getElementById('adminFuelPage').style.display = 'none';
+        document.getElementById('adminDetailsPage').style.display = 'none';
+        document.getElementById('adminScreen').style.display = 'block';
+    }
+
+    // ===== ADMIN DATA LOADING =====
+    async function loadOverview() {
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            document.getElementById('totalDrivers').textContent = data.points.length;
+            document.getElementById('totalPTIs').textContent = data.pti.length;
+            document.getElementById('totalFuelStops').textContent = data.fuel_usage.length;
+        } catch(err) { }
+    }
+
+    async function loadOverviewPage() {
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            document.getElementById('overviewDrivers').textContent = data.points.length;
+            document.getElementById('overviewPTIs').textContent = data.pti.length;
+            document.getElementById('overviewFuel').textContent = data.fuel_usage.length;
+        } catch(err) { }
+    }
+
+    async function loadDriversPage() {
+        const resDiv = document.getElementById('driversPageResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4>Driver List</h4>';
+            data.points.forEach(p => {
+                html += `<div class="list-item"><b>${p.driver_id}</b>: ${p.balance} pts</div>`;
+            });
+            resDiv.innerHTML = html;
+        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+    }
+
+    async function loadPtiPage() {
+        const resDiv = document.getElementById('ptiPageResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4>PTI List</h4>';
+            data.pti.forEach(p => {
+                html += `<div class="list-item"><b>${p.driver_id}</b>: ${p.count} PTIs</div>`;
+            });
+            resDiv.innerHTML = html;
+        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+    }
+
+    async function loadFuelPage() {
+        const resDiv = document.getElementById('fuelPageResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4>Fuel Log</h4>';
+            data.fuel_usage.forEach(f => {
+                html += `<div class="list-item"><b>${f.driver_id}</b>: ${f.station_name} - ${f.used_at}</div>`;
+            });
+            resDiv.innerHTML = html;
+        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+    }
+
+    async function loadDetailsPage() {
+        const truck = document.getElementById('searchTruck').value.trim();
+        const resDiv = document.getElementById('detailsPageResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            const found = data.points.find(p => p.driver_id === truck);
+            if (found) {
+                resDiv.innerHTML = `<h4>Driver ${truck}</h4><div class="list-item">Points: ${found.balance}</div>`;
+            } else {
+                resDiv.innerHTML = '<div class="error">Driver not found</div>';
+            }
+        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
 
     // ===== DRIVER FUNCTIONS =====
@@ -403,72 +537,6 @@
             data.pti_history.forEach(p => html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`);
             resDiv.innerHTML = html;
         } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    // ===== ADMIN FUNCTIONS =====
-    async function loadOverview() {
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            document.getElementById('totalDrivers').textContent = data.points.length;
-            document.getElementById('totalPTIs').textContent = data.pti.length;
-            document.getElementById('totalFuelStops').textContent = data.fuel_usage.length;
-        } catch(err) { alert('Error loading stats'); }
-    }
-
-    async function loadDrivers() {
-        const resDiv = document.getElementById('driversResult'); resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>Driver List</h4>';
-            data.points.forEach(p => {
-                html += `<div class="list-item"><b>${p.driver_id}</b>: ${p.balance} pts</div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadPTIs() {
-        const resDiv = document.getElementById('ptiResult'); resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>PTI List</h4>';
-            data.pti.forEach(p => {
-                html += `<div class="list-item"><b>${p.driver_id}</b>: ${p.count} PTIs</div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadFuelLog() {
-        const resDiv = document.getElementById('fuelLogResult'); resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>Fuel Log</h4>';
-            data.fuel_usage.forEach(f => {
-                html += `<div class="list-item"><b>${f.driver_id}</b>: ${f.station_name} - ${f.used_at}</div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadDriverDetails() {
-        const truck = document.getElementById('searchTruck').value.trim();
-        const resDiv = document.getElementById('detailsResult'); resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            // Placeholder – you can implement a specific endpoint
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            const filtered = data.points.find(p => p.driver_id === truck);
-            if (filtered) {
-                resDiv.innerHTML = `<h4>Driver ${truck}</h4><div class="list-item">Points: ${filtered.balance}</div>`;
-            } else {
-                resDiv.innerHTML = '<div class="error">Driver not found</div>';
-            }
-        } catch(err) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
 </script>
 </body>
