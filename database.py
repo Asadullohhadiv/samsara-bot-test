@@ -191,6 +191,79 @@ def get_all_drivers():
     conn.close()
     return rows
 
+# ============ NEW ADMIN FUNCTIONS ============
+
+def register_driver_admin(truck_number, chat_id, samsara_driver_id, vehicle_id, password, truck_license=""):
+    """
+    Registers a driver from the admin panel with all details.
+    Creates/updates the driver record and sets login credentials.
+    """
+    conn = get_connection()
+    c = conn.cursor()
+    
+    # Insert or update drivers table
+    c.execute('''INSERT INTO drivers (telegram_chat_id, samsara_driver_id, vehicle_id, truck_number, truck_license)
+                 VALUES (%s, %s, %s, %s, %s)
+                 ON CONFLICT (telegram_chat_id) DO UPDATE SET
+                 samsara_driver_id = EXCLUDED.samsara_driver_id,
+                 vehicle_id = EXCLUDED.vehicle_id,
+                 truck_number = EXCLUDED.truck_number,
+                 truck_license = EXCLUDED.truck_license''', 
+              (chat_id, samsara_driver_id, vehicle_id, truck_number, truck_license))
+    
+    # Insert or update truck_mapping
+    c.execute('''INSERT INTO truck_mapping (truck_number, samsara_driver_id, vehicle_id, truck_license)
+                 VALUES (%s, %s, %s, %s)
+                 ON CONFLICT (truck_number) DO UPDATE SET
+                 samsara_driver_id = EXCLUDED.samsara_driver_id,
+                 vehicle_id = EXCLUDED.vehicle_id,
+                 truck_license = EXCLUDED.truck_license''', 
+              (truck_number, samsara_driver_id, vehicle_id, truck_license))
+    
+    # Insert or update driver_credentials (password)
+    c.execute('''INSERT INTO driver_credentials (truck_number, password)
+                 VALUES (%s, %s)
+                 ON CONFLICT (truck_number) DO UPDATE SET password = EXCLUDED.password''', 
+              (truck_number, password))
+    
+    conn.commit()
+    conn.close()
+    return True
+
+def get_driver_by_truck(truck_number):
+    """Get driver info by truck number."""
+    conn = get_connection()
+    c = conn.cursor(cursor_factory=RealDictCursor)
+    c.execute('''SELECT d.telegram_chat_id, d.samsara_driver_id, d.vehicle_id, d.truck_number, d.truck_license,
+                        dc.password
+                 FROM drivers d
+                 LEFT JOIN driver_credentials dc ON d.truck_number = dc.truck_number
+                 WHERE d.truck_number = %s''', (truck_number,))
+    r = c.fetchone()
+    conn.close()
+    if r:
+        return {
+            "chat_id": r["telegram_chat_id"],
+            "driver_id": r["samsara_driver_id"],
+            "vehicle_id": r["vehicle_id"],
+            "truck_number": r["truck_number"],
+            "truck_license": r["truck_license"] or "",
+            "password": r["password"] or ""
+        }
+    return None
+
+def list_all_drivers_admin():
+    """Get all drivers with their credentials for admin panel."""
+    conn = get_connection()
+    c = conn.cursor(cursor_factory=RealDictCursor)
+    c.execute('''SELECT d.telegram_chat_id, d.samsara_driver_id, d.vehicle_id, d.truck_number, d.truck_license,
+                        dc.password
+                 FROM drivers d
+                 LEFT JOIN driver_credentials dc ON d.truck_number = dc.truck_number''')
+    rows = c.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
 # ============ DISPATCH ============
 
 def set_dispatch(driver_id, stop1, stop2, time1="", time2=""):
