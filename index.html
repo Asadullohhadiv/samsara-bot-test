@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Truck Safety Assistant</title>
+    <title>FleetGuard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -13,8 +13,9 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
+            color: #fff;
         }
 
         /* ===== LOGIN SCREEN ===== */
@@ -25,71 +26,100 @@
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            background: white;
         }
         .login-logo {
-            font-size: 48px;
-            margin-bottom: 20px;
+            font-size: 60px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
         }
         .login-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #222;
-            margin-bottom: 8px;
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
         }
         .login-subtitle {
             font-size: 14px;
-            color: #888;
+            color: #aaa;
             margin-bottom: 40px;
             text-align: center;
+            letter-spacing: 1px;
         }
         .login-form {
             width: 100%;
-            max-width: 350px;
+            max-width: 380px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
-        .login-form .form-group {
+        .form-group {
             margin-bottom: 20px;
         }
-        .login-form label {
+        .form-group label {
             display: block;
             font-size: 13px;
-            color: #555;
+            color: #ccc;
             margin-bottom: 6px;
             font-weight: 500;
+            letter-spacing: 0.5px;
         }
-        .login-form input {
+        .form-group input {
             width: 100%;
             padding: 14px;
-            border: 1px solid #ddd;
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 12px;
             font-size: 16px;
-            background: #f9f9f9;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
             outline: none;
             transition: border 0.3s;
         }
-        .login-form input:focus {
-            border-color: #222;
-            background: white;
+        .form-group input:focus {
+            border-color: #00d2ff;
+            background: rgba(0,0,0,0.5);
+        }
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .remember-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00d2ff;
         }
         .login-btn {
             width: 100%;
             padding: 16px;
-            background: #222;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
             color: white;
             border: none;
             border-radius: 12px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             margin-top: 10px;
-            transition: background 0.3s;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,210,255,0.3);
         }
         .login-btn:hover {
-            background: #000;
+            transform: translateY(-2px);
+        }
+        .login-btn:disabled {
+            opacity: 0.6;
+            transform: none;
         }
         .login-error {
-            color: #e74c3c;
-            font-size: 14px;
+            color: #ff6b6b;
+            font-size: 13px;
             margin-top: 12px;
             text-align: center;
             display: none;
@@ -98,26 +128,34 @@
         /* ===== MAIN APP (after login) ===== */
         .app-screen {
             display: none;
-            padding-bottom: 80px;
+            min-height: 100vh;
+            background: #f5f5f5;
+            color: #222;
         }
 
         /* Header */
         .app-header {
-            background: #222;
+            background: #1a1a2e;
             color: white;
             padding: 16px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .app-header h1 {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .app-header .truck-info {
-            font-size: 13px;
-            opacity: 0.8;
-            text-align: right;
+            font-size: 14px;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
         }
 
         /* Horizontal Tabs */
@@ -138,7 +176,7 @@
             text-align: center;
             padding: 14px 8px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             color: #888;
             cursor: pointer;
             white-space: nowrap;
@@ -146,8 +184,8 @@
             transition: all 0.3s;
         }
         .tab.active {
-            color: #222;
-            border-bottom-color: #222;
+            color: #0f3460;
+            border-bottom-color: #0f3460;
             font-weight: 700;
         }
         .tab .tab-icon {
@@ -165,13 +203,13 @@
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .card h3 {
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 16px;
-            color: #222;
+            color: #0f3460;
         }
         .form-group {
             margin-bottom: 16px;
@@ -193,23 +231,23 @@
             outline: none;
         }
         .form-group input:focus {
-            border-color: #222;
+            border-color: #0f3460;
             background: white;
         }
         .primary-btn {
             width: 100%;
             padding: 14px;
-            background: #222;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
             color: white;
             border: none;
             border-radius: 10px;
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: background 0.3s;
         }
         .primary-btn:hover {
-            background: #000;
+            opacity: 0.9;
         }
         .secondary-btn {
             width: 100%;
@@ -227,7 +265,7 @@
             padding: 14px;
             background: #f9f9f9;
             border-radius: 10px;
-            border-left: 4px solid #222;
+            border-left: 4px solid #0f3460;
         }
         .list-item {
             padding: 12px 0;
@@ -254,22 +292,16 @@
         .hidden {
             display: none;
         }
-
-        /* Footer */
         footer {
             text-align: center;
             padding: 20px;
-            font-size: 13px;
-            color: #aaa;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
+            font-size: 12px;
+            color: #888;
             border-top: 1px solid #eee;
+            background: white;
         }
         footer a {
-            color: #222;
+            color: #0f3460;
             text-decoration: none;
         }
     </style>
@@ -279,8 +311,8 @@
 <!-- ===== LOGIN SCREEN ===== -->
 <div id="loginScreen" class="login-screen">
     <div class="login-logo">🚛</div>
-    <h1 class="login-title">Truck Safety Assistant</h1>
-    <p class="login-subtitle">Enter your truck number and password to continue</p>
+    <h1 class="login-title">FleetGuard</h1>
+    <p class="login-subtitle">Professional Fleet Management</p>
     <form id="loginForm" class="login-form">
         <div class="form-group">
             <label>Truck Number</label>
@@ -290,21 +322,22 @@
             <label>Password</label>
             <input type="password" id="loginPassword" placeholder="Enter your password" required>
         </div>
+        <div class="remember-row">
+            <input type="checkbox" id="rememberMe">
+            <label for="rememberMe">Remember me</label>
+        </div>
         <button type="submit" class="login-btn">Login</button>
-        <div id="loginError" class="login-error">Invalid truck number or password</div>
+        <div id="loginError" class="login-error"></div>
     </form>
 </div>
 
-<!-- ===== MAIN APP SCREEN ===== -->
+<!-- ===== DRIVER APP SCREEN ===== -->
 <div id="appScreen" class="app-screen">
-    
-    <!-- Header -->
     <div class="app-header">
-        <h1>Driver Hub</h1>
+        <h1>FleetGuard</h1>
         <div class="truck-info" id="truckInfo">Truck: -</div>
     </div>
 
-    <!-- Horizontal Tabs -->
     <div class="tab-bar">
         <div class="tab active" data-tab="fuel" onclick="showTab('fuel')">
             <span class="tab-icon">⛽</span>Fuel
@@ -323,10 +356,7 @@
         </div>
     </div>
 
-    <!-- Content -->
     <div class="content">
-
-        <!-- Fuel Tab -->
         <div id="fuel" class="tab-content">
             <div class="card">
                 <h3>Search Fuel Stations</h3>
@@ -339,7 +369,6 @@
             </div>
         </div>
 
-        <!-- PTI Tab -->
         <div id="pti" class="tab-content hidden">
             <div class="card">
                 <h3>Submit PTI</h3>
@@ -352,7 +381,6 @@
             </div>
         </div>
 
-        <!-- Points Tab -->
         <div id="points" class="tab-content hidden">
             <div class="card">
                 <h3>My Points</h3>
@@ -361,7 +389,6 @@
             </div>
         </div>
 
-        <!-- Verify Tab -->
         <div id="verify" class="tab-content hidden">
             <div class="card">
                 <h3>Verify Your Truck</h3>
@@ -378,7 +405,6 @@
             </div>
         </div>
 
-        <!-- History Tab -->
         <div id="history" class="tab-content hidden">
             <div class="card">
                 <h3>Fuel & PTI History</h3>
@@ -386,24 +412,55 @@
                 <div id="historyResult" class="result-box hidden"></div>
             </div>
         </div>
-
     </div>
 
     <footer>
         <a href="#" onclick="logout()">Logout</a> • <a href="/donate">💖 Donate</a>
     </footer>
+</div>
 
+<!-- ===== ADMIN APP SCREEN ===== -->
+<div id="adminScreen" class="app-screen">
+    <div class="app-header">
+        <h1>FleetGuard Admin</h1>
+        <div class="truck-info">Admin</div>
+    </div>
+    <div class="content">
+        <div class="card">
+            <h3>Admin Dashboard</h3>
+            <button class="primary-btn" onclick="loadAdminData()">📊 Load Summary</button>
+            <div id="adminResult" class="result-box hidden"></div>
+        </div>
+    </div>
+    <footer>
+        <a href="#" onclick="logout()">Logout</a>
+    </footer>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-    const initData = tg.initData;  // <-- REQUIRED for login
+    const initData = tg.initData;
 
-    // ===== LOGIN LOGIC =====
+    // Admin credentials
+    const ADMIN_TRUCK = "1234";
+    const ADMIN_PASSWORD = "Mytrucksafetypassword3223";
+
+    // Check remember me on page load
+    window.onload = function() {
+        const savedTruck = localStorage.getItem('rememberedTruck');
+        const savedPass = localStorage.getItem('rememberedPass');
+        if (savedTruck && savedPass) {
+            document.getElementById('loginTruck').value = savedTruck;
+            document.getElementById('loginPassword').value = savedPass;
+            document.getElementById('rememberMe').checked = true;
+        }
+    };
+
     const loginScreen = document.getElementById('loginScreen');
     const appScreen = document.getElementById('appScreen');
+    const adminScreen = document.getElementById('adminScreen');
     const loginForm = document.getElementById('loginForm');
     const loginError = document.getElementById('loginError');
 
@@ -411,41 +468,55 @@
         e.preventDefault();
         const truck = document.getElementById('loginTruck').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
-        
+        const remember = document.getElementById('rememberMe').checked;
+
         if (!truck || !password) {
             loginError.textContent = "Please fill all fields";
             loginError.style.display = 'block';
             return;
         }
 
-        // Show loading
         const btn = loginForm.querySelector('.login-btn');
         btn.textContent = 'Logging in...';
         btn.disabled = true;
         loginError.style.display = 'none';
 
         try {
+            // Check admin credentials first
+            if (truck === ADMIN_TRUCK && password === ADMIN_PASSWORD) {
+                // Admin login
+                localStorage.setItem('role', 'admin');
+                loginScreen.style.display = 'none';
+                adminScreen.style.display = 'block';
+                return;
+            }
+
+            // Normal driver login
             const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ truck_number: truck, password: password, init_data: initData })  // <-- Send initData
+                body: JSON.stringify({ truck_number: truck, password: password, init_data: initData })
             });
             const data = await response.json();
 
             if (!response.ok) {
-                // Handle 403 (Unauthorized - invalid init_data)
-                if (response.status === 403) {
-                    loginError.textContent = "Session expired. Please close and reopen the app from Telegram.";
-                } else {
-                    loginError.textContent = data.error || "Invalid truck number or password";
-                }
+                loginError.textContent = data.error || "Invalid truck number or password";
                 loginError.style.display = 'block';
                 btn.textContent = 'Login';
                 btn.disabled = false;
                 return;
             }
 
-            // Login successful
+            // Remember me
+            if (remember) {
+                localStorage.setItem('rememberedTruck', truck);
+                localStorage.setItem('rememberedPass', password);
+            } else {
+                localStorage.removeItem('rememberedTruck');
+                localStorage.removeItem('rememberedPass');
+            }
+
+            localStorage.setItem('role', 'driver');
             localStorage.setItem('truck_number', truck);
             document.getElementById('truckInfo').textContent = 'Truck: ' + truck;
             loginScreen.style.display = 'none';
@@ -460,7 +531,7 @@
         }
     });
 
-    // ===== TAB SWITCHING =====
+    // Tab switching
     function showTab(tabId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -468,9 +539,14 @@
         document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
     }
 
-    // ===== LOGOUT =====
+    // Logout
     function logout() {
-        localStorage.removeItem('truck_number');
+        localStorage.removeItem('role');
+        if (!document.getElementById('rememberMe').checked) {
+            localStorage.removeItem('rememberedTruck');
+            localStorage.removeItem('rememberedPass');
+        }
+        adminScreen.style.display = 'none';
         appScreen.style.display = 'none';
         loginScreen.style.display = 'flex';
         document.getElementById('loginPassword').value = '';
@@ -638,6 +714,44 @@
                 });
             } else {
                 html += '<p>No PTIs submitted.</p>';
+            }
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    // ===== ADMIN DATA =====
+    async function loadAdminData() {
+        const resDiv = document.getElementById('adminResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h3>Points Summary</h3>';
+            if (data.points && data.points.length) {
+                data.points.forEach(p => {
+                    html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`;
+                });
+            } else {
+                html += '<p>No points data.</p>';
+            }
+            html += '<h3>PTI Counts</h3>';
+            if (data.pti && data.pti.length) {
+                data.pti.forEach(p => {
+                    html += `<div class="list-item">${p.driver_id}: ${p.count} PTIs</div>`;
+                });
+            } else {
+                html += '<p>No PTI data.</p>';
+            }
+            html += '<h3>Recent Fuel Usage</h3>';
+            if (data.fuel_usage && data.fuel_usage.length) {
+                data.fuel_usage.forEach(f => {
+                    html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at} - Confirmed: ${f.is_confirmed}</div>`;
+                });
+            } else {
+                html += '<p>No fuel usage data.</p>';
             }
             resDiv.innerHTML = html;
         } catch (err) {
