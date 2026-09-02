@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FleetGuard</title>
+    <title>Truck Safety Assistant</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #f4f6f9;
             min-height: 100vh;
-            color: #fff;
         }
 
         /* ===== LOGIN SCREEN ===== */
@@ -28,60 +27,53 @@
             padding: 20px;
         }
         .login-logo {
-            font-size: 60px;
+            font-size: 64px;
             margin-bottom: 10px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
         }
         .login-title {
-            font-size: 36px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 6px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         .login-subtitle {
             font-size: 14px;
-            color: #aaa;
+            color: #64748b;
             margin-bottom: 40px;
             text-align: center;
-            letter-spacing: 1px;
         }
         .login-form {
             width: 100%;
             max-width: 380px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: white;
+            border-radius: 16px;
             padding: 30px;
-            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .form-group label {
             display: block;
             font-size: 13px;
-            color: #ccc;
-            margin-bottom: 6px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
         }
         .form-group input {
             width: 100%;
-            padding: 14px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
             font-size: 16px;
-            background: rgba(0,0,0,0.3);
-            color: #fff;
+            background: white;
             outline: none;
-            transition: border 0.3s;
+            transition: border-color 0.2s;
         }
         .form-group input:focus {
-            border-color: #00d2ff;
-            background: rgba(0,0,0,0.5);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         .remember-row {
             display: flex;
@@ -89,72 +81,64 @@
             gap: 8px;
             margin-bottom: 20px;
             font-size: 14px;
-            color: #aaa;
+            color: #64748b;
         }
         .remember-row input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #00d2ff;
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
         }
         .login-btn {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            padding: 14px;
+            background: #3b82f6;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 15px rgba(0,210,255,0.3);
+            transition: background 0.2s;
         }
         .login-btn:hover {
-            transform: translateY(-2px);
+            background: #2563eb;
         }
         .login-btn:disabled {
-            opacity: 0.6;
-            transform: none;
+            opacity: 0.7;
         }
         .login-error {
-            color: #ff6b6b;
+            color: #ef4444;
             font-size: 13px;
             margin-top: 12px;
             text-align: center;
             display: none;
         }
 
-        /* ===== MAIN APP (after login) ===== */
+        /* ===== MAIN APP ===== */
         .app-screen {
             display: none;
             min-height: 100vh;
-            background: #f5f5f5;
-            color: #222;
+            background: #f4f6f9;
         }
 
         /* Header */
         .app-header {
-            background: #1a1a2e;
+            background: #1e293b;
             color: white;
             padding: 16px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         .app-header h1 {
             font-size: 20px;
-            font-weight: 800;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 600;
         }
         .app-header .truck-info {
             font-size: 14px;
-            opacity: 0.9;
-            background: rgba(255,255,255,0.2);
-            padding: 4px 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
             border-radius: 20px;
         }
 
@@ -162,36 +146,33 @@
         .tab-bar {
             display: flex;
             background: white;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e2e8f0;
             overflow-x: auto;
             scrollbar-width: none;
-            -ms-overflow-style: none;
         }
-        .tab-bar::-webkit-scrollbar {
-            display: none;
-        }
+        .tab-bar::-webkit-scrollbar { display: none; }
         .tab {
             flex: 1;
             min-width: 80px;
             text-align: center;
             padding: 14px 8px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #888;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
             cursor: pointer;
-            white-space: nowrap;
             border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
         .tab.active {
-            color: #0f3460;
-            border-bottom-color: #0f3460;
-            font-weight: 700;
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            font-weight: 600;
         }
         .tab .tab-icon {
             display: block;
-            font-size: 20px;
-            margin-bottom: 4px;
+            font-size: 24px;
+            margin-bottom: 6px;
         }
 
         /* Content */
@@ -200,62 +181,54 @@
         }
         .card {
             background: white;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .card h3 {
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             margin-bottom: 16px;
-            color: #0f3460;
+            color: #1e293b;
         }
         .form-group {
             margin-bottom: 16px;
         }
-        .form-group label {
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 6px;
-            display: block;
-            font-weight: 500;
-        }
         .form-group input {
             width: 100%;
             padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
             font-size: 15px;
-            background: #fafafa;
+            background: white;
             outline: none;
         }
         .form-group input:focus {
-            border-color: #0f3460;
-            background: white;
+            border-color: #3b82f6;
         }
         .primary-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            background: #3b82f6;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.2s;
         }
         .primary-btn:hover {
-            opacity: 0.9;
+            background: #2563eb;
         }
         .secondary-btn {
             width: 100%;
             padding: 10px;
-            background: #f0f0f0;
-            color: #333;
-            border: none;
-            border-radius: 10px;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
             margin-top: 8px;
@@ -263,56 +236,37 @@
         .result-box {
             margin-top: 16px;
             padding: 14px;
-            background: #f9f9f9;
-            border-radius: 10px;
-            border-left: 4px solid #0f3460;
+            background: #f8fafc;
+            border-radius: 8px;
         }
         .list-item {
             padding: 12px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e2e8f0;
         }
-        .list-item:last-child {
-            border-bottom: none;
-        }
-        .price {
-            color: #27ae60;
-            font-weight: 700;
-        }
-        .error {
-            color: #e74c3c;
-        }
-        .success {
-            color: #27ae60;
-        }
-        .loading {
-            text-align: center;
-            color: #888;
-            padding: 20px;
-        }
-        .hidden {
-            display: none;
-        }
+        .list-item:last-child { border-bottom: none; }
+        .price { color: #10b981; font-weight: 600; }
+        .error { color: #ef4444; }
+        .success { color: #10b981; }
+        .loading { text-align: center; color: #64748b; padding: 20px; }
+        .hidden { display: none; }
         footer {
             text-align: center;
             padding: 20px;
-            font-size: 12px;
-            color: #888;
-            border-top: 1px solid #eee;
+            font-size: 13px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
             background: white;
         }
-        footer a {
-            color: #0f3460;
-            text-decoration: none;
-        }
+        footer a { color: #3b82f6; text-decoration: none; }
     </style>
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
+<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login-screen">
     <div class="login-logo">🚛</div>
-    <h1 class="login-title">FleetGuard</h1>
-    <p class="login-subtitle">Professional Fleet Management</p>
+    <h1 class="login-title">Truck Safety</h1>
+    <p class="login-subtitle">Enter your credentials to continue</p>
     <form id="loginForm" class="login-form">
         <div class="form-group">
             <label>Truck Number</label>
@@ -331,56 +285,36 @@
     </form>
 </div>
 
-<!-- ===== DRIVER APP SCREEN ===== -->
+<!-- DRIVER APP -->
 <div id="appScreen" class="app-screen">
     <div class="app-header">
-        <h1>FleetGuard</h1>
+        <h1>Driver Hub</h1>
         <div class="truck-info" id="truckInfo">Truck: -</div>
     </div>
-
     <div class="tab-bar">
-        <div class="tab active" data-tab="fuel" onclick="showTab('fuel')">
-            <span class="tab-icon">⛽</span>Fuel
-        </div>
-        <div class="tab" data-tab="pti" onclick="showTab('pti')">
-            <span class="tab-icon">📋</span>PTI
-        </div>
-        <div class="tab" data-tab="points" onclick="showTab('points')">
-            <span class="tab-icon">💰</span>Points
-        </div>
-        <div class="tab" data-tab="verify" onclick="showTab('verify')">
-            <span class="tab-icon">✅</span>Verify
-        </div>
-        <div class="tab" data-tab="history" onclick="showTab('history')">
-            <span class="tab-icon">📜</span>History
-        </div>
+        <div class="tab active" data-tab="fuel" onclick="showTab('fuel')"><span class="tab-icon">⛽</span>Fuel</div>
+        <div class="tab" data-tab="pti" onclick="showTab('pti')"><span class="tab-icon">📋</span>PTI</div>
+        <div class="tab" data-tab="points" onclick="showTab('points')"><span class="tab-icon">💰</span>Points</div>
+        <div class="tab" data-tab="verify" onclick="showTab('verify')"><span class="tab-icon">✅</span>Verify</div>
+        <div class="tab" data-tab="history" onclick="showTab('history')"><span class="tab-icon">📜</span>History</div>
     </div>
-
     <div class="content">
         <div id="fuel" class="tab-content">
             <div class="card">
                 <h3>Search Fuel Stations</h3>
-                <div class="form-group">
-                    <label>Destination (optional)</label>
-                    <input type="text" id="fuelDest" placeholder="e.g., 123 Main St, LA">
-                </div>
+                <div class="form-group"><input type="text" id="fuelDest" placeholder="Destination (optional)"></div>
                 <button class="primary-btn" onclick="searchFuel()">🔍 Find Fuel</button>
                 <div id="fuelResult" class="result-box hidden"></div>
             </div>
         </div>
-
         <div id="pti" class="tab-content hidden">
             <div class="card">
                 <h3>Submit PTI</h3>
-                <div class="form-group">
-                    <label>PTI Number</label>
-                    <input type="text" id="ptiNum" placeholder="e.g., PTI-12345">
-                </div>
+                <div class="form-group"><input type="text" id="ptiNum" placeholder="PTI Number"></div>
                 <button class="primary-btn" onclick="submitPTI()">📤 Submit PTI</button>
                 <div id="ptiResult" class="result-box hidden"></div>
             </div>
         </div>
-
         <div id="points" class="tab-content hidden">
             <div class="card">
                 <h3>My Points</h3>
@@ -388,23 +322,15 @@
                 <div id="pointsResult" class="result-box hidden"></div>
             </div>
         </div>
-
         <div id="verify" class="tab-content hidden">
             <div class="card">
                 <h3>Verify Your Truck</h3>
-                <div class="form-group">
-                    <label>Driver Name</label>
-                    <input type="text" id="verifyName" placeholder="e.g., John Doe">
-                </div>
-                <div class="form-group">
-                    <label>Truck Front Photo</label>
-                    <input type="file" id="verifyPhoto" accept="image/*">
-                </div>
+                <div class="form-group"><input type="text" id="verifyName" placeholder="Driver Name"></div>
+                <div class="form-group"><input type="file" id="verifyPhoto" accept="image/*"></div>
                 <button class="primary-btn" onclick="submitVerification()">📷 Submit Verification</button>
                 <div id="verifyResult" class="result-box hidden"></div>
             </div>
         </div>
-
         <div id="history" class="tab-content hidden">
             <div class="card">
                 <h3>Fuel & PTI History</h3>
@@ -413,104 +339,80 @@
             </div>
         </div>
     </div>
-
-    <footer>
-        <a href="#" onclick="logout()">Logout</a> • <a href="/donate">💖 Donate</a>
-    </footer>
+    <footer><a href="#" onclick="logout()">Logout</a> • <a href="/donate">Donate</a></footer>
 </div>
 
-<!-- ===== ADMIN APP SCREEN ===== -->
+<!-- ADMIN APP -->
 <div id="adminScreen" class="app-screen">
     <div class="app-header">
-        <h1>FleetGuard Admin</h1>
+        <h1>Admin Panel</h1>
         <div class="truck-info">Admin</div>
     </div>
     <div class="content">
         <div class="card">
-            <h3>Admin Dashboard</h3>
+            <h3>Dashboard</h3>
             <button class="primary-btn" onclick="loadAdminData()">📊 Load Summary</button>
             <div id="adminResult" class="result-box hidden"></div>
         </div>
     </div>
-    <footer>
-        <a href="#" onclick="logout()">Logout</a>
-    </footer>
+    <footer><a href="#" onclick="logout()">Logout</a></footer>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    tg.ready(); tg.expand();
     const initData = tg.initData;
 
     // Admin credentials
     const ADMIN_TRUCK = "1234";
     const ADMIN_PASSWORD = "Mytrucksafetypassword3223";
 
-    // Check remember me on page load
+    // Check remember me on load
     window.onload = function() {
-        const savedTruck = localStorage.getItem('rememberedTruck');
-        const savedPass = localStorage.getItem('rememberedPass');
-        if (savedTruck && savedPass) {
-            document.getElementById('loginTruck').value = savedTruck;
-            document.getElementById('loginPassword').value = savedPass;
+        const sTruck = localStorage.getItem('rememberedTruck');
+        const sPass = localStorage.getItem('rememberedPass');
+        if (sTruck && sPass) {
+            document.getElementById('loginTruck').value = sTruck;
+            document.getElementById('loginPassword').value = sPass;
             document.getElementById('rememberMe').checked = true;
         }
     };
 
-    const loginScreen = document.getElementById('loginScreen');
-    const appScreen = document.getElementById('appScreen');
-    const adminScreen = document.getElementById('adminScreen');
-    const loginForm = document.getElementById('loginForm');
-    const loginError = document.getElementById('loginError');
-
-    loginForm.addEventListener('submit', async (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const truck = document.getElementById('loginTruck').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
+        const pass = document.getElementById('loginPassword').value.trim();
         const remember = document.getElementById('rememberMe').checked;
 
-        if (!truck || !password) {
-            loginError.textContent = "Please fill all fields";
-            loginError.style.display = 'block';
-            return;
-        }
+        if (!truck || !pass) { showError("Fill all fields"); return; }
 
-        const btn = loginForm.querySelector('.login-btn');
-        btn.textContent = 'Logging in...';
-        btn.disabled = true;
-        loginError.style.display = 'none';
+        const btn = e.target.querySelector('.login-btn');
+        btn.disabled = true; btn.textContent = 'Logging in...';
+        document.getElementById('loginError').style.display = 'none';
 
         try {
-            // Check admin credentials first
-            if (truck === ADMIN_TRUCK && password === ADMIN_PASSWORD) {
-                // Admin login
+            // Admin Check
+            if (truck === ADMIN_TRUCK && pass === ADMIN_PASSWORD) {
                 localStorage.setItem('role', 'admin');
-                loginScreen.style.display = 'none';
-                adminScreen.style.display = 'block';
+                showScreen('adminScreen');
                 return;
             }
 
-            // Normal driver login
             const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ truck_number: truck, password: password, init_data: initData })
+                body: JSON.stringify({ truck_number: truck, password: pass, init_data: initData })
             });
             const data = await response.json();
-
-            if (!response.ok) {
-                loginError.textContent = data.error || "Invalid truck number or password";
-                loginError.style.display = 'block';
-                btn.textContent = 'Login';
-                btn.disabled = false;
+            if (!response.ok || data.error) {
+                showError(data.error || "Login failed");
+                btn.disabled = false; btn.textContent = 'Login';
                 return;
             }
 
-            // Remember me
             if (remember) {
                 localStorage.setItem('rememberedTruck', truck);
-                localStorage.setItem('rememberedPass', password);
+                localStorage.setItem('rememberedPass', pass);
             } else {
                 localStorage.removeItem('rememberedTruck');
                 localStorage.removeItem('rememberedPass');
@@ -519,19 +421,28 @@
             localStorage.setItem('role', 'driver');
             localStorage.setItem('truck_number', truck);
             document.getElementById('truckInfo').textContent = 'Truck: ' + truck;
-            loginScreen.style.display = 'none';
-            appScreen.style.display = 'block';
+            showScreen('appScreen');
             showTab('fuel');
         } catch (err) {
-            loginError.textContent = "Network error: " + err.message;
-            loginError.style.display = 'block';
+            showError("Network error: " + err.message);
         } finally {
-            btn.textContent = 'Login';
-            btn.disabled = false;
+            btn.disabled = false; btn.textContent = 'Login';
         }
     });
 
-    // Tab switching
+    function showError(msg) {
+        const el = document.getElementById('loginError');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function showScreen(id) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'none';
+        document.getElementById('adminScreen').style.display = 'none';
+        document.getElementById(id).style.display = 'block';
+    }
+
     function showTab(tabId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -539,224 +450,132 @@
         document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
     }
 
-    // Logout
     function logout() {
         localStorage.removeItem('role');
         if (!document.getElementById('rememberMe').checked) {
             localStorage.removeItem('rememberedTruck');
             localStorage.removeItem('rememberedPass');
         }
-        adminScreen.style.display = 'none';
-        appScreen.style.display = 'none';
-        loginScreen.style.display = 'flex';
+        showScreen('loginScreen');
         document.getElementById('loginPassword').value = '';
     }
 
-    // ===== FUEL SEARCH =====
+    // ... (All the functions for searchFuel, submitPTI, etc. are the same as before but use the new buttons)
+    // For brevity, keep the function bodies you already have.
+    // I'll include the searchFuel, useStation, submitPTI, showPoints, submitVerification, showHistory, loadAdminData below:
+    
     async function searchFuel() {
         const dest = document.getElementById('fuelDest').value.trim();
         const resDiv = document.getElementById('fuelResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">⏳ Searching...</div>';
-
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
         try {
             const resp = await fetch('/api/fuel-search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ destination: dest, init_data: initData })
             });
             const data = await resp.json();
-            if (!resp.ok) {
-                resDiv.innerHTML = `<div class="error">❌ ${data.error || 'Error'}</div>`;
-                return;
-            }
-            let html = '<h4>Fuel Stations</h4>';
-            if (data.stations && data.stations.length > 0) {
+            if (!resp.ok) { resDiv.innerHTML = `<div class="error">${data.error || 'Error'}</div>`; return; }
+            let html = '<h4>Stations</h4>';
+            if (data.stations && data.stations.length) {
                 data.stations.forEach(s => {
-                    html += `<div class="list-item">
-                        <b>${s.name || 'Unknown'}</b><br>
-                        <span class="price">${s.price ? '$' + s.price.toFixed(2) : 'N/A'}</span>
-                        <span> | ${s.distance_from_truck} mi</span><br>
-                        <small>${s.address || ''}</small><br>
-                        <button class="secondary-btn" onclick="useStation('${s.name}', '${s.address}', ${s.lat}, ${s.lng}, ${s.price})">I used this</button>
-                    </div>`;
+                    html += `<div class="list-item"><b>${s.name}</b><br><span class="price">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="secondary-btn" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
                 });
-            } else {
-                html += '<p>No stations found.</p>';
-            }
+            } else { html += '<p>No stations found.</p>'; }
             resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
+        } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
     async function useStation(name, address, lat, lng, price) {
         if (!confirm('Confirm you used this station?')) return;
         try {
             const resp = await fetch('/api/use-station', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    station_name: name,
-                    station_address: address,
-                    station_lat: lat,
-                    station_lng: lng,
-                    price: price,
-                    init_data: initData
-                })
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: initData })
             });
             const data = await resp.json();
             alert(data.message || 'Recorded!');
-        } catch (err) {
-            alert('Error recording station');
-        }
+        } catch(err) { alert('Error'); }
     }
 
-    // ===== PTI =====
     async function submitPTI() {
         const pti = document.getElementById('ptiNum').value.trim();
         if (!pti) { alert('Enter PTI number'); return; }
         const resDiv = document.getElementById('ptiResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Submitting...</div>';
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Submitting...</div>';
         try {
             const resp = await fetch('/api/submit-pti', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ pti_number: pti, init_data: initData })
             });
             const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">❌ ${data.error}</div>`;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
+            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
+        } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
-    // ===== POINTS =====
     async function showPoints() {
         const resDiv = document.getElementById('pointsResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
             const resp = await fetch('/api/points', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ init_data: initData })
             });
             const data = await resp.json();
-            let html = `<h3>Balance: <span style="color:#27ae60;">${data.balance} pts</span></h3><br>`;
-            if (data.history && data.history.length) {
-                html += '<h4>Recent Transactions:</h4>';
-                data.history.forEach(t => {
-                    html += `<div class="list-item"><span>${t.type}</span><span>${t.amount > 0 ? '+' : ''}${t.amount} pts</span></div>`;
-                });
-            } else {
-                html += '<p>No transactions yet.</p>';
-            }
+            let html = `<h3>Balance: ${data.balance} pts</h3>`;
+            data.history.forEach(t => html += `<div class="list-item">${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount}</div>`);
             resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
+        } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
-    // ===== VERIFICATION =====
     async function submitVerification() {
         const name = document.getElementById('verifyName').value.trim();
         const photoInput = document.getElementById('verifyPhoto');
-        if (!name || !photoInput.files.length) {
-            alert('Fill name and upload photo');
-            return;
-        }
+        if (!name || !photoInput.files.length) { alert('Fill name and upload photo'); return; }
         const resDiv = document.getElementById('verifyResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Uploading...</div>';
-
-        const truck = localStorage.getItem('truck_number') || '';
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Uploading...</div>';
         const formData = new FormData();
         formData.append('driver_name', name);
-        formData.append('truck_number', truck);
+        formData.append('truck_number', localStorage.getItem('truck_number') || '');
         formData.append('photo', photoInput.files[0]);
         formData.append('init_data', initData);
-
         try {
             const resp = await fetch('/api/verify', { method: 'POST', body: formData });
             const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">❌ ${data.error}</div>`;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
+            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
+        } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
-    // ===== HISTORY =====
     async function showHistory() {
         const resDiv = document.getElementById('historyResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
             const resp = await fetch('/api/history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ init_data: initData })
             });
             const data = await resp.json();
             let html = '<h3>Fuel Usage</h3>';
-            if (data.fuel_usage && data.fuel_usage.length) {
-                data.fuel_usage.forEach(u => {
-                    html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`;
-                });
-            } else {
-                html += '<p>No fuel usage recorded.</p>';
-            }
-            html += '<h3>PTI Submissions</h3>';
-            if (data.pti_history && data.pti_history.length) {
-                data.pti_history.forEach(p => {
-                    html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`;
-                });
-            } else {
-                html += '<p>No PTIs submitted.</p>';
-            }
+            data.fuel_usage.forEach(u => html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`);
+            html += '<h3>PTI</h3>';
+            data.pti_history.forEach(p => html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`);
             resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
+        } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
-    // ===== ADMIN DATA =====
     async function loadAdminData() {
         const resDiv = document.getElementById('adminResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
             const resp = await fetch('/api/admin-summary', { method: 'GET' });
             const data = await resp.json();
-            let html = '<h3>Points Summary</h3>';
-            if (data.points && data.points.length) {
-                data.points.forEach(p => {
-                    html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`;
-                });
-            } else {
-                html += '<p>No points data.</p>';
-            }
-            html += '<h3>PTI Counts</h3>';
-            if (data.pti && data.pti.length) {
-                data.pti.forEach(p => {
-                    html += `<div class="list-item">${p.driver_id}: ${p.count} PTIs</div>`;
-                });
-            } else {
-                html += '<p>No PTI data.</p>';
-            }
-            html += '<h3>Recent Fuel Usage</h3>';
-            if (data.fuel_usage && data.fuel_usage.length) {
-                data.fuel_usage.forEach(f => {
-                    html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at} - Confirmed: ${f.is_confirmed}</div>`;
-                });
-            } else {
-                html += '<p>No fuel usage data.</p>';
-            }
+            let html = '<h3>Points</h3>';
+            data.points.forEach(p => html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`);
+            html += '<h3>PTI</h3>';
+            data.pti.forEach(p => html += `<div class="list-item">${p.driver_id}: ${p.count}</div>`);
+            html += '<h3>Fuel</h3>';
+            data.fuel_usage.forEach(f => html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`);
             resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
+        } catch(err) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 </script>
 </body>
