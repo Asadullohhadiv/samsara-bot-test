@@ -17,7 +17,10 @@ from database import (
     get_all_points_summary, get_all_pti_summary, get_all_fuel_usage,
     get_driver_by_chat,
     verify_driver_login,
-    set_driver_credentials
+    set_driver_credentials,
+    register_driver_admin,
+    get_driver_by_truck,
+    list_all_drivers_admin
 )
 from samsara_client import find_vehicle_by_truck_number, get_vehicle_stats
 from fuel_service import get_comprehensive_fuel_info
@@ -85,16 +88,12 @@ class LoginRequest(BaseModel):
 
 @app.post("/api/login")
 async def login_api(req: LoginRequest):
-    print(f"🔍 LOGIN ATTEMPT: truck={req.truck_number}, pass={req.password}")
-    
     # TEMPORARY: Skip init_data verification for testing
     # if not verify_init_data(req.init_data):
     #     print("❌ INIT DATA INVALID")
     #     raise HTTPException(status_code=403, detail="Unauthorized")
     
     result = verify_driver_login(req.truck_number, req.password)
-    print(f"🔍 LOGIN RESULT: {result}")
-    
     if not result:
         return {"error": "Invalid truck number or password"}
     
@@ -104,6 +103,43 @@ async def login_api(req: LoginRequest):
         save_mini_app_user(tg_id, "", req.truck_number)
     
     return {"success": True, "truck_number": req.truck_number}
+
+# ---- Admin: Register Driver API ----
+
+class AdminRegisterDriverRequest(BaseModel):
+    truck_number: str
+    group_id: int
+    samsara_driver_id: str
+    vehicle_id: str
+    password: str
+    truck_license: str = ""
+
+@app.post("/api/admin/register-driver")
+async def admin_register_driver_api(req: AdminRegisterDriverRequest):
+    if not req.truck_number or not req.group_id or not req.samsara_driver_id or not req.password:
+        return {"error": "All required fields must be filled"}
+    try:
+        register_driver_admin(
+            truck_number=req.truck_number,
+            chat_id=req.group_id,
+            samsara_driver_id=req.samsara_driver_id,
+            vehicle_id=req.vehicle_id,
+            password=req.password,
+            truck_license=req.truck_license
+        )
+        return {"success": True, "message": f"Driver {req.truck_number} registered successfully!"}
+    except Exception as e:
+        return {"error": str(e)}
+
+# ---- Admin: Get all drivers ----
+
+@app.get("/api/admin/drivers")
+async def admin_list_drivers():
+    try:
+        drivers = list_all_drivers_admin()
+        return {"drivers": drivers}
+    except Exception as e:
+        return {"error": str(e)}
 
 # ---- Fuel Search API ----
 
@@ -266,7 +302,7 @@ async def history_api(req: PointsRequest):
         pti_list.append({"pti_number": row[0], "submitted_at": row[1]})
     return {"fuel_usage": fuel_list, "pti_history": pti_list}
 
-# ---- Admin Summary API (for admin panel) ----
+# ---- Admin Summary API ----
 
 @app.get("/api/admin-summary")
 async def admin_summary_api():
@@ -295,8 +331,11 @@ async def admin_summary_api():
 
 @app.get("/api/driver-details/{truck_number}")
 async def driver_details_api(truck_number: str):
-    # This endpoint can be expanded later to return full driver info.
-    # For now, it returns points and PTI counts for that driver.
+    driver = get_driver_by_truck(truck_number)
+    if not driver:
+        return {"error": "Driver not found"}
+    
+    # Get points
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT COALESCE(SUM(amount),0) FROM points WHERE driver_id = %s', (truck_number,))
@@ -304,8 +343,14 @@ async def driver_details_api(truck_number: str):
     c.execute('SELECT COUNT(*) FROM pti_submissions WHERE driver_id = %s', (truck_number,))
     pti_count = c.fetchone()[0]
     conn.close()
+    
     return {
         "truck_number": truck_number,
+        "driver_id": driver["samsara_driver_id"],
+        "vehicle_id": driver["vehicle_id"],
+        "truck_license": driver["truck_license"],
+        "chat_id": driver["chat_id"],
+        "password": driver["password"],
         "points": balance,
         "pti_count": pti_count
     }
