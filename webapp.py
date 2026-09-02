@@ -26,10 +26,6 @@ import shutil
 
 app = FastAPI()
 
-# Admin credentials (hardcoded for now)
-ADMIN_TRUCK = "1234"
-ADMIN_PASSWORD = "Mytrucksafetypassword3223"
-
 # ---- Helper functions ----
 
 def verify_init_data(init_data: str) -> bool:
@@ -80,19 +76,7 @@ async def get_user(telegram_user_id: int):
         return user
     return {"driver_name": "", "truck_number": ""}
 
-# ---- Admin Login API ----
-
-class AdminLoginRequest(BaseModel):
-    truck_number: str
-    password: str
-
-@app.post("/api/admin-login")
-async def admin_login_api(req: AdminLoginRequest):
-    if req.truck_number == ADMIN_TRUCK and req.password == ADMIN_PASSWORD:
-        return {"success": True, "role": "admin"}
-    return {"error": "Invalid admin credentials"}
-
-# ---- Login API ----
+# ---- Driver Login API ----
 
 class LoginRequest(BaseModel):
     truck_number: str
@@ -282,8 +266,51 @@ async def history_api(req: PointsRequest):
         pti_list.append({"pti_number": row[0], "submitted_at": row[1]})
     return {"fuel_usage": fuel_list, "pti_history": pti_list}
 
-# ---- Admin endpoints ----
+# ---- Admin Summary API (for admin panel) ----
 
+@app.get("/api/admin-summary")
+async def admin_summary_api():
+    points = get_all_points_summary()
+    pti = get_all_pti_summary()
+    fuel = get_all_fuel_usage()
+    
+    points_list = [{"driver_id": r[0], "balance": r[1]} for r in points]
+    pti_list = [{"driver_id": r[0], "count": r[1]} for r in pti]
+    fuel_list = []
+    for row in fuel:
+        fuel_list.append({
+            "driver_id": row[0],
+            "station_name": row[1],
+            "used_at": row[2],
+            "is_confirmed": row[3]
+        })
+    
+    return {
+        "points": points_list,
+        "pti": pti_list,
+        "fuel_usage": fuel_list
+    }
+
+# ---- Driver Details API (for admin) ----
+
+@app.get("/api/driver-details/{truck_number}")
+async def driver_details_api(truck_number: str):
+    # This endpoint can be expanded later to return full driver info.
+    # For now, it returns points and PTI counts for that driver.
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT COALESCE(SUM(amount),0) FROM points WHERE driver_id = %s', (truck_number,))
+    balance = c.fetchone()[0]
+    c.execute('SELECT COUNT(*) FROM pti_submissions WHERE driver_id = %s', (truck_number,))
+    pti_count = c.fetchone()[0]
+    conn.close()
+    return {
+        "truck_number": truck_number,
+        "points": balance,
+        "pti_count": pti_count
+    }
+
+# ---- Admin page (simple HTML) ----
 @app.get("/admin")
 async def admin_page():
     return """
@@ -310,15 +337,3 @@ async def admin_page():
     </body>
     </html>
     """
-
-@app.get("/api/admin-summary")
-async def admin_summary_api():
-    points = get_all_points_summary()
-    pti = get_all_pti_summary()
-    fuel = get_all_fuel_usage()
-    points_list = [{"driver_id": r[0], "balance": r[1]} for r in points]
-    pti_list = [{"driver_id": r[0], "count": r[1]} for r in pti]
-    fuel_list = []
-    for row in fuel:
-        fuel_list.append({"driver_id": row[0], "station_name": row[1], "used_at": row[2], "is_confirmed": row[3]})
-    return {"points": points_list, "pti": pti_list, "fuel_usage": fuel_list}
