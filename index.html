@@ -3,149 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FleetPro</title>
+    <title>FleetPro • Workspace</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=Google+Sans+Code&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --gm-bg: #f8f9fa;
+            --gm-surface: #ffffff;
+            --gm-surface-variant: #f1f3f4;
+            --gm-outline: #e0e0e0;
+            --gm-text-main: #1f1f1f;
+            --gm-text-sub: #444746;
+            --gm-primary: #1a73e8;
+            --gm-primary-hover: #1557b0;
+            --gm-gradient: linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #06b6d4 100%);
+            --gm-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
+            --gm-shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --gm-radius-sm: 8px;
+            --gm-radius-md: 16px;
+            --gm-radius-lg: 28px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Google Sans Flex', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
+
         body {
-            background: #f2f2f7;
+            background-color: var(--gm-bg);
+            color: var(--gm-text-main);
             min-height: 100vh;
         }
 
-        /* iOS-style components */
+        /* Material UI Base Card */
         .card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            background: var(--gm-surface);
+            border-radius: var(--gm-radius-md);
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--gm-outline);
+            box-shadow: var(--gm-shadow);
         }
+
+        .card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--gm-text-main);
+        }
+
+        /* Standard Modern Buttons */
         .btn-primary {
             width: 100%;
-            padding: 16px;
-            background: #007aff;
-            color: white;
+            padding: 14px 24px;
+            background: var(--gm-primary);
+            color: #ffffff;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: var(--gm-radius-lg);
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--gm-shadow);
         }
+
+        .btn-primary:hover {
+            background: var(--gm-primary-hover);
+            box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+        }
+
         .btn-secondary {
             width: 100%;
-            padding: 12px;
-            background: #e5e5ea;
-            color: #333;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 10px 18px;
+            background: var(--gm-surface-variant);
+            color: var(--gm-text-main);
+            border: 1px solid var(--gm-outline);
+            border-radius: var(--gm-radius-lg);
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.2s;
             margin-top: 8px;
         }
 
-        /* ===== LOGIN ===== */
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+
+        /* ===== GEMINI LOGIN ===== */
         .login-wrap {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            background: #f2f2f7;
+            background: var(--gm-bg);
         }
+
         .login-box {
             width: 100%;
-            max-width: 400px;
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 420px;
+            background: var(--gm-surface);
+            border-radius: var(--gm-radius-lg);
+            padding: 40px 32px;
+            border: 1px solid var(--gm-outline);
+            box-shadow: var(--gm-shadow-lg);
         }
+
         .login-icon {
             text-align: center;
-            font-size: 48px;
-            margin-bottom: 10px;
+            font-size: 36px;
+            margin-bottom: 12px;
+            background: var(--gm-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            width: 100%;
         }
+
         .login-title {
             text-align: center;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
-            color: #1c1c1e;
+            letter-spacing: -0.5px;
+            color: var(--gm-text-main);
         }
+
         .login-sub {
             text-align: center;
             font-size: 14px;
-            color: #8e8e93;
-            margin-bottom: 30px;
+            color: var(--gm-text-sub);
+            margin-bottom: 32px;
         }
-        .input-group {
-            margin-bottom: 16px;
+
+        .input-group, .form-group {
+            margin-bottom: 18px;
         }
-        .input-group label {
+
+        .input-group label, .form-group label {
             display: block;
             font-size: 12px;
             font-weight: 600;
-            color: #3a3a3c;
-            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--gm-text-sub);
+            margin-bottom: 8px;
         }
-        .input-group input {
+
+        .input-group input, .form-group input {
             width: 100%;
-            padding: 14px;
-            border: 1px solid #e5e5ea;
-            border-radius: 12px;
+            padding: 14px 18px;
+            border: 1px solid var(--gm-outline);
+            border-radius: var(--gm-radius-sm);
             font-size: 15px;
-            background: #f2f2f7;
+            background: var(--gm-bg);
+            color: var(--gm-text-main);
             outline: none;
+            transition: border-color 0.2s, background 0.2s;
         }
-        .input-group input:focus {
-            border-color: #007aff;
-            background: white;
+
+        .input-group input:focus, .form-group input:focus {
+            border-color: var(--gm-primary);
+            background: var(--gm-surface);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
         }
+
         .password-wrap {
             position: relative;
         }
+
         .toggle-eye {
             position: absolute;
             right: 14px;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            font-size: 20px;
-            color: #8e8e93;
+            font-size: 18px;
+            opacity: 0.6;
         }
+
         .remember-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 24px;
             font-size: 14px;
-            color: #8e8e93;
+            color: var(--gm-text-sub);
         }
+
         .remember-row input {
-            width: 16px;
-            height: 16px;
-            accent-color: #007aff;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: #007aff;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--gm-primary);
             cursor: pointer;
         }
+
+        .login-btn, .register-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--gm-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--gm-radius-lg);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--gm-shadow);
+            transition: opacity 0.2s;
+        }
+
+        .login-btn:hover, .register-btn:hover {
+            opacity: 0.92;
+        }
+
         .error-msg {
-            color: #ff3b30;
+            color: #d93025;
             font-size: 13px;
             text-align: center;
-            margin-top: 12px;
+            margin-top: 14px;
             display: none;
         }
 
@@ -153,254 +233,297 @@
         .app-screen {
             display: none;
             min-height: 100vh;
-            background: #f2f2f7;
         }
+
         .top-bar {
-            background: #1c1c1e;
-            color: white;
-            padding: 16px 20px;
+            background: var(--gm-surface);
+            border-bottom: 1px solid var(--gm-outline);
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .top-bar h2 {
-            font-size: 18px;
-            font-weight: 600;
-        }
-        .top-bar .info-chip {
-            background: rgba(255,255,255,0.2);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-        }
-        .tabs {
-            display: flex;
-            background: white;
-            border-bottom: 1px solid #e5e5ea;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-        .tabs::-webkit-scrollbar {
-            display: none;
-        }
-        .tab {
-            flex: 1;
-            min-width: 70px;
-            padding: 14px 6px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: #8e8e93;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-        }
-        .tab.active {
-            color: #007aff;
-            border-bottom-color: #007aff;
-        }
-        .tab .tab-icon {
-            display: block;
-            font-size: 22px;
-            margin-bottom: 4px;
-        }
-        .content {
-            padding: 20px;
-        }
-        .list-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e5ea;
-        }
-        .list-item:last-child {
-            border-bottom: none;
-        }
-        .price {
-            color: #34c759;
-            font-weight: 600;
-        }
-        .error {
-            color: #ff3b30;
-        }
-        .success {
-            color: #34c759;
-        }
-        .hidden {
-            display: none;
-        }
-        .loading {
-            text-align: center;
-            color: #8e8e93;
-            padding: 20px;
-        }
-        .footer {
-            text-align: center;
-            padding: 16px;
-            font-size: 13px;
-            color: #8e8e93;
-            background: white;
-            border-top: 1px solid #e5e5ea;
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--gm-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        /* ===== ADMIN PANEL (VERTICAL NAV) ===== */
+        .top-bar .info-chip {
+            background: var(--gm-surface-variant);
+            border: 1px solid var(--gm-outline);
+            padding: 6px 16px;
+            border-radius: var(--gm-radius-lg);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gm-text-sub);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--gm-surface);
+            border-bottom: 1px solid var(--gm-outline);
+            padding: 0 12px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 14px 12px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gm-text-sub);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: var(--gm-primary);
+            border-bottom-color: var(--gm-primary);
+            font-weight: 600;
+        }
+
+        .tab .tab-icon {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .content {
+            padding: 24px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 13px;
+            color: var(--gm-text-sub);
+            border-top: 1px solid var(--gm-outline);
+            background: var(--gm-surface);
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: var(--gm-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* ===== WORKSPACE ADMIN PANEL ===== */
         .admin-screen {
             display: none;
             min-height: 100vh;
-            background: #f2f2f7;
         }
+
         .admin-topbar {
-            background: #1c1c1e;
-            color: white;
-            padding: 16px 20px;
+            background: var(--gm-surface);
+            border-bottom: 1px solid var(--gm-outline);
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
+
         .admin-topbar h2 {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gm-text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
+        .admin-topbar h2::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--gm-gradient);
+        }
+
         .admin-logout-btn {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
+            background: transparent;
+            padding: 8px 18px;
+            border-radius: var(--gm-radius-lg);
             font-size: 13px;
             cursor: pointer;
-            border: none;
-            color: white;
-            font-weight: 600;
+            border: 1px solid var(--gm-outline);
+            color: var(--gm-text-sub);
+            font-weight: 500;
+            transition: background 0.2s;
         }
+
+        .admin-logout-btn:hover {
+            background: var(--gm-surface-variant);
+            color: var(--gm-text-main);
+        }
+
+        /* Sidebar & Content Layout for Admin */
+        .admin-layout {
+            display: flex;
+            min-height: calc(100vh - 65px);
+        }
+
         .admin-nav {
+            width: 260px;
+            background: var(--gm-surface);
+            border-right: 1px solid var(--gm-outline);
+            padding: 16px 12px;
             display: flex;
             flex-direction: column;
-            background: white;
-            border-bottom: 1px solid #e5e5ea;
+            gap: 4px;
+            flex-shrink: 0;
         }
+
         .admin-nav-item {
             display: flex;
             align-items: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f2f2f7;
+            padding: 12px 18px;
+            border-radius: var(--gm-radius-lg);
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .admin-nav-item:last-child {
-            border-bottom: none;
-        }
-        .admin-nav-item:hover {
-            background: #f2f2f7;
-        }
-        .admin-nav-item.active {
-            background: #e5f0ff;
-            border-left: 4px solid #007aff;
-        }
-        .admin-nav-icon {
-            font-size: 24px;
-            margin-right: 16px;
-        }
-        .admin-nav-label {
-            font-size: 15px;
-            font-weight: 500;
-            color: #1c1c1e;
+            transition: background 0.15s;
         }
 
-        /* Admin content */
-        .admin-content {
-            padding: 20px;
+        .admin-nav-item:hover {
+            background: var(--gm-surface-variant);
         }
+
+        .admin-nav-item.active {
+            background: #e8f0fe;
+        }
+
+        .admin-nav-item.active .admin-nav-label {
+            color: var(--gm-primary);
+            font-weight: 600;
+        }
+
+        .admin-nav-icon {
+            font-size: 18px;
+            margin-right: 14px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .admin-nav-label {
+            font-size: 14px;
+            color: var(--gm-text-sub);
+            font-weight: 500;
+        }
+
+        .admin-content {
+            flex-grow: 1;
+            padding: 32px;
+            max-width: 1000px;
+        }
+
+        /* Material Data Grids */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
+
         .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 16px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            background: var(--gm-surface);
+            border: 1px solid var(--gm-outline);
+            border-radius: var(--gm-radius-md);
+            padding: 20px;
+            text-align: left;
+            box-shadow: var(--gm-shadow);
         }
+
         .stat-card .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-            color: #1c1c1e;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gm-text-main);
+            letter-spacing: -1px;
         }
+
         .stat-card .stat-label {
-            font-size: 12px;
-            color: #8e8e93;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gm-text-sub);
             margin-top: 4px;
         }
+
         .table-wrap {
             overflow-x: auto;
-            background: white;
-            border-radius: 16px;
-            padding: 10px;
+            background: var(--gm-surface);
+            border: 1px solid var(--gm-outline);
+            border-radius: var(--gm-radius-md);
+            margin-top: 16px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         th {
             text-align: left;
             font-size: 12px;
-            color: #8e8e93;
-            padding: 10px;
-            border-bottom: 1px solid #e5e5ea;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gm-text-sub);
+            padding: 14px 18px;
+            background: var(--gm-surface-variant);
+            border-bottom: 1px solid var(--gm-outline);
         }
+
         td {
-            padding: 10px;
+            padding: 14px 18px;
             font-size: 14px;
-            color: #1c1c1e;
-            border-bottom: 1px solid #f2f2f7;
+            color: var(--gm-text-main);
+            border-bottom: 1px solid var(--gm-outline);
         }
+
         tr:last-child td {
             border-bottom: none;
         }
 
-        /* Forms */
-        .form-group {
-            margin-bottom: 16px;
+        .list-item {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--gm-outline);
+            font-size: 14px;
         }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #3a3a3c;
-            margin-bottom: 8px;
+
+        .list-item:last-child {
+            border-bottom: none;
         }
-        .form-group input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #e5e5ea;
-            border-radius: 12px;
-            font-size: 15px;
-            background: #f2f2f7;
-            outline: none;
-        }
-        .form-group input:focus {
-            border-color: #007aff;
-            background: white;
-        }
-        .register-btn {
-            width: 100%;
-            padding: 16px;
-            background: #007aff;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+
+        .hidden { display: none !important; }
+        .result-box { margin-top: 16px; }
+        .loading { text-align: center; color: var(--gm-text-sub); padding: 20px; font-size: 14px; }
+        .success { color: #188038; font-weight: 500; }
+        .error { color: #d93025; font-weight: 500; }
+
+        @media (max-width: 768px) {
+            .admin-layout { flex-direction: column; }
+            .admin-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--gm-outline); }
+            .admin-content { padding: 16px; }
         }
     </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen" class="login-wrap">
     <div class="login-box">
-        <div class="login-icon">🚛</div>
+        <div class="login-icon">✦</div>
         <h1 class="login-title">FleetPro</h1>
-        <p class="login-sub">Professional Fleet Management</p>
+        <p class="login-sub">Workspace Fleet Management System</p>
         <div class="input-group">
             <label>Truck Number</label>
             <input type="text" id="loginTruck" placeholder="e.g., 88817">
@@ -408,20 +531,19 @@
         <div class="input-group">
             <label>Password</label>
             <div class="password-wrap">
-                <input type="password" id="loginPass" placeholder="Enter password">
+                <input type="password" id="loginPass" placeholder="Enter security password">
                 <span class="toggle-eye" onclick="togglePass()">👁️</span>
             </div>
         </div>
         <div class="remember-row">
             <input type="checkbox" id="rememberMe">
-            <label for="rememberMe">Remember me</label>
+            <label for="rememberMe">Remember login details</label>
         </div>
-        <button class="login-btn" onclick="login()">Login</button>
+        <button class="login-btn" onclick="login()">Sign In</button>
         <div id="loginError" class="error-msg"></div>
     </div>
 </div>
 
-<!-- DRIVER APP -->
 <div id="appScreen" class="app-screen">
     <div class="top-bar">
         <h2>FleetPro</h2>
@@ -437,159 +559,151 @@
     <div class="content">
         <div id="fuel" class="tab-content">
             <div class="card">
-                <h3>Search Fuel</h3>
-                <div class="form-group"><input type="text" id="fuelDest" placeholder="Destination (optional)"></div>
-                <button class="btn-primary" onclick="searchFuel()">🔍 Find Fuel</button>
+                <h3>Search Fuel Stations</h3>
+                <div class="form-group"><input type="text" id="fuelDest" placeholder="Destination route (optional)"></div>
+                <button class="btn-primary" onclick="searchFuel()">🔍 Find Fuel Stops</button>
                 <div id="fuelResult" class="result-box hidden"></div>
             </div>
         </div>
         <div id="pti" class="tab-content hidden">
             <div class="card">
-                <h3>Submit PTI</h3>
-                <div class="form-group"><input type="text" id="ptiNum" placeholder="PTI Number"></div>
-                <button class="btn-primary" onclick="submitPTI()">📤 Submit</button>
+                <h3>Submit PTI Inspection</h3>
+                <div class="form-group"><input type="text" id="ptiNum" placeholder="PTI Inspection Number"></div>
+                <button class="btn-primary" onclick="submitPTI()">📤 Submit Record</button>
                 <div id="ptiResult" class="result-box hidden"></div>
             </div>
         </div>
         <div id="points" class="tab-content hidden">
             <div class="card">
-                <h3>My Points</h3>
-                <button class="btn-primary" onclick="showPoints()">💰 View Balance</button>
+                <h3>My Points Balance</h3>
+                <button class="btn-primary" onclick="showPoints()">💰 View Driver Balance</button>
                 <div id="pointsResult" class="result-box hidden"></div>
             </div>
         </div>
         <div id="verify" class="tab-content hidden">
             <div class="card">
-                <h3>Verify Truck</h3>
-                <div class="form-group"><input type="text" id="verifyName" placeholder="Driver Name"></div>
+                <h3>Verify Vehicle Inspection</h3>
+                <div class="form-group"><input type="text" id="verifyName" placeholder="Driver Full Name"></div>
                 <div class="form-group"><input type="file" id="verifyPhoto" accept="image/*"></div>
-                <button class="btn-primary" onclick="submitVerification()">📷 Submit</button>
+                <button class="btn-primary" onclick="submitVerification()">📷 Upload Verification Photo</button>
                 <div id="verifyResult" class="result-box hidden"></div>
             </div>
         </div>
         <div id="history" class="tab-content hidden">
             <div class="card">
-                <h3>History</h3>
-                <button class="btn-primary" onclick="showHistory()">📂 Load</button>
+                <h3>Driver History & Activity</h3>
+                <button class="btn-primary" onclick="showHistory()">📂 Fetch Log History</button>
                 <div id="historyResult" class="result-box hidden"></div>
             </div>
         </div>
     </div>
-    <div class="footer"><a href="#" onclick="logout()">Logout</a> • <a href="/donate">Donate</a></div>
+    <div class="footer"><a href="#" onclick="logout()">Sign Out</a> • <a href="/donate">Support System</a></div>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="adminScreen" class="admin-screen">
     <div class="admin-topbar">
-        <h2>Admin Panel</h2>
-        <button class="admin-logout-btn" onclick="logout()">Logout</button>
+        <h2>Admin Console</h2>
+        <button class="admin-logout-btn" onclick="logout()">Sign Out</button>
     </div>
-    <!-- Vertical Navigation -->
-    <div class="admin-nav">
-        <div class="admin-nav-item active" data-anav="overview" onclick="openAdminPage('overview')">
-            <span class="admin-nav-icon">📊</span><span class="admin-nav-label">Overview</span>
-        </div>
-        <div class="admin-nav-item" data-anav="assign" onclick="openAdminPage('assign')">
-            <span class="admin-nav-icon">🚛</span><span class="admin-nav-label">Assign Trucks</span>
-        </div>
-        <div class="admin-nav-item" data-anav="register" onclick="openAdminPage('register')">
-            <span class="admin-nav-icon">➕</span><span class="admin-nav-label">Register Driver</span>
-        </div>
-        <div class="admin-nav-item" data-anav="trucks" onclick="openAdminPage('trucks')">
-            <span class="admin-nav-icon">⛽</span><span class="admin-nav-label">Trucks & Fuel</span>
-        </div>
-        <div class="admin-nav-item" data-anav="drivers" onclick="openAdminPage('drivers')">
-            <span class="admin-nav-icon">👤</span><span class="admin-nav-label">Drivers</span>
-        </div>
-        <div class="admin-nav-item" data-anav="pti" onclick="openAdminPage('pti')">
-            <span class="admin-nav-icon">📋</span><span class="admin-nav-label">PTI List</span>
-        </div>
-        <div class="admin-nav-item" data-anav="fuel" onclick="openAdminPage('fuel')">
-            <span class="admin-nav-icon">⛽</span><span class="admin-nav-label">Fuel Log</span>
-        </div>
-        <div class="admin-nav-item" data-anav="details" onclick="openAdminPage('details')">
-            <span class="admin-nav-icon">🔍</span><span class="admin-nav-label">Driver Details</span>
-        </div>
-    </div>
-
-    <div class="admin-content">
-        <!-- Overview -->
-        <div id="overview" class="admin-section">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Drivers</div></div>
-                <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">PTIs</div></div>
-                <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Stops</div></div>
+    <div class="admin-layout">
+        <div class="admin-nav">
+            <div class="admin-nav-item active" data-anav="overview" onclick="openAdminPage('overview')">
+                <span class="admin-nav-icon">📊</span><span class="admin-nav-label">Overview</span>
             </div>
-            <button class="btn-primary" onclick="loadOverview()">Load Stats</button>
-        </div>
-
-        <!-- Assign Trucks (from Samsara) -->
-        <div id="assign" class="admin-section hidden">
-            <div class="card">
-                <h3>Assign Samsara Trucks</h3>
-                <button class="btn-primary" onclick="loadSamsaraVehicles()">Load Samsara Vehicles</button>
-                <div id="samsaraVehicles" class="result-box hidden"></div>
+            <div class="admin-nav-item" data-anav="assign" onclick="openAdminPage('assign')">
+                <span class="admin-nav-icon">🚛</span><span class="admin-nav-label">Assign Vehicles</span>
+            </div>
+            <div class="admin-nav-item" data-anav="register" onclick="openAdminPage('register')">
+                <span class="admin-nav-icon">➕</span><span class="admin-nav-label">Register Driver</span>
+            </div>
+            <div class="admin-nav-item" data-anav="trucks" onclick="openAdminPage('trucks')">
+                <span class="admin-nav-icon">⚡</span><span class="admin-nav-label">Trucks & Fuel</span>
+            </div>
+            <div class="admin-nav-item" data-anav="drivers" onclick="openAdminPage('drivers')">
+                <span class="admin-nav-icon">👤</span><span class="admin-nav-label">Drivers Directory</span>
+            </div>
+            <div class="admin-nav-item" data-anav="pti" onclick="openAdminPage('pti')">
+                <span class="admin-nav-icon">📋</span><span class="admin-nav-label">PTI Reports</span>
+            </div>
+            <div class="admin-nav-item" data-anav="fuel" onclick="openAdminPage('fuel')">
+                <span class="admin-nav-icon">⛽</span><span class="admin-nav-label">Fuel Telematics</span>
+            </div>
+            <div class="admin-nav-item" data-anav="details" onclick="openAdminPage('details')">
+                <span class="admin-nav-icon">🔍</span><span class="admin-nav-label">Driver Lookup</span>
             </div>
         </div>
 
-        <!-- Register Driver (manual) -->
-        <div id="register" class="admin-section hidden">
-            <div class="card">
-                <h3>Register New Driver</h3>
-                <div class="form-group"><label>Truck Number</label><input type="text" id="regTruck" placeholder="e.g., 88817"></div>
-                <div class="form-group"><label>Group ID (Telegram)</label><input type="number" id="regGroupId" placeholder="e.g., -5218192108"></div>
-                <div class="form-group"><label>Samsara Driver ID</label><input type="text" id="regDriverId" placeholder="e.g., driver_88817"></div>
-                <div class="form-group"><label>Vehicle ID</label><input type="text" id="regVehicleId" placeholder="e.g., 281474980774397"></div>
-                <div class="form-group"><label>Password</label><input type="text" id="regPassword" placeholder="e.g., password123"></div>
-                <div class="form-group"><label>Truck License</label><input type="text" id="regLicense" placeholder="e.g., XYZ-1234"></div>
-                <button class="register-btn" onclick="registerDriver()">✅ Register Driver</button>
-                <div id="registerResult" class="result-box hidden"></div>
+        <div class="admin-content">
+            <div id="overview" class="admin-section">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Active Drivers</div></div>
+                    <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">Completed PTIs</div></div>
+                    <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Logs</div></div>
+                </div>
+                <button class="btn-primary" onclick="loadOverview()">Refresh Overview Statistics</button>
             </div>
-        </div>
 
-        <!-- Trucks & Fuel Levels -->
-        <div id="trucks" class="admin-section hidden">
-            <div class="card">
-                <h3>Registered Trucks & Fuel</h3>
-                <button class="btn-primary" onclick="loadTrucksFuel()">Load Trucks</button>
-                <div id="trucksFuelResult" class="result-box hidden"></div>
+            <div id="assign" class="admin-section hidden">
+                <div class="card">
+                    <h3>Samsara Telematics Vehicles</h3>
+                    <button class="btn-primary" onclick="loadSamsaraVehicles()">Sync Fleet Vehicles</button>
+                    <div id="samsaraVehicles" class="result-box hidden"></div>
+                </div>
             </div>
-        </div>
 
-        <!-- Drivers List -->
-        <div id="drivers" class="admin-section hidden">
-            <div class="card">
-                <h3>Registered Drivers</h3>
-                <button class="btn-primary" onclick="loadDriversList()">Load Drivers</button>
-                <div id="driversListResult" class="result-box hidden"></div>
+            <div id="register" class="admin-section hidden">
+                <div class="card">
+                    <h3>Register New Fleet Driver</h3>
+                    <div class="form-group"><label>Truck ID Number</label><input type="text" id="regTruck" placeholder="e.g., 88817"></div>
+                    <div class="form-group"><label>Telegram Group ID</label><input type="number" id="regGroupId" placeholder="e.g., -5218192108"></div>
+                    <div class="form-group"><label>Samsara Driver ID</label><input type="text" id="regDriverId" placeholder="e.g., driver_88817"></div>
+                    <div class="form-group"><label>Hardware Vehicle ID</label><input type="text" id="regVehicleId" placeholder="e.g., 281474980774397"></div>
+                    <div class="form-group"><label>Access Password</label><input type="text" id="regPassword" placeholder="e.g., password123"></div>
+                    <div class="form-group"><label>License Plate</label><input type="text" id="regLicense" placeholder="e.g., XYZ-1234"></div>
+                    <button class="register-btn" onclick="registerDriver()">Complete Driver Onboarding</button>
+                    <div id="registerResult" class="result-box hidden"></div>
+                </div>
             </div>
-        </div>
 
-        <!-- PTI List -->
-        <div id="pti" class="admin-section hidden">
-            <div class="card">
-                <h3>PTI Submissions</h3>
-                <button class="btn-primary" onclick="loadPTIList()">Load PTIs</button>
-                <div id="ptiListResult" class="result-box hidden"></div>
+            <div id="trucks" class="admin-section hidden">
+                <div class="card">
+                    <h3>Registered Fleet & Fuel Level Monitors</h3>
+                    <button class="btn-primary" onclick="loadTrucksFuel()">Load Active Telematics</button>
+                    <div id="trucksFuelResult" class="result-box hidden"></div>
+                </div>
             </div>
-        </div>
 
-        <!-- Fuel Log -->
-        <div id="fuel" class="admin-section hidden">
-            <div class="card">
-                <h3>Fuel Usage Log</h3>
-                <button class="btn-primary" onclick="loadFuelLog()">Load Fuel Log</button>
-                <div id="fuelLogResult" class="result-box hidden"></div>
+            <div id="drivers" class="admin-section hidden">
+                <div class="card">
+                    <h3>Active Driver Database</h3>
+                    <button class="btn-primary" onclick="loadDriversList()">Load Driver Accounts</button>
+                    <div id="driversListResult" class="result-box hidden"></div>
+                </div>
             </div>
-        </div>
 
-        <!-- Driver Details -->
-        <div id="details" class="admin-section hidden">
-            <div class="card">
-                <h3>Driver Details</h3>
-                <div class="form-group"><input type="text" id="searchTruck" placeholder="Enter Truck Number"></div>
-                <button class="btn-primary" onclick="loadDriverDetails()">Search</button>
-                <div id="detailsResult" class="result-box hidden"></div>
+            <div id="pti" class="admin-section hidden">
+                <div class="card">
+                    <h3>Pre-Trip Inspection Logs</h3>
+                    <button class="btn-primary" onclick="loadPTIList()">Fetch Inspection Records</button>
+                    <div id="ptiListResult" class="result-box hidden"></div>
+                </div>
+            </div>
+
+            <div id="fuel" class="admin-section hidden">
+                <div class="card">
+                    <h3>Fuel Usage Audit Trail</h3>
+                    <button class="btn-primary" onclick="loadFuelLog()">Retrieve Fuel Logs</button>
+                    <div id="fuelLogResult" class="result-box hidden"></div>
+                </div>
+            </div>
+
+            <div id="details" class="admin-section hidden">
+                <div class="card">
+                    <h3>Driver File Search</h3>
+                    <div class="form-group"><input type="text" id="searchTruck" placeholder="Enter Truck Number"></div>
+                    <button class="btn-primary" onclick="loadDriverDetails()">Execute Search</button>
+                    <div id="detailsResult" class="result-box hidden"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -624,7 +738,7 @@
         errEl.style.display = 'none';
 
         if (!truck || !pass) {
-            errEl.textContent = "Fill all fields";
+            errEl.textContent = "Please complete all fields";
             errEl.style.display = 'block';
             return;
         }
@@ -644,7 +758,7 @@
             });
             const data = await response.json();
             if (!response.ok || data.error) {
-                errEl.textContent = data.error || "Login failed";
+                errEl.textContent = data.error || "Login authorization failed";
                 errEl.style.display = 'block';
                 return;
             }
@@ -662,7 +776,7 @@
             document.getElementById('appScreen').style.display = 'block';
             showTab('fuel');
         } catch (err) {
-            errEl.textContent = "Network error";
+            errEl.textContent = "Network connection failure";
             errEl.style.display = 'block';
         }
     }
@@ -678,7 +792,6 @@
         document.getElementById('loginPass').value = '';
     }
 
-    // Driver tabs
     function showTab(tabId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
@@ -686,7 +799,6 @@
         document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
     }
 
-    // Admin navigation (vertical)
     function openAdminPage(page) {
         document.querySelectorAll('.admin-nav-item').forEach(item => item.classList.remove('active'));
         document.querySelectorAll('.admin-section').forEach(section => section.classList.add('hidden'));
@@ -694,7 +806,6 @@
         const navItem = document.querySelector(`.admin-nav-item[data-anav="${page}"]`);
         if (navItem) navItem.classList.add('active');
 
-        // Load data on open
         if (page === 'overview') loadOverview();
         if (page === 'assign') loadSamsaraVehicles();
         if (page === 'trucks') loadTrucksFuel();
@@ -703,7 +814,6 @@
         if (page === 'fuel') loadFuelLog();
     }
 
-    // ===== ADMIN DATA LOADING =====
     async function loadOverview() {
         try {
             const resp = await fetch('/api/admin-summary', { method: 'GET' });
@@ -717,33 +827,33 @@
     async function loadSamsaraVehicles() {
         const resDiv = document.getElementById('samsaraVehicles');
         resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.innerHTML = '<div class="loading">Fetching telematics data...</div>';
         try {
             const resp = await fetch('/api/samsara-vehicles', { method: 'GET' });
             const data = await resp.json();
             if (data.vehicles && data.vehicles.length) {
-                let html = '<h4>Samsara Vehicles</h4>';
+                let html = '<h4 style="margin-bottom:12px;">Samsara Fleet Records</h4>';
                 data.vehicles.forEach(v => {
                     html += `<div class="list-item">
-                        <b>${v.name || 'Unknown'}</b> (${v.id})<br>
-                        <button class="btn-secondary" onclick="showAssignForm('${v.id}', '${v.name}')">Assign</button>
+                        <b>${v.name || 'Unassigned Device'}</b> (${v.id})<br>
+                        <button class="btn-secondary" onclick="showAssignForm('${v.id}', '${v.name}')">Assign Driver</button>
                     </div>`;
                 });
                 resDiv.innerHTML = html;
             } else {
-                resDiv.innerHTML = '<p>No vehicles found.</p>';
+                resDiv.innerHTML = '<p class="loading">No Samsara vehicles located.</p>';
             }
         } catch (err) {
-            resDiv.innerHTML = '<div class="error">Error loading vehicles</div>';
+            resDiv.innerHTML = '<div class="error">Failed to fetch Samsara vehicles</div>';
         }
     }
 
     function showAssignForm(vehicleId, truckName) {
-        const groupId = prompt("Enter Telegram Group ID (e.g., -5218192108):");
+        const groupId = prompt("Telegram Group ID (-XXXXXXXXX):");
         if (!groupId) return;
-        const password = prompt("Enter login password for this driver:");
+        const password = prompt("Assigned Password:");
         if (!password) return;
-        const truckNumber = prompt("Enter Truck Number (e.g., 88817):", truckName.split(' ')[0] || '');
+        const truckNumber = prompt("Truck Identifier:", truckName.split(' ')[0] || '');
         if (!truckNumber) return;
         assignDriver(vehicleId, truckNumber, groupId, password);
     }
@@ -764,7 +874,7 @@
             alert(data.message || data.error);
             loadSamsaraVehicles();
         } catch (err) {
-            alert('Error assigning driver');
+            alert('Error updating driver assignment');
         }
     }
 
@@ -777,13 +887,13 @@
         const license = document.getElementById('regLicense').value.trim();
 
         if (!truck || !groupId || !driverId || !password) {
-            alert('Fill all required fields');
+            alert('All mandatory fields must be filled');
             return;
         }
 
         const resDiv = document.getElementById('registerResult');
         resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Registering...</div>';
+        resDiv.innerHTML = '<div class="loading">Writing profile to database...</div>';
 
         try {
             const resp = await fetch('/api/admin/register-driver', {
@@ -800,7 +910,7 @@
             });
             const data = await resp.json();
             if (data.success) {
-                resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`;
+                resDiv.innerHTML = `<div class="success">✓ ${data.message}</div>`;
                 document.getElementById('regTruck').value = '';
                 document.getElementById('regGroupId').value = '';
                 document.getElementById('regDriverId').value = '';
@@ -808,227 +918,67 @@
                 document.getElementById('regPassword').value = '';
                 document.getElementById('regLicense').value = '';
             } else {
-                resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                resDiv.innerHTML = `<div class="error">✕ ${data.error}</div>`;
             }
         } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
+            resDiv.innerHTML = '<div class="error">Network exception encountered</div>';
         }
     }
 
     async function loadTrucksFuel() {
         const resDiv = document.getElementById('trucksFuelResult');
         resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.innerHTML = '<div class="loading">Analyzing telematics data...</div>';
         try {
             const resp = await fetch('/api/admin/trucks-with-fuel', { method: 'GET' });
             const data = await resp.json();
             if (data.trucks && data.trucks.length) {
-                let html = '<h4>Registered Trucks & Fuel</h4><table><tr><th>Truck</th><th>Fuel Level</th><th>Driver</th></tr>';
+                let html = '<div class="table-wrap"><table><tr><th>Truck #</th><th>Fuel Status</th><th>Driver ID</th></tr>';
                 data.trucks.forEach(t => {
                     const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A';
-                    html += `<tr><td>${t.truck_number}</td><td>${fuel}</td><td>${t.driver_id}</td></tr>`;
+                    html += `<tr><td><b>${t.truck_number}</b></td><td>${fuel}</td><td>${t.driver_id}</td></tr>`;
                 });
-                html += '</table>';
+                html += '</table></div>';
                 resDiv.innerHTML = html;
             } else {
-                resDiv.innerHTML = '<p>No registered trucks yet.</p>';
+                resDiv.innerHTML = '<p class="loading">No registered vehicles found.</p>';
             }
         } catch (err) {
-            resDiv.innerHTML = '<div class="error">Error loading trucks</div>';
+            resDiv.innerHTML = '<div class="error">Failed loading telematics data</div>';
         }
     }
 
     async function loadDriversList() {
         const resDiv = document.getElementById('driversListResult');
         resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.innerHTML = '<div class="loading">Retrieving roster...</div>';
         try {
             const resp = await fetch('/api/admin-summary', { method: 'GET' });
             const data = await resp.json();
-            let html = '<h4>Driver List</h4>';
+            let html = '<h4 style="margin-bottom:12px;">Driver Roster & Points</h4>';
             data.points.forEach(p => {
-                html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`;
+                html += `<div class="list-item">Driver <b>${p.driver_id}</b>: <span style="color:var(--gm-primary);font-weight:600;">${p.balance} pts</span></div>`;
             });
             resDiv.innerHTML = html;
         } catch (err) {
-            resDiv.innerHTML = '<div class="error">Error</div>';
+            resDiv.innerHTML = '<div class="error">Failed loading drivers roster</div>';
         }
     }
 
     async function loadPTIList() {
         const resDiv = document.getElementById('ptiListResult');
         resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        resDiv.innerHTML = '<div class="loading">Retrieving inspection logs...</div>';
         try {
             const resp = await fetch('/api/admin-summary', { method: 'GET' });
             const data = await resp.json();
-            let html = '<h4>PTI Counts</h4>';
+            let html = '<h4 style="margin-bottom:12px;">Pre-Trip Inspection Summary</h4>';
             data.pti.forEach(p => {
-                html += `<div class="list-item">${p.driver_id}: ${p.count} PTIs</div>`;
+                html += `<div class="list-item">Driver <b>${p.driver_id}</b>: ${p.count} inspections recorded</div>`;
             });
             resDiv.innerHTML = html;
         } catch (err) {
-            resDiv.innerHTML = '<div class="error">Error</div>';
-        }
-    }
-
-    async function loadFuelLog() {
-        const resDiv = document.getElementById('fuelLogResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>Fuel Usage</h4>';
-            data.fuel_usage.forEach(f => {
-                html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Error</div>';
-        }
-    }
-
-    async function loadDriverDetails() {
-        const truck = document.getElementById('searchTruck').value.trim();
-        const resDiv = document.getElementById('detailsResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/driver-details/' + truck, { method: 'GET' });
-            const data = await resp.json();
-            if (data.error) {
-                resDiv.innerHTML = `<div class="error">${data.error}</div>`;
-            } else {
-                resDiv.innerHTML = `<h4>Driver ${truck}</h4>
-                    <div class="list-item">Points: ${data.points}</div>
-                    <div class="list-item">PTIs: ${data.pti_count}</div>
-                    <div class="list-item">Vehicle: ${data.vehicle_id}</div>`;
-            }
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Error</div>';
-        }
-    }
-
-    // ===== DRIVER FUNCTIONS =====
-    async function searchFuel() {
-        const dest = document.getElementById('fuelDest').value.trim();
-        const resDiv = document.getElementById('fuelResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Searching...</div>';
-        try {
-            const resp = await fetch('/api/fuel-search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ destination: dest, init_data: initData })
-            });
-            const data = await resp.json();
-            if (!resp.ok) {
-                resDiv.innerHTML = `<div class="error">${data.error}</div>`;
-                return;
-            }
-            let html = '<h4>Stations</h4>';
-            data.stations.forEach(s => {
-                html += `<div class="list-item"><b>${s.name}</b><br><span class="price">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="btn-secondary" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
-    }
-
-    async function useStation(name, address, lat, lng, price) {
-        if (!confirm('Confirm?')) return;
-        try {
-            const resp = await fetch('/api/use-station', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: initData })
-            });
-            const data = await resp.json();
-            alert(data.message || 'Recorded!');
-        } catch (err) {
-            alert('Error');
-        }
-    }
-
-    async function submitPTI() {
-        const pti = document.getElementById('ptiNum').value.trim();
-        if (!pti) { alert('Enter PTI'); return; }
-        const resDiv = document.getElementById('ptiResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Submitting...</div>';
-        try {
-            const resp = await fetch('/api/submit-pti', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pti_number: pti, init_data: initData })
-            });
-            const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
-    }
-
-    async function showPoints() {
-        const resDiv = document.getElementById('pointsResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/points', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ init_data: initData })
-            });
-            const data = await resp.json();
-            let html = `<h3>Balance: ${data.balance} pts</h3>`;
-            data.history.forEach(t => html += `<div class="list-item">${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount}</div>`);
-            resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
-    }
-
-    async function submitVerification() {
-        const name = document.getElementById('verifyName').value.trim();
-        const photoInput = document.getElementById('verifyPhoto');
-        if (!name || !photoInput.files.length) { alert('Fill all'); return; }
-        const resDiv = document.getElementById('verifyResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Uploading...</div>';
-        const fd = new FormData();
-        fd.append('driver_name', name);
-        fd.append('truck_number', localStorage.getItem('remTruck') || '');
-        fd.append('photo', photoInput.files[0]);
-        fd.append('init_data', initData);
-        try {
-            const resp = await fetch('/api/verify', { method: 'POST', body: fd });
-            const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
-        }
-    }
-
-    async function showHistory() {
-        const resDiv = document.getElementById('historyResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ init_data: initData })
-            });
-            const data = await resp.json();
-            let html = '<h3>Fuel</h3>';
-            data.fuel_usage.forEach(u => html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`);
-            html += '<h3>PTI</h3>';
-            data.pti_history.forEach(p => html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`);
-            resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network error</div>';
+            resDiv.innerHTML = '<div class="error">Failed loading PTI logs</div>';
         }
     }
 </script>
