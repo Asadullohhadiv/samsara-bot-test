@@ -5,6 +5,7 @@ SAMSARA_API_TOKEN = config.SAMSARA_API_TOKEN
 BASE_URL = "https://api.samsara.com"
 
 def get_vehicle_stats(vehicle_id):
+    """Fetch stats including fuel, gps, heading."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/stats"
     params = {"types": "fuelPercents,gps", "vehicleIds": vehicle_id}
@@ -38,22 +39,31 @@ def get_vehicle_location(vehicle_id):
         return {"latitude": stats["lat"], "longitude": stats["lng"], "heading": stats.get("heading")}
     return None
 
-def find_vehicle_by_truck_number(truck_number: str):
+# NEW: Get all vehicles from Samsara
+def get_all_vehicles():
+    """Fetch all vehicles from Samsara, paginating through results."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles"
     params = {"limit": 100}
     all_vehicles = []
     while True:
-        resp = requests.get(url, headers=headers, params=params, timeout=15)
-        if resp.status_code != 200:
-            print(f"❌ Failed to fetch vehicles: {resp.text}")
+        try:
+            resp = requests.get(url, headers=headers, params=params, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            all_vehicles.extend(data.get('data', []))
+            if not data.get('pagination', {}).get('hasNextPage'):
+                break
+            params['startingAfter'] = data['pagination']['endCursor']
+        except Exception as e:
+            print(f"❌ Error fetching vehicles: {e}")
             break
-        data = resp.json()
-        all_vehicles.extend(data.get('data', []))
-        if not data.get('pagination', {}).get('hasNextPage'):
-            break
-        params['startingAfter'] = data['pagination']['endCursor']
-    for vehicle in all_vehicles:
+    return all_vehicles
+
+def find_vehicle_by_truck_number(truck_number):
+    """Search vehicles by name or external ID for the truck number."""
+    vehicles = get_all_vehicles()
+    for vehicle in vehicles:
         name = vehicle.get('name', '')
         external_ids = vehicle.get('externalIds', {})
         v_id = vehicle.get('id')
@@ -64,7 +74,8 @@ def find_vehicle_by_truck_number(truck_number: str):
                 return v_id
     return None
 
-def get_driver_for_vehicle(vehicle_id: str):
+def get_driver_for_vehicle(vehicle_id):
+    """Fetch the driver assigned to a vehicle from Samsara."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/{vehicle_id}"
     try:
