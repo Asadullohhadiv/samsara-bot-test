@@ -55,7 +55,9 @@ from database import (
     get_all_pti_summary,
     get_all_fuel_usage,
     set_driver_credentials,
-    add_pti_submission,  # NEW
+    add_pti_submission,
+    save_bot_group,
+    get_all_bot_groups,
 )
 from samsara_client import (
     get_vehicle_fuel_level,
@@ -74,7 +76,6 @@ TOKEN = config.TELEGRAM_TOKEN
 # ======================== PTI STATE ========================
 PTI_STATES: Dict[int, Dict] = {}
 
-# Order of steps for photos (excluding identity)
 PTI_STEPS = [
     ("Truck Front & Lights", "Please send a clear photo of the front of the truck, including lights and grill."),
     ("Engine Compartment", "Please open the hood and send a photo of the engine bay, fluids, and belts."),
@@ -86,7 +87,7 @@ PTI_STEPS = [
 
 PTI_STEP_LABELS = ["Odometer"] + [s[0] for s in PTI_STEPS]
 
-# ======================== HELPERS ========================
+# ======================== PTI HELPERS ========================
 
 def get_pti_state(chat_id: int) -> Optional[Dict]:
     return PTI_STATES.get(chat_id)
@@ -97,35 +98,22 @@ def set_pti_state(chat_id: int, state: Optional[Dict]):
     else:
         PTI_STATES[chat_id] = state
 
-def pti_progress_text(state: Dict) -> str:
-    total = len(PTI_STEPS) + 1  # +1 for odometer
-    done = len(state.get('photos', []))
-    return f"Collected: {done}/{total}"
-
 # ======================== PTI FLOW ========================
 
 async def start_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Command /pti - starts a new PTI inspection."""
     chat_id = update.effective_chat.id
-
     if get_pti_state(chat_id):
-        await update.message.reply_text(
-            "You already have an unfinished inspection. Use /resume to continue or /cancel to start over."
-        )
+        await update.message.reply_text("You already have an unfinished inspection. Use /resume to continue or /cancel to start over.")
         return
-
-    # Initialize state
     state = {
-        "step": 0,  # 0 = identity, 1..N = photos, N+1 = review
-        "photos": [],  # list of (step_index, file_id)
+        "step": 0,
+        "photos": [],
         "truck_number": None,
         "trailer_number": None,
         "driver_name": None,
         "created_at": datetime.now(),
     }
     set_pti_state(chat_id, state)
-
-    # Prefill truck number if driver is registered
     driver_info = get_driver_by_chat(chat_id)
     if driver_info and driver_info.get('truck_number'):
         state['truck_number'] = driver_info['truck_number']
@@ -143,15 +131,11 @@ async def start_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Process text during PTI."""
     chat_id = update.effective_chat.id
     state = get_pti_state(chat_id)
     if not state:
         return
-
     text = update.message.text.strip()
-
-    # Step 0: waiting for truck number (if not prefilled)
     if state["step"] == 0 and state.get("truck_number") is None:
         if not re.match(r'^[\dA-Za-z-]+$', text):
             await update.message.reply_text("❌ Invalid truck number. Please enter a valid truck number.")
@@ -162,50 +146,35 @@ async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Now enter your **Trailer Number** (optional, type 'N/A' if none)."
         )
         return
-
-    # Step 0: waiting for trailer number
     if state["step"] == 0 and state.get("truck_number") is not None:
         state["trailer_number"] = text if text.upper() != "N/A" else ""
         state["step"] = 1
         state["photos"] = []
-
-        # Ask for driver name if not known
         driver_info = get_driver_by_chat(chat_id)
         if driver_info:
             state["driver_name"] = driver_info.get("driver_id", "")
         else:
             await update.message.reply_text("Please enter your full name (first and last).")
-            state["step"] = -1  # use -1 to request name
+            state["step"] = -1
             return
-
         await ask_next_photo(update, state)
         return
-
-    # Step -1: waiting for driver name
     if state["step"] == -1:
         state["driver_name"] = text
         state["step"] = 1
         await ask_next_photo(update, state)
         return
-
-    # Other steps: ignore text
     await update.message.reply_text("Please send a photo, or use /cancel to stop.")
 
 async def ask_next_photo(update: Update, state: Dict):
-    """Send the next photo request."""
     chat_id = update.effective_chat.id
-    step = state["step"]  # 1-based index
-
+    step = state["step"]
     if step > len(PTI_STEPS):
         await show_review(update, state)
         return
-
     label, prompt = PTI_STEPS[step - 1]
-    keyboard = [[
-        InlineKeyboardButton("Skip / N/A", callback_data=f"pti_skip_{step}")
-    ]]
+    keyboard = [[InlineKeyboardButton("Skip / N/A", callback_data=f"pti_skip_{step}")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-
     await update.message.reply_text(
         f"📸 **Step {step} of {len(PTI_STEPS)}**\n\n"
         f"**{label}**\n{prompt}",
@@ -214,36 +183,28 @@ async def ask_next_photo(update: Update, state: Dict):
     )
 
 async def handle_pti_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Process photo during PTI."""
     chat_id = update.effective_chat.id
     state = get_pti_state(chat_id)
     if not state:
         return
-
     if state["step"] < 1:
         await update.message.reply_text("Please complete the text steps first.")
         return
-
-    # Use largest photo
     photo = update.message.photo[-1]
     file_id = photo.file_id
     step = state["step"]
     state["photos"].append((step, file_id))
-
     state["step"] += 1
     await ask_next_photo(update, state)
 
 async def handle_pti_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle skip and submit buttons."""
     query = update.callback_query
     await query.answer()
     chat_id = update.effective_chat.id
     state = get_pti_state(chat_id)
     if not state:
         return
-
     data = query.data
-
     if data.startswith("pti_skip_"):
         step = int(data.split("_")[2])
         if state["step"] == step:
@@ -251,20 +212,16 @@ async def handle_pti_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
             await ask_next_photo(update, state)
         else:
             await query.message.reply_text("This step is no longer active.")
-
     elif data == "pti_submit":
         await submit_pti(update, state)
-
     elif data == "pti_cancel":
         set_pti_state(chat_id, None)
         await query.message.reply_text("❌ PTI inspection cancelled.")
 
 async def show_review(update: Update, state: Dict):
-    """Show summary and submit/cancel buttons."""
     chat_id = update.effective_chat.id
     collected = len(state["photos"])
     total = len(PTI_STEPS)
-
     text = (
         f"📋 **PTI Summary**\n\n"
         f"Driver: {state.get('driver_name', 'Unknown')}\n"
@@ -273,23 +230,18 @@ async def show_review(update: Update, state: Dict):
         f"Photos collected: {collected}/{total}\n\n"
         f"Ready to submit?"
     )
-
     keyboard = [
         [InlineKeyboardButton("✅ Submit PTI", callback_data="pti_submit")],
         [InlineKeyboardButton("❌ Cancel", callback_data="pti_cancel")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
 
 async def submit_pti(update: Update, state: Dict):
-    """Send media group to admin group, notify dispatcher, and record."""
     chat_id = update.effective_chat.id
     if not state["photos"]:
         await update.message.reply_text("No photos collected. Cannot submit.")
         return
-
-    # Build media group (max 10 photos, we have up to 7)
     media_group = []
     for step_idx, file_id in state["photos"]:
         label = PTI_STEP_LABELS[step_idx - 1] if step_idx - 1 < len(PTI_STEP_LABELS) else "Photo"
@@ -298,7 +250,6 @@ async def submit_pti(update: Update, state: Dict):
             "media": file_id,
             "caption": label,
         })
-
     caption = (
         f"📋 **NEW PRE-TRIP INSPECTION REPORT**\n\n"
         f"👤 Driver: {state.get('driver_name', 'Unknown')}\n"
@@ -307,16 +258,12 @@ async def submit_pti(update: Update, state: Dict):
         f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
         f"📸 Collected {len(state['photos'])} photos"
     )
-
     try:
-        # 1. Send media group to admin group
         await context.bot.send_media_group(
             chat_id=config.ADMIN_GROUP_ID,
             media=media_group,
-            caption=caption,  # caption is applied to first photo
+            caption=caption,
         )
-
-        # 2. Send text notification to dispatcher group
         dispatcher_msg = (
             f"📋 **PTI COMPLETED**\n"
             f"👤 Driver: {state.get('driver_name', 'Unknown')}\n"
@@ -330,23 +277,17 @@ async def submit_pti(update: Update, state: Dict):
             text=dispatcher_msg,
             parse_mode="Markdown"
         )
-
-        # 3. Record in database and award points
         driver_id = state.get('driver_name', '')
         truck_number = state.get('truck_number', '')
         trailer_number = state.get('trailer_number', '')
         photo_count = len(state['photos'])
-
         pti_number = f"PTI-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         add_pti(driver_id, pti_number)
         add_points(driver_id, config.POINTS_PER_PTI, "pti", f"PTI {pti_number}")
         add_pti_submission(driver_id, truck_number, trailer_number, photo_count)
-
         await update.message.reply_text(f"✅ PTI submitted successfully!\n\nYou earned {config.POINTS_PER_PTI} points.")
     except Exception as e:
         await update.message.reply_text(f"❌ Failed to submit PTI: {e}")
-
-    # Clear state
     set_pti_state(chat_id, None)
 
 async def cancel_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -360,7 +301,6 @@ async def resume_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not state:
         await update.message.reply_text("No unfinished inspection found.")
         return
-    # If in identity step, continue text; otherwise continue photo step
     if state["step"] == -1:
         await update.message.reply_text("Please enter your full name.")
     elif state["step"] == 0 and state.get("truck_number") is None:
@@ -370,9 +310,218 @@ async def resume_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await ask_next_photo(update, state)
 
-# ======================== OTHER COMMANDS (unchanged) ========================
-# [Include all your existing commands: start, fuel, points, verify, admin, etc.]
-# For brevity, assume they are present. Copy them from your current main.py.
+# ======================== ORIGINAL COMMANDS ========================
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    web_app_url = config.WEB_APP_URL
+    keyboard = [
+        [KeyboardButton("⛽ Open Driver App", web_app={"url": web_app_url})],
+        [InlineKeyboardButton("📋 My Points", callback_data="points")],
+        [InlineKeyboardButton("💖 Donate", callback_data="donate")],
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    chat_id = update.effective_chat.id
+    driver_info = get_driver_by_chat(chat_id)
+    if driver_info:
+        truck = driver_info.get('truck_number', 'Unknown')
+        welcome_text = (
+            f"🚛 **Truck {truck}** – Hello, Driver!\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n"
+            f"✅ Connected to Samsara.\n"
+            f"📊 Use the Driver App to access all features."
+        )
+    else:
+        welcome_text = (
+            "🚛 **Welcome!**\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "I'm your Samsara assistant. Use the Driver App below to access fuel search, PTI submission, points tracking, and truck verification."
+        )
+    await update.message.reply_text(welcome_text, parse_mode="Markdown", reply_markup=reply_markup)
+
+async def points_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    chat_id = update.effective_chat.id
+    driver_info = get_driver_by_chat(chat_id)
+    if not driver_info:
+        await query.edit_message_text("❌ Not registered.")
+        return
+    driver_id = driver_info["driver_id"]
+    balance = get_points_balance(driver_id)
+    history = get_points_history(driver_id, limit=5)
+    text = f"💰 **Points Balance:** {balance}\n\nRecent:\n"
+    if history:
+        for row in history:
+            text += f"• {row[0]} pts ({row[1]}) - {row[3]}\n"
+    else:
+        text += "No transactions yet."
+    await query.edit_message_text(text, parse_mode="Markdown")
+
+async def donate_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = f"💖 **Support the Developer**\n\nDonate to keep this bot running:\n{config.DONATION_WALLET}"
+    await query.edit_message_text(text, parse_mode="Markdown")
+
+async def fuel_search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    web_app_url = config.WEB_APP_URL
+    await update.message.reply_text("Please use the Driver App for fuel search.", reply_markup=ReplyKeyboardMarkup([[KeyboardButton("⛽ Open Driver App", web_app={"url": web_app_url})]], resize_keyboard=True))
+
+async def submit_pti_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # The actual /pti command is handled separately
+    await start_pti(update, context)
+
+async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    driver_info = get_driver_by_chat(chat_id)
+    if not driver_info:
+        await update.message.reply_text("❌ Not registered.")
+        return
+    driver_id = driver_info["driver_id"]
+    balance = get_points_balance(driver_id)
+    history = get_points_history(driver_id, limit=10)
+    text = f"💰 **Points Balance:** {balance}\n\nRecent transactions:\n"
+    for row in history:
+        text += f"• {row[0]} pts ({row[1]}) - {row[3]}\n"
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    web_app_url = config.WEB_APP_URL + "?tab=verify"
+    await update.message.reply_text("Please use the Driver App to verify your truck.", reply_markup=ReplyKeyboardMarkup([[KeyboardButton("📷 Verify Truck", web_app={"url": web_app_url})]], resize_keyboard=True))
+
+async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    if chat_id == config.ADMIN_GROUP_ID:
+        points = get_all_points_summary()
+        pti = get_all_pti_summary()
+        fuel = get_all_fuel_usage()
+        text = "📊 **Admin Summary**\n\nPoints:\n"
+        for p in points:
+            text += f"• {p[0]}: {p[1]} pts\n"
+        text += "\nPTI Counts:\n"
+        for p in pti:
+            text += f"• {p[0]}: {p[1]}\n"
+        text += "\nRecent Fuel Usage:\n"
+        for f in fuel[:10]:
+            text += f"• {f[0]} - {f[1]} ({f[2]})\n"
+        await update.message.reply_text(text, parse_mode="Markdown")
+    else:
+        await update.message.reply_text("❌ Not authorized.")
+
+async def cashout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    driver_info = get_driver_by_chat(chat_id)
+    if not driver_info:
+        await update.message.reply_text("❌ Not registered.")
+        return
+    driver_id = driver_info["driver_id"]
+    balance = get_points_balance(driver_id)
+    if balance < config.MIN_POINTS_FOR_CASHOUT:
+        await update.message.reply_text(f"❌ Need at least {config.MIN_POINTS_FOR_CASHOUT} points to cashout. You have {balance}.")
+        return
+    amount_usd = balance * 0.01
+    month = datetime.now().strftime("%Y-%m")
+    add_cashout(driver_id, balance, amount_usd, month)
+    add_points(driver_id, -balance, "cashout", f"Monthly cashout {month}")
+    await update.message.reply_text(f"✅ Cashout processed: {balance} pts -> ${amount_usd:.2f}")
+
+async def set_credentials_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    if chat_id != config.ADMIN_GROUP_ID:
+        await update.message.reply_text("❌ Not authorized.")
+        return
+    if len(context.args) != 2:
+        await update.message.reply_text("Usage: /set_credentials TRUCK_NUMBER PASSWORD")
+        return
+    truck_number, password = context.args[0], context.args[1]
+    set_driver_credentials(truck_number, password)
+    await update.message.reply_text(f"✅ Credentials set for truck {truck_number}")
+
+async def list_groups_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    if chat_id != config.ADMIN_GROUP_ID:
+        await update.message.reply_text("❌ Not authorized.")
+        return
+    groups = get_all_bot_groups()
+    if not groups:
+        await update.message.reply_text("No groups found.")
+        return
+    text = "📋 **Groups where bot is added:**\n"
+    for g in groups:
+        text += f"• `{g[1]}` (ID: {g[0]}) - Added: {g[2]}\n"
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    driver_info = get_driver_by_chat(chat_id)
+    if not driver_info:
+        await update.message.reply_text("❌ Not registered.")
+        return
+    photo = update.message.photo[-1]
+    file = await photo.get_file()
+    os.makedirs("uploads", exist_ok=True)
+    file_path = f"uploads/{chat_id}_truck.jpg"
+    await file.download_to_drive(file_path)
+    await update.message.reply_text("📷 Truck photo received. If you haven't submitted verification, please use the app.")
+
+async def auto_register_on_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.my_chat_member:
+        return
+    new_member = update.my_chat_member.new_chat_member
+    old_member = update.my_chat_member.old_chat_member
+    was_removed = old_member.status in ['left', 'kicked']
+    is_added = new_member.status in ['member', 'administrator']
+    if not was_removed and is_added:
+        chat = update.effective_chat
+        chat_id = chat.id
+        chat_title = chat.title or "Unknown Group"
+        # Save group
+        save_bot_group(chat_id, chat_title)
+        truck_number = get_truck_number_from_group(chat_title)
+        if truck_number:
+            vehicle_id = find_vehicle_by_truck_number(truck_number)
+            if vehicle_id:
+                driver_id = get_driver_for_vehicle(vehicle_id)
+                if not driver_id:
+                    driver_id = f"driver_{truck_number}"
+                register_driver_auto(chat_id, truck_number, driver_id, vehicle_id, "")
+                welcome_msg = (
+                    f"🚛 **Truck {truck_number} Connected!**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"Driver: {driver_id}\n"
+                    f"Vehicle: {vehicle_id}\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"Use the Driver App to find fuel, submit PTI, and track points."
+                )
+                web_app_url = config.WEB_APP_URL
+                keyboard = [[KeyboardButton("⛽ Open Driver App", web_app={"url": web_app_url})]]
+                reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+                await context.bot.send_message(chat_id=chat_id, text=welcome_msg, parse_mode="Markdown", reply_markup=reply_markup)
+                return
+            mapping = get_mapping_by_truck_number(truck_number)
+            if mapping:
+                register_driver_auto(chat_id, truck_number, mapping["driver_id"], mapping["vehicle_id"], mapping.get("truck_license", ""))
+                welcome_msg = (
+                    f"🚛 **Truck {truck_number} Connected!**\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"Driver: {mapping['driver_id']}\n"
+                    f"Vehicle: {mapping['vehicle_id']}\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━\n"
+                    f"Use the Driver App to find fuel, submit PTI, and track points."
+                )
+                web_app_url = config.WEB_APP_URL
+                keyboard = [[KeyboardButton("⛽ Open Driver App", web_app={"url": web_app_url})]]
+                reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+                await context.bot.send_message(chat_id=chat_id, text=welcome_msg, parse_mode="Markdown", reply_markup=reply_markup)
+                return
+            else:
+                await context.bot.send_message(chat_id, f"⚠️ Truck {truck_number} not found. Map it or contact admin.")
+        else:
+            await context.bot.send_message(chat_id, "⚠️ Could not detect truck number from group name. Rename group to start with truck number.")
+
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # For non-PTI texts, we don't do anything
+    pass
 
 # ======================== MAIN ========================
 
@@ -380,7 +529,7 @@ def main():
     init_db()
     app = Application.builder().token(TOKEN).build()
 
-    # Existing commands
+    # Original commands
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("fuel", fuel_search_command))
     app.add_handler(CommandHandler("points", points_command))
@@ -388,6 +537,7 @@ def main():
     app.add_handler(CommandHandler("cashout", cashout_command))
     app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CommandHandler("set_credentials", set_credentials_command))
+    app.add_handler(CommandHandler("groups", list_groups_command))
 
     # PTI commands
     app.add_handler(CommandHandler("pti", start_pti))
@@ -399,12 +549,13 @@ def main():
     app.add_handler(CallbackQueryHandler(donate_callback, pattern="donate"))
     app.add_handler(CallbackQueryHandler(handle_pti_callback, pattern="pti_"))
 
-    # Message handlers - order matters
+    # Message handlers
     app.add_handler(MessageHandler(filters.PHOTO, handle_pti_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pti_text))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))  # your existing text handler
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))  # for general photo handling
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))  # catch others
 
-    # Chat member handler
+    # Chat member handler (group joins)
     app.add_handler(ChatMemberHandler(auto_register_on_join, ChatMemberHandler.MY_CHAT_MEMBER))
 
     # Start web server
