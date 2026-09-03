@@ -14,7 +14,7 @@ def get_connection():
 def init_db():
     conn = get_connection()
     c = conn.cursor()
-    
+
     # Create tables
     c.execute('''CREATE TABLE IF NOT EXISTS drivers (
         telegram_chat_id BIGINT PRIMARY KEY,
@@ -24,12 +24,14 @@ def init_db():
         truck_license TEXT,
         registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS truck_mapping (
         truck_number TEXT PRIMARY KEY,
         samsara_driver_id TEXT,
         vehicle_id TEXT,
         truck_license TEXT
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS dispatch (
         driver_id TEXT PRIMARY KEY,
         stop1_address TEXT,
@@ -38,11 +40,13 @@ def init_db():
         stop2_time TEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS truck_specs (
         vehicle_id TEXT PRIMARY KEY,
         tank_capacity_gallons REAL DEFAULT 100,
         avg_mpg REAL DEFAULT 6.0
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS truck_stops (
         id SERIAL PRIMARY KEY,
         name TEXT,
@@ -57,6 +61,7 @@ def init_db():
         is_active INTEGER DEFAULT 1,
         UNIQUE(lat, lng)
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS points (
         id SERIAL PRIMARY KEY,
         driver_id TEXT,
@@ -65,13 +70,17 @@ def init_db():
         description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS pti_submissions (
         id SERIAL PRIMARY KEY,
         driver_id TEXT,
-        pti_number TEXT,
-        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        status TEXT DEFAULT 'pending'
+        truck_number TEXT,
+        trailer_number TEXT,
+        photo_count INTEGER,
+        status TEXT DEFAULT 'pending',
+        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS fuel_station_usage (
         id SERIAL PRIMARY KEY,
         driver_id TEXT,
@@ -83,6 +92,7 @@ def init_db():
         used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_confirmed INTEGER DEFAULT 0
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS driver_verification (
         telegram_user_id BIGINT PRIMARY KEY,
         driver_name TEXT,
@@ -91,6 +101,7 @@ def init_db():
         verified INTEGER DEFAULT 0,
         submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS cashouts (
         id SERIAL PRIMARY KEY,
         driver_id TEXT,
@@ -99,23 +110,63 @@ def init_db():
         month TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS mini_app_users (
         telegram_user_id BIGINT PRIMARY KEY,
         driver_name TEXT,
         truck_number TEXT,
         last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS driver_credentials (
         truck_number TEXT PRIMARY KEY,
         password TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
-    
+
+    # NEW: bot_groups table
+    c.execute('''CREATE TABLE IF NOT EXISTS bot_groups (
+        chat_id BIGINT PRIMARY KEY,
+        group_title TEXT,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+
     conn.commit()
     conn.close()
     print("✅ Database initialized on Supabase!")
 
-# ============ TRUCK MAPPING ============
+# ==================== GROUP TRACKING ====================
+
+def save_bot_group(chat_id: int, group_title: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('''INSERT INTO bot_groups (chat_id, group_title)
+                 VALUES (%s, %s)
+                 ON CONFLICT (chat_id) DO UPDATE SET group_title = EXCLUDED.group_title''',
+              (chat_id, group_title))
+    conn.commit()
+    conn.close()
+
+def get_all_bot_groups():
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT chat_id, group_title, added_at FROM bot_groups ORDER BY added_at DESC')
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+# ==================== PTI SUBMISSION ====================
+
+def add_pti_submission(driver_id, truck_number, trailer_number, photo_count):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('''INSERT INTO pti_submissions (driver_id, truck_number, trailer_number, photo_count, status)
+                 VALUES (%s, %s, %s, %s, 'submitted')''',
+              (driver_id, truck_number, trailer_number, photo_count))
+    conn.commit()
+    conn.close()
+
+# ==================== TRUCK MAPPING ====================
 
 def get_truck_number_from_group(group_name: str):
     if not group_name:
@@ -146,7 +197,7 @@ def get_mapping_by_truck_number(truck_number):
         return {"driver_id": r["samsara_driver_id"], "vehicle_id": r["vehicle_id"], "truck_license": r["truck_license"] or ""}
     return None
 
-# ============ DRIVER REGISTRATION ============
+# ==================== DRIVER REGISTRATION ====================
 
 def register_driver_auto(chat_id, truck_number, driver_id, vehicle_id, truck_license=""):
     conn = get_connection()
@@ -191,17 +242,12 @@ def get_all_drivers():
     conn.close()
     return rows
 
-# ============ NEW ADMIN FUNCTIONS ============
+# ==================== ADMIN DRIVER FUNCTIONS ====================
 
 def register_driver_admin(truck_number, chat_id, samsara_driver_id, vehicle_id, password, truck_license=""):
-    """
-    Registers a driver from the admin panel with all details.
-    Creates/updates the driver record and sets login credentials.
-    """
     conn = get_connection()
     c = conn.cursor()
-    
-    # Insert or update drivers table
+    # Insert/update drivers table
     c.execute('''INSERT INTO drivers (telegram_chat_id, samsara_driver_id, vehicle_id, truck_number, truck_license)
                  VALUES (%s, %s, %s, %s, %s)
                  ON CONFLICT (telegram_chat_id) DO UPDATE SET
@@ -210,8 +256,7 @@ def register_driver_admin(truck_number, chat_id, samsara_driver_id, vehicle_id, 
                  truck_number = EXCLUDED.truck_number,
                  truck_license = EXCLUDED.truck_license''', 
               (chat_id, samsara_driver_id, vehicle_id, truck_number, truck_license))
-    
-    # Insert or update truck_mapping
+    # Insert/update truck_mapping
     c.execute('''INSERT INTO truck_mapping (truck_number, samsara_driver_id, vehicle_id, truck_license)
                  VALUES (%s, %s, %s, %s)
                  ON CONFLICT (truck_number) DO UPDATE SET
@@ -219,19 +264,16 @@ def register_driver_admin(truck_number, chat_id, samsara_driver_id, vehicle_id, 
                  vehicle_id = EXCLUDED.vehicle_id,
                  truck_license = EXCLUDED.truck_license''', 
               (truck_number, samsara_driver_id, vehicle_id, truck_license))
-    
-    # Insert or update driver_credentials (password)
+    # Insert/update credentials
     c.execute('''INSERT INTO driver_credentials (truck_number, password)
                  VALUES (%s, %s)
                  ON CONFLICT (truck_number) DO UPDATE SET password = EXCLUDED.password''', 
               (truck_number, password))
-    
     conn.commit()
     conn.close()
     return True
 
 def get_driver_by_truck(truck_number):
-    """Get driver info by truck number."""
     conn = get_connection()
     c = conn.cursor(cursor_factory=RealDictCursor)
     c.execute('''SELECT d.telegram_chat_id, d.samsara_driver_id, d.vehicle_id, d.truck_number, d.truck_license,
@@ -253,7 +295,6 @@ def get_driver_by_truck(truck_number):
     return None
 
 def list_all_drivers_admin():
-    """Get all drivers with their credentials for admin panel."""
     conn = get_connection()
     c = conn.cursor(cursor_factory=RealDictCursor)
     c.execute('''SELECT d.telegram_chat_id, d.samsara_driver_id, d.vehicle_id, d.truck_number, d.truck_license,
@@ -264,7 +305,7 @@ def list_all_drivers_admin():
     conn.close()
     return [dict(row) for row in rows]
 
-# ============ DISPATCH ============
+# ==================== DISPATCH ====================
 
 def set_dispatch(driver_id, stop1, stop2, time1="", time2=""):
     conn = get_connection()
@@ -295,7 +336,7 @@ def get_dispatch(driver_id):
         return {"stop1": r["stop1_address"], "stop2": r["stop2_address"], "time1": r["stop1_time"], "time2": r["stop2_time"]}
     return None
 
-# ============ TRUCK SPECS ============
+# ==================== TRUCK SPECS ====================
 
 def set_truck_specs(vehicle_id, tank, mpg):
     conn = get_connection()
@@ -319,7 +360,7 @@ def get_truck_specs(vehicle_id):
         return {"tank": r["tank_capacity_gallons"], "mpg": r["avg_mpg"]}
     return {"tank": 100, "mpg": 6.0}
 
-# ============ TRUCK STOPS ============
+# ==================== TRUCK STOPS ====================
 
 def get_truck_stops_near(lat, lng, radius_miles=100, brands=None):
     conn = get_connection()
@@ -358,7 +399,7 @@ def add_user_fuel_stop(name, brand, address, city, state, lat, lng, price, user_
     conn.commit()
     conn.close()
 
-# ============ MINI APP USERS ============
+# ==================== MINI APP USERS ====================
 
 def save_mini_app_user(telegram_user_id, driver_name, truck_number):
     conn = get_connection()
@@ -383,7 +424,7 @@ def get_mini_app_user(telegram_user_id):
         return {"driver_name": r["driver_name"], "truck_number": r["truck_number"]}
     return None
 
-# ============ DRIVER CREDENTIALS ============
+# ==================== DRIVER CREDENTIALS ====================
 
 def set_driver_credentials(truck_number, password):
     conn = get_connection()
@@ -404,7 +445,7 @@ def verify_driver_login(truck_number, password):
     conn.close()
     return r is not None
 
-# ============ POINTS ============
+# ==================== POINTS ====================
 
 def add_points(driver_id, amount, type, description=""):
     conn = get_connection()
@@ -431,7 +472,7 @@ def get_points_history(driver_id, limit=20):
     conn.close()
     return rows
 
-# ============ PTI ============
+# ==================== PTI ====================
 
 def add_pti(driver_id, pti_number):
     conn = get_connection()
@@ -449,7 +490,7 @@ def get_pti_history(driver_id, limit=20):
     conn.close()
     return rows
 
-# ============ FUEL STATION USAGE ============
+# ==================== FUEL STATION USAGE ====================
 
 def add_fuel_station_usage(driver_id, station_name, station_address, station_lat, station_lng, price):
     conn = get_connection()
@@ -476,7 +517,7 @@ def confirm_fuel_station_usage(usage_id):
     conn.commit()
     conn.close()
 
-# ============ VERIFICATION ============
+# ==================== VERIFICATION ====================
 
 def submit_verification(telegram_user_id, driver_name, truck_number, truck_photo_path):
     conn = get_connection()
@@ -503,7 +544,7 @@ def get_verification(telegram_user_id):
         return {"driver_name": r["driver_name"], "truck_number": r["truck_number"], "truck_photo_path": r["truck_photo_path"], "verified": r["verified"]}
     return None
 
-# ============ CASHOUTS ============
+# ==================== CASHOUTS ====================
 
 def add_cashout(driver_id, points_used, amount_usd, month):
     conn = get_connection()
@@ -521,7 +562,7 @@ def get_cashouts(driver_id):
     conn.close()
     return rows
 
-# ============ ADMIN ============
+# ==================== ADMIN ====================
 
 def get_all_points_summary():
     conn = get_connection()
