@@ -3,29 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FleetPro • Workspace</title>
+    <title>My Truck Safety</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=Google+Sans+Code&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gm-bg: #f8f9fa;
-            --gm-surface: #ffffff;
-            --gm-surface-variant: #f1f3f4;
-            --gm-outline: #e0e0e0;
-            --gm-text-main: #1f1f1f;
-            --gm-text-sub: #444746;
-            --gm-primary: #1a73e8;
-            --gm-primary-hover: #1557b0;
-            --gm-gradient: linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #06b6d4 100%);
-            --gm-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
-            --gm-shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            --gm-radius-sm: 8px;
-            --gm-radius-md: 16px;
-            --gm-radius-lg: 28px;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --surface-variant: #f1f3f4;
+            --outline: #e0e0e0;
+            --text-main: #1f1f1f;
+            --text-sub: #444746;
+            --primary: #1a73e8;
+            --gradient: linear-gradient(135deg, #1a73e8 0%, #0b57d0 100%);
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 28px;
         }
-
         * {
             margin: 0;
             padding: 0;
@@ -33,150 +30,126 @@
             font-family: 'Google Sans Flex', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-
         body {
-            background-color: var(--gm-bg);
-            color: var(--gm-text-main);
+            background: var(--bg);
+            color: var(--text-main);
             min-height: 100vh;
         }
 
-        /* Material UI Base Card */
+        /* Cards */
         .card {
-            background: var(--gm-surface);
-            border-radius: var(--gm-radius-md);
+            background: var(--surface);
+            border-radius: var(--radius-md);
             padding: 24px;
             margin-bottom: 20px;
-            border: 1px solid var(--gm-outline);
-            box-shadow: var(--gm-shadow);
+            border: 1px solid var(--outline);
+            box-shadow: var(--shadow);
         }
-
         .card h3 {
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 16px;
-            color: var(--gm-text-main);
         }
 
-        /* Standard Modern Buttons */
+        /* Buttons */
         .btn-primary {
             width: 100%;
             padding: 14px 24px;
-            background: var(--gm-primary);
-            color: #ffffff;
+            background: var(--gradient);
+            color: #fff;
             border: none;
-            border-radius: var(--gm-radius-lg);
+            border-radius: var(--radius-lg);
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: var(--gm-shadow);
+            box-shadow: var(--shadow);
+            transition: opacity 0.2s;
         }
-
         .btn-primary:hover {
-            background: var(--gm-primary-hover);
-            box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+            opacity: 0.92;
         }
-
         .btn-secondary {
             width: 100%;
             padding: 10px 18px;
-            background: var(--gm-surface-variant);
-            color: var(--gm-text-main);
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-lg);
+            background: var(--surface-variant);
+            color: var(--text-main);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-lg);
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
             margin-top: 8px;
         }
 
-        .btn-secondary:hover {
-            background: #e8eaed;
-        }
-
-        /* ===== GEMINI LOGIN ===== */
+        /* ===== LOGIN ===== */
         .login-wrap {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
-            background: var(--gm-bg);
+            background: var(--bg);
         }
-
         .login-box {
             width: 100%;
             max-width: 420px;
-            background: var(--gm-surface);
-            border-radius: var(--gm-radius-lg);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
             padding: 40px 32px;
-            border: 1px solid var(--gm-outline);
-            box-shadow: var(--gm-shadow-lg);
+            border: 1px solid var(--outline);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
         }
-
         .login-icon {
             text-align: center;
             font-size: 36px;
             margin-bottom: 12px;
-            background: var(--gm-gradient);
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: inline-block;
             width: 100%;
         }
-
         .login-title {
             text-align: center;
             font-size: 28px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: var(--gm-text-main);
         }
-
         .login-sub {
             text-align: center;
             font-size: 14px;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
             margin-bottom: 32px;
         }
-
         .input-group, .form-group {
             margin-bottom: 18px;
         }
-
         .input-group label, .form-group label {
             display: block;
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
             margin-bottom: 8px;
         }
-
         .input-group input, .form-group input {
             width: 100%;
             padding: 14px 18px;
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-sm);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-sm);
             font-size: 15px;
-            background: var(--gm-bg);
-            color: var(--gm-text-main);
+            background: var(--bg);
             outline: none;
-            transition: border-color 0.2s, background 0.2s;
+            transition: border 0.2s;
         }
-
         .input-group input:focus, .form-group input:focus {
-            border-color: var(--gm-primary);
-            background: var(--gm-surface);
+            border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
         }
-
         .password-wrap {
             position: relative;
         }
-
         .toggle-eye {
             position: absolute;
             right: 14px;
@@ -186,41 +159,31 @@
             font-size: 18px;
             opacity: 0.6;
         }
-
         .remember-row {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 24px;
             font-size: 14px;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
         }
-
         .remember-row input {
             width: 18px;
             height: 18px;
-            accent-color: var(--gm-primary);
-            cursor: pointer;
+            accent-color: var(--primary);
         }
-
         .login-btn, .register-btn {
             width: 100%;
             padding: 14px;
-            background: var(--gm-gradient);
+            background: var(--gradient);
             color: white;
             border: none;
-            border-radius: var(--gm-radius-lg);
+            border-radius: var(--radius-lg);
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: var(--gm-shadow);
-            transition: opacity 0.2s;
+            box-shadow: var(--shadow);
         }
-
-        .login-btn:hover, .register-btn:hover {
-            opacity: 0.92;
-        }
-
         .error-msg {
             color: #d93025;
             font-size: 13px;
@@ -233,99 +196,92 @@
         .app-screen {
             display: none;
             min-height: 100vh;
+            padding-bottom: 80px; /* space for bottom nav */
         }
-
         .top-bar {
-            background: var(--gm-surface);
-            border-bottom: 1px solid var(--gm-outline);
+            background: var(--surface);
+            border-bottom: 1px solid var(--outline);
             padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
-
         .top-bar h2 {
             font-size: 20px;
             font-weight: 700;
-            background: var(--gm-gradient);
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .top-bar .info-chip {
-            background: var(--gm-surface-variant);
-            border: 1px solid var(--gm-outline);
+            background: var(--surface-variant);
+            border: 1px solid var(--outline);
             padding: 6px 16px;
-            border-radius: var(--gm-radius-lg);
+            border-radius: var(--radius-lg);
             font-size: 13px;
             font-weight: 500;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
         }
-
-        .tabs {
-            display: flex;
-            background: var(--gm-surface);
-            border-bottom: 1px solid var(--gm-outline);
-            padding: 0 12px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            flex: 1;
-            min-width: 80px;
-            padding: 14px 12px;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gm-text-sub);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            color: var(--gm-primary);
-            border-bottom-color: var(--gm-primary);
-            font-weight: 600;
-        }
-
-        .tab .tab-icon {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-
         .content {
             padding: 24px;
             max-width: 800px;
             margin: 0 auto;
         }
 
-        .footer {
-            text-align: center;
-            padding: 24px;
-            font-size: 13px;
-            color: var(--gm-text-sub);
-            border-top: 1px solid var(--gm-outline);
-            background: var(--gm-surface);
-            margin-top: 40px;
+        /* BOTTOM NAVIGATION */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--outline);
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            z-index: 100;
         }
-
-        .footer a {
-            color: var(--gm-primary);
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 4px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-sub);
+            transition: background 0.2s;
             text-decoration: none;
+            font-size: 11px;
             font-weight: 500;
         }
+        .nav-item:hover {
+            background: var(--surface-variant);
+        }
+        .nav-item.active {
+            color: var(--primary);
+            background: #e8f0fe;
+        }
+        .nav-icon {
+            font-size: 22px;
+        }
 
-        /* ===== WORKSPACE ADMIN PANEL ===== */
+        /* ===== ADMIN PANEL ===== */
         .admin-screen {
             display: none;
             min-height: 100vh;
         }
-
         .admin-topbar {
-            background: var(--gm-surface);
-            border-bottom: 1px solid var(--gm-outline);
+            background: var(--surface);
+            border-bottom: 1px solid var(--outline);
             padding: 16px 24px;
             display: flex;
             justify-content: space-between;
@@ -334,196 +290,156 @@
             top: 0;
             z-index: 100;
         }
-
         .admin-topbar h2 {
             font-size: 20px;
             font-weight: 700;
-            color: var(--gm-text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--text-main);
         }
-
-        .admin-topbar h2::before {
-            content: '';
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--gm-gradient);
-        }
-
         .admin-logout-btn {
             background: transparent;
             padding: 8px 18px;
-            border-radius: var(--gm-radius-lg);
+            border-radius: var(--radius-lg);
             font-size: 13px;
             cursor: pointer;
-            border: 1px solid var(--gm-outline);
-            color: var(--gm-text-sub);
+            border: 1px solid var(--outline);
+            color: var(--text-sub);
             font-weight: 500;
-            transition: background 0.2s;
         }
-
-        .admin-logout-btn:hover {
-            background: var(--gm-surface-variant);
-            color: var(--gm-text-main);
-        }
-
-        /* Sidebar & Content Layout for Admin */
         .admin-layout {
             display: flex;
             min-height: calc(100vh - 65px);
         }
-
         .admin-nav {
             width: 260px;
-            background: var(--gm-surface);
-            border-right: 1px solid var(--gm-outline);
+            background: var(--surface);
+            border-right: 1px solid var(--outline);
             padding: 16px 12px;
             display: flex;
             flex-direction: column;
             gap: 4px;
-            flex-shrink: 0;
         }
-
         .admin-nav-item {
             display: flex;
             align-items: center;
             padding: 12px 18px;
-            border-radius: var(--gm-radius-lg);
+            border-radius: var(--radius-lg);
             cursor: pointer;
             transition: background 0.15s;
         }
-
         .admin-nav-item:hover {
-            background: var(--gm-surface-variant);
+            background: var(--surface-variant);
         }
-
         .admin-nav-item.active {
             background: #e8f0fe;
         }
-
         .admin-nav-item.active .admin-nav-label {
-            color: var(--gm-primary);
+            color: var(--primary);
             font-weight: 600;
         }
-
         .admin-nav-icon {
             font-size: 18px;
             margin-right: 14px;
             width: 24px;
             text-align: center;
         }
-
         .admin-nav-label {
             font-size: 14px;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
             font-weight: 500;
         }
-
         .admin-content {
             flex-grow: 1;
             padding: 32px;
             max-width: 1000px;
         }
-
-        /* Material Data Grids */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
-
         .stat-card {
-            background: var(--gm-surface);
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-md);
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-md);
             padding: 20px;
-            text-align: left;
-            box-shadow: var(--gm-shadow);
+            box-shadow: var(--shadow);
         }
-
         .stat-card .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: var(--gm-text-main);
             letter-spacing: -1px;
         }
-
         .stat-card .stat-label {
             font-size: 13px;
-            font-weight: 500;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
             margin-top: 4px;
         }
-
         .table-wrap {
             overflow-x: auto;
-            background: var(--gm-surface);
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-md);
+            background: var(--surface);
+            border: 1px solid var(--outline);
+            border-radius: var(--radius-md);
             margin-top: 16px;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
         }
-
         th {
             text-align: left;
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            color: var(--gm-text-sub);
+            color: var(--text-sub);
             padding: 14px 18px;
-            background: var(--gm-surface-variant);
-            border-bottom: 1px solid var(--gm-outline);
+            background: var(--surface-variant);
+            border-bottom: 1px solid var(--outline);
         }
-
         td {
             padding: 14px 18px;
             font-size: 14px;
-            color: var(--gm-text-main);
-            border-bottom: 1px solid var(--gm-outline);
+            border-bottom: 1px solid var(--outline);
         }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .list-item {
-            padding: 14px 0;
-            border-bottom: 1px solid var(--gm-outline);
-            font-size: 14px;
-        }
-
-        .list-item:last-child {
-            border-bottom: none;
-        }
-
         .hidden { display: none !important; }
         .result-box { margin-top: 16px; }
-        .loading { text-align: center; color: var(--gm-text-sub); padding: 20px; font-size: 14px; }
-        .success { color: #188038; font-weight: 500; }
-        .error { color: #d93025; font-weight: 500; }
+        .loading { text-align: center; color: var(--text-sub); padding: 20px; }
+        .success { color: #188038; }
+        .error { color: #d93025; }
 
         @media (max-width: 768px) {
-            .admin-layout { flex-direction: column; }
-            .admin-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--gm-outline); }
-            .admin-content { padding: 16px; }
+            .admin-layout {
+                flex-direction: column;
+            }
+            .admin-nav {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--outline);
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 8px;
+            }
+            .admin-nav-item {
+                flex-shrink: 0;
+                padding: 10px 14px;
+            }
+            .admin-nav-label {
+                font-size: 12px;
+            }
+            .admin-content {
+                padding: 16px;
+            }
         }
     </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen" class="login-wrap">
     <div class="login-box">
-        <div class="login-icon">✦</div>
-        <h1 class="login-title">FleetPro</h1>
-        <p class="login-sub">Workspace Fleet Management System</p>
+        <div class="login-icon">🚛</div>
+        <h1 class="login-title">My Truck Safety</h1>
+        <p class="login-sub">Fleet Management System</p>
         <div class="input-group">
             <label>Truck Number</label>
             <input type="text" id="loginTruck" placeholder="e.g., 88817">
@@ -544,19 +460,14 @@
     </div>
 </div>
 
+<!-- DRIVER APP -->
 <div id="appScreen" class="app-screen">
     <div class="top-bar">
-        <h2>FleetPro</h2>
+        <h2>My Truck Safety</h2>
         <div class="info-chip" id="truckInfo">Truck: -</div>
     </div>
-    <div class="tabs">
-        <div class="tab active" data-tab="fuel" onclick="showTab('fuel')"><span class="tab-icon">⛽</span>Fuel</div>
-        <div class="tab" data-tab="pti" onclick="showTab('pti')"><span class="tab-icon">📋</span>PTI</div>
-        <div class="tab" data-tab="points" onclick="showTab('points')"><span class="tab-icon">💰</span>Points</div>
-        <div class="tab" data-tab="verify" onclick="showTab('verify')"><span class="tab-icon">✅</span>Verify</div>
-        <div class="tab" data-tab="history" onclick="showTab('history')"><span class="tab-icon">📜</span>History</div>
-    </div>
     <div class="content">
+        <!-- Fuel -->
         <div id="fuel" class="tab-content">
             <div class="card">
                 <h3>Search Fuel Stations</h3>
@@ -565,6 +476,7 @@
                 <div id="fuelResult" class="result-box hidden"></div>
             </div>
         </div>
+        <!-- PTI -->
         <div id="pti" class="tab-content hidden">
             <div class="card">
                 <h3>Submit PTI Inspection</h3>
@@ -573,6 +485,7 @@
                 <div id="ptiResult" class="result-box hidden"></div>
             </div>
         </div>
+        <!-- Points -->
         <div id="points" class="tab-content hidden">
             <div class="card">
                 <h3>My Points Balance</h3>
@@ -580,6 +493,7 @@
                 <div id="pointsResult" class="result-box hidden"></div>
             </div>
         </div>
+        <!-- Verify -->
         <div id="verify" class="tab-content hidden">
             <div class="card">
                 <h3>Verify Vehicle Inspection</h3>
@@ -589,6 +503,7 @@
                 <div id="verifyResult" class="result-box hidden"></div>
             </div>
         </div>
+        <!-- History -->
         <div id="history" class="tab-content hidden">
             <div class="card">
                 <h3>Driver History & Activity</h3>
@@ -597,9 +512,28 @@
             </div>
         </div>
     </div>
-    <div class="footer"><a href="#" onclick="logout()">Sign Out</a> • <a href="/donate">Support System</a></div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a class="nav-item active" data-tab="fuel" onclick="showTab('fuel')">
+            <span class="nav-icon">⛽</span><span>Fuel</span>
+        </a>
+        <a class="nav-item" data-tab="pti" onclick="showTab('pti')">
+            <span class="nav-icon">📋</span><span>PTI</span>
+        </a>
+        <a class="nav-item" data-tab="points" onclick="showTab('points')">
+            <span class="nav-icon">💰</span><span>Points</span>
+        </a>
+        <a class="nav-item" data-tab="verify" onclick="showTab('verify')">
+            <span class="nav-icon">✅</span><span>Verify</span>
+        </a>
+        <a class="nav-item" data-tab="history" onclick="showTab('history')">
+            <span class="nav-icon">📜</span><span>History</span>
+        </a>
+    </div>
 </div>
 
+<!-- ADMIN PANEL -->
 <div id="adminScreen" class="admin-screen">
     <div class="admin-topbar">
         <h2>Admin Console</h2>
@@ -634,15 +568,16 @@
         </div>
 
         <div class="admin-content">
+            <!-- Overview -->
             <div id="overview" class="admin-section">
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Active Drivers</div></div>
                     <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">Completed PTIs</div></div>
                     <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Logs</div></div>
                 </div>
-                <button class="btn-primary" onclick="loadOverview()">Refresh Overview Statistics</button>
+                <button class="btn-primary" onclick="loadOverview()">Refresh Statistics</button>
             </div>
-
+            <!-- Assign -->
             <div id="assign" class="admin-section hidden">
                 <div class="card">
                     <h3>Samsara Telematics Vehicles</h3>
@@ -650,7 +585,7 @@
                     <div id="samsaraVehicles" class="result-box hidden"></div>
                 </div>
             </div>
-
+            <!-- Register -->
             <div id="register" class="admin-section hidden">
                 <div class="card">
                     <h3>Register New Fleet Driver</h3>
@@ -664,7 +599,7 @@
                     <div id="registerResult" class="result-box hidden"></div>
                 </div>
             </div>
-
+            <!-- Trucks & Fuel -->
             <div id="trucks" class="admin-section hidden">
                 <div class="card">
                     <h3>Registered Fleet & Fuel Level Monitors</h3>
@@ -672,7 +607,7 @@
                     <div id="trucksFuelResult" class="result-box hidden"></div>
                 </div>
             </div>
-
+            <!-- Drivers -->
             <div id="drivers" class="admin-section hidden">
                 <div class="card">
                     <h3>Active Driver Database</h3>
@@ -680,7 +615,7 @@
                     <div id="driversListResult" class="result-box hidden"></div>
                 </div>
             </div>
-
+            <!-- PTI -->
             <div id="pti" class="admin-section hidden">
                 <div class="card">
                     <h3>Pre-Trip Inspection Logs</h3>
@@ -688,7 +623,7 @@
                     <div id="ptiListResult" class="result-box hidden"></div>
                 </div>
             </div>
-
+            <!-- Fuel Log -->
             <div id="fuel" class="admin-section hidden">
                 <div class="card">
                     <h3>Fuel Usage Audit Trail</h3>
@@ -696,7 +631,7 @@
                     <div id="fuelLogResult" class="result-box hidden"></div>
                 </div>
             </div>
-
+            <!-- Details -->
             <div id="details" class="admin-section hidden">
                 <div class="card">
                     <h3>Driver File Search</h3>
@@ -793,12 +728,13 @@
     }
 
     function showTab(tabId) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById(tabId).classList.remove('hidden');
-        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
     }
 
+    // Admin navigation (sidebar)
     function openAdminPage(page) {
         document.querySelectorAll('.admin-nav-item').forEach(item => item.classList.remove('active'));
         document.querySelectorAll('.admin-section').forEach(section => section.classList.add('hidden'));
@@ -814,6 +750,7 @@
         if (page === 'fuel') loadFuelLog();
     }
 
+    // ===== ADMIN DATA LOADING =====
     async function loadOverview() {
         try {
             const resp = await fetch('/api/admin-summary', { method: 'GET' });
@@ -821,7 +758,7 @@
             document.getElementById('totalDrivers').textContent = data.points.length;
             document.getElementById('totalPTIs').textContent = data.pti.length;
             document.getElementById('totalFuelStops').textContent = data.fuel_usage.length;
-        } catch (err) { }
+        } catch (err) {}
     }
 
     async function loadSamsaraVehicles() {
@@ -957,7 +894,7 @@
             const data = await resp.json();
             let html = '<h4 style="margin-bottom:12px;">Driver Roster & Points</h4>';
             data.points.forEach(p => {
-                html += `<div class="list-item">Driver <b>${p.driver_id}</b>: <span style="color:var(--gm-primary);font-weight:600;">${p.balance} pts</span></div>`;
+                html += `<div class="list-item">Driver <b>${p.driver_id}</b>: <span style="color:var(--primary);font-weight:600;">${p.balance} pts</span></div>`;
             });
             resDiv.innerHTML = html;
         } catch (err) {
@@ -979,6 +916,166 @@
             resDiv.innerHTML = html;
         } catch (err) {
             resDiv.innerHTML = '<div class="error">Failed loading PTI logs</div>';
+        }
+    }
+
+    async function loadFuelLog() {
+        const resDiv = document.getElementById('fuelLogResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Retrieving fuel logs...</div>';
+        try {
+            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4 style="margin-bottom:12px;">Fuel Usage Audit Trail</h4>';
+            data.fuel_usage.forEach(f => {
+                html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`;
+            });
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Failed loading fuel logs</div>';
+        }
+    }
+
+    async function loadDriverDetails() {
+        const truck = document.getElementById('searchTruck').value.trim();
+        const resDiv = document.getElementById('detailsResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Searching...</div>';
+        try {
+            const resp = await fetch('/api/driver-details/' + truck, { method: 'GET' });
+            const data = await resp.json();
+            if (data.error) {
+                resDiv.innerHTML = `<div class="error">${data.error}</div>`;
+            } else {
+                resDiv.innerHTML = `<h4>Driver ${truck}</h4>
+                    <div class="list-item">Points: ${data.points}</div>
+                    <div class="list-item">PTIs: ${data.pti_count}</div>
+                    <div class="list-item">Vehicle: ${data.vehicle_id}</div>`;
+            }
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Error</div>';
+        }
+    }
+
+    // ===== DRIVER FUNCTIONS =====
+    async function searchFuel() {
+        const dest = document.getElementById('fuelDest').value.trim();
+        const resDiv = document.getElementById('fuelResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Searching...</div>';
+        try {
+            const resp = await fetch('/api/fuel-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ destination: dest, init_data: initData })
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                resDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                return;
+            }
+            let html = '<h4>Stations</h4>';
+            data.stations.forEach(s => {
+                html += `<div class="list-item"><b>${s.name}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="btn-secondary" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
+            });
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function useStation(name, address, lat, lng, price) {
+        if (!confirm('Confirm?')) return;
+        try {
+            const resp = await fetch('/api/use-station', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: initData })
+            });
+            const data = await resp.json();
+            alert(data.message || 'Recorded!');
+        } catch (err) {
+            alert('Error');
+        }
+    }
+
+    async function submitPTI() {
+        const pti = document.getElementById('ptiNum').value.trim();
+        if (!pti) { alert('Enter PTI'); return; }
+        const resDiv = document.getElementById('ptiResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Submitting...</div>';
+        try {
+            const resp = await fetch('/api/submit-pti', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pti_number: pti, init_data: initData })
+            });
+            const data = await resp.json();
+            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function showPoints() {
+        const resDiv = document.getElementById('pointsResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/points', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ init_data: initData })
+            });
+            const data = await resp.json();
+            let html = `<h3>Balance: ${data.balance} pts</h3>`;
+            data.history.forEach(t => html += `<div class="list-item">${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount}</div>`);
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function submitVerification() {
+        const name = document.getElementById('verifyName').value.trim();
+        const photoInput = document.getElementById('verifyPhoto');
+        if (!name || !photoInput.files.length) { alert('Fill all'); return; }
+        const resDiv = document.getElementById('verifyResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Uploading...</div>';
+        const fd = new FormData();
+        fd.append('driver_name', name);
+        fd.append('truck_number', localStorage.getItem('remTruck') || '');
+        fd.append('photo', photoInput.files[0]);
+        fd.append('init_data', initData);
+        try {
+            const resp = await fetch('/api/verify', { method: 'POST', body: fd });
+            const data = await resp.json();
+            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
+        }
+    }
+
+    async function showHistory() {
+        const resDiv = document.getElementById('historyResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ init_data: initData })
+            });
+            const data = await resp.json();
+            let html = '<h3>Fuel</h3>';
+            data.fuel_usage.forEach(u => html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`);
+            html += '<h3>PTI</h3>';
+            data.pti_history.forEach(p => html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`);
+            resDiv.innerHTML = html;
+        } catch (err) {
+            resDiv.innerHTML = '<div class="error">Network error</div>';
         }
     }
 </script>
