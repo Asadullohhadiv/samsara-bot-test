@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import Optional
+import requests  # NEW for sending Telegram messages
 import config
 from database import (
     get_mini_app_user, save_mini_app_user,
@@ -22,7 +23,12 @@ from database import (
     get_driver_by_truck,
     list_all_drivers_admin
 )
-from samsara_client import find_vehicle_by_truck_number, get_vehicle_stats
+from samsara_client import (
+    find_vehicle_by_truck_number,
+    get_vehicle_stats,
+    get_all_vehicles,  # NEW
+    get_driver_for_vehicle
+)
 from fuel_service import get_comprehensive_fuel_info
 from route_service import geocode_address_to_coords
 import shutil
@@ -50,6 +56,15 @@ def get_user_from_init_data(init_data: str):
         return json.loads(user_json)
     except:
         return None
+
+def send_telegram_message(chat_id, text):
+    """Send a message to a Telegram group using the bot token."""
+    try:
+        url = f"https://api.telegram.org/bot{config.TELEGRAM_TOKEN}/sendMessage"
+        payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
+        requests.post(url, json=payload, timeout=5)
+    except Exception as e:
+        print(f"❌ Failed to send Telegram message: {e}")
 
 # ---- Routes ----
 
@@ -127,17 +142,73 @@ async def admin_register_driver_api(req: AdminRegisterDriverRequest):
             password=req.password,
             truck_license=req.truck_license
         )
+        # Send login info to the group
+        send_telegram_message(
+            req.group_id,
+            f"🚛 **Welcome aboard!**\n\n"
+            f"Truck: `{req.truck_number}`\n"
+            f"Login Password: `{req.password}`\n\n"
+            f"Please open the Driver App and log in with these credentials."
+        )
         return {"success": True, "message": f"Driver {req.truck_number} registered successfully!"}
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Admin: Get all drivers ----
+# ---- Admin: List Samsara Vehicles ----
 
-@app.get("/api/admin/drivers")
-async def admin_list_drivers():
+@app.get("/api/samsara-vehicles")
+async def samsara_vehicles_api():
     try:
-        drivers = list_all_drivers_admin()
-        return {"drivers": drivers}
+        vehicles = get_all_vehicles()
+        # Format for frontend
+        result = []
+        for v in vehicles:
+            result.append({
+                "id": v.get("id"),
+                "name": v.get("name", ""),
+                "externalIds": v.get("externalIds", {}),
+                "driverId": v.get("driver", {}).get("id") if v.get("driver") else None
+            })
+        return {"vehicles": result}
+    except Exception as e:
+        return {"error": str(e)}
+
+# ---- Admin: Assign Driver (from Samsara vehicle) ----
+
+class AssignDriverRequest(BaseModel):
+    vehicle_id: str
+    truck_number: str
+    group_id: int
+    password: str
+    truck_license: str = ""
+
+@app.post("/api/admin/assign-driver")
+async def admin_assign_driver_api(req: AssignDriverRequest):
+    if not req.vehicle_id or not req.truck_number or not req.group_id or not req.password:
+        return {"error": "All required fields must be filled"}
+    try:
+        # Fetch driver id from Samsara if not provided
+        driver_id = get_driver_for_vehicle(req.vehicle_id) or f"driver_{req.truck_number}"
+        
+        # Register driver in database
+        register_driver_admin(
+            truck_number=req.truck_number,
+            chat_id=req.group_id,
+            samsara_driver_id=driver_id,
+            vehicle_id=req.vehicle_id,
+            password=req.password,
+            truck_license=req.truck_license
+        )
+        
+        # Send login info to the group
+        send_telegram_message(
+            req.group_id,
+            f"🚛 **Welcome aboard!**\n\n"
+            f"Truck: `{req.truck_number}`\n"
+            f"Login Password: `{req.password}`\n\n"
+            f"Please open the Driver App and log in with these credentials."
+        )
+        return {"success": True, "message": f"Truck {req.truck_number} assigned successfully!"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -327,15 +398,13 @@ async def admin_summary_api():
         "fuel_usage": fuel_list
     }
 
-# ---- Driver Details API (for admin) ----
+# ---- Driver Details API ----
 
 @app.get("/api/driver-details/{truck_number}")
 async def driver_details_api(truck_number: str):
     driver = get_driver_by_truck(truck_number)
     if not driver:
         return {"error": "Driver not found"}
-    
-    # Get points
     conn = get_connection()
     c = conn.cursor()
     c.execute('SELECT COALESCE(SUM(amount),0) FROM points WHERE driver_id = %s', (truck_number,))
@@ -343,7 +412,6 @@ async def driver_details_api(truck_number: str):
     c.execute('SELECT COUNT(*) FROM pti_submissions WHERE driver_id = %s', (truck_number,))
     pti_count = c.fetchone()[0]
     conn.close()
-    
     return {
         "truck_number": truck_number,
         "driver_id": driver["samsara_driver_id"],
