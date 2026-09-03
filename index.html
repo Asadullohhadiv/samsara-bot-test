@@ -1,986 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FleetPro • Workspace</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&family=Google+Sans+Code&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --gm-bg: #f8f9fa;
-            --gm-surface: #ffffff;
-            --gm-surface-variant: #f1f3f4;
-            --gm-outline: #e0e0e0;
-            --gm-text-main: #1f1f1f;
-            --gm-text-sub: #444746;
-            --gm-primary: #1a73e8;
-            --gm-primary-hover: #1557b0;
-            --gm-gradient: linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #06b6d4 100%);
-            --gm-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.12);
-            --gm-shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            --gm-radius-sm: 8px;
-            --gm-radius-md: 16px;
-            --gm-radius-lg: 28px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Google Sans Flex', -apple-system, BlinkMacSystemFont, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--gm-bg);
-            color: var(--gm-text-main);
-            min-height: 100vh;
-        }
-
-        /* Material UI Base Card */
-        .card {
-            background: var(--gm-surface);
-            border-radius: var(--gm-radius-md);
-            padding: 24px;
-            margin-bottom: 20px;
-            border: 1px solid var(--gm-outline);
-            box-shadow: var(--gm-shadow);
-        }
-
-        .card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--gm-text-main);
-        }
-
-        /* Standard Modern Buttons */
-        .btn-primary {
-            width: 100%;
-            padding: 14px 24px;
-            background: var(--gm-primary);
-            color: #ffffff;
-            border: none;
-            border-radius: var(--gm-radius-lg);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: var(--gm-shadow);
-        }
-
-        .btn-primary:hover {
-            background: var(--gm-primary-hover);
-            box-shadow: 0 2px 6px rgba(26,115,232,0.3);
-        }
-
-        .btn-secondary {
-            width: 100%;
-            padding: 10px 18px;
-            background: var(--gm-surface-variant);
-            color: var(--gm-text-main);
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-lg);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 8px;
-        }
-
-        .btn-secondary:hover {
-            background: #e8eaed;
-        }
-
-        /* ===== GEMINI LOGIN ===== */
-        .login-wrap {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: var(--gm-bg);
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 420px;
-            background: var(--gm-surface);
-            border-radius: var(--gm-radius-lg);
-            padding: 40px 32px;
-            border: 1px solid var(--gm-outline);
-            box-shadow: var(--gm-shadow-lg);
-        }
-
-        .login-icon {
-            text-align: center;
-            font-size: 36px;
-            margin-bottom: 12px;
-            background: var(--gm-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .login-title {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--gm-text-main);
-        }
-
-        .login-sub {
-            text-align: center;
-            font-size: 14px;
-            color: var(--gm-text-sub);
-            margin-bottom: 32px;
-        }
-
-        .input-group, .form-group {
-            margin-bottom: 18px;
-        }
-
-        .input-group label, .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--gm-text-sub);
-            margin-bottom: 8px;
-        }
-
-        .input-group input, .form-group input {
-            width: 100%;
-            padding: 14px 18px;
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-sm);
-            font-size: 15px;
-            background: var(--gm-bg);
-            color: var(--gm-text-main);
-            outline: none;
-            transition: border-color 0.2s, background 0.2s;
-        }
-
-        .input-group input:focus, .form-group input:focus {
-            border-color: var(--gm-primary);
-            background: var(--gm-surface);
-            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
-        }
-
-        .password-wrap {
-            position: relative;
-        }
-
-        .toggle-eye {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            font-size: 18px;
-            opacity: 0.6;
-        }
-
-        .remember-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            color: var(--gm-text-sub);
-        }
-
-        .remember-row input {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--gm-primary);
-            cursor: pointer;
-        }
-
-        .login-btn, .register-btn {
-            width: 100%;
-            padding: 14px;
-            background: var(--gm-gradient);
-            color: white;
-            border: none;
-            border-radius: var(--gm-radius-lg);
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: var(--gm-shadow);
-            transition: opacity 0.2s;
-        }
-
-        .login-btn:hover, .register-btn:hover {
-            opacity: 0.92;
-        }
-
-        .error-msg {
-            color: #d93025;
-            font-size: 13px;
-            text-align: center;
-            margin-top: 14px;
-            display: none;
-        }
-
-        /* ===== DRIVER APP ===== */
-        .app-screen {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .top-bar {
-            background: var(--gm-surface);
-            border-bottom: 1px solid var(--gm-outline);
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .top-bar h2 {
-            font-size: 20px;
-            font-weight: 700;
-            background: var(--gm-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .top-bar .info-chip {
-            background: var(--gm-surface-variant);
-            border: 1px solid var(--gm-outline);
-            padding: 6px 16px;
-            border-radius: var(--gm-radius-lg);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gm-text-sub);
-        }
-
-        .tabs {
-            display: flex;
-            background: var(--gm-surface);
-            border-bottom: 1px solid var(--gm-outline);
-            padding: 0 12px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            flex: 1;
-            min-width: 80px;
-            padding: 14px 12px;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gm-text-sub);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            color: var(--gm-primary);
-            border-bottom-color: var(--gm-primary);
-            font-weight: 600;
-        }
-
-        .tab .tab-icon {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-
-        .content {
-            padding: 24px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 24px;
-            font-size: 13px;
-            color: var(--gm-text-sub);
-            border-top: 1px solid var(--gm-outline);
-            background: var(--gm-surface);
-            margin-top: 40px;
-        }
-
-        .footer a {
-            color: var(--gm-primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        /* ===== WORKSPACE ADMIN PANEL ===== */
-        .admin-screen {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .admin-topbar {
-            background: var(--gm-surface);
-            border-bottom: 1px solid var(--gm-outline);
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .admin-topbar h2 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--gm-text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .admin-topbar h2::before {
-            content: '';
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--gm-gradient);
-        }
-
-        .admin-logout-btn {
-            background: transparent;
-            padding: 8px 18px;
-            border-radius: var(--gm-radius-lg);
-            font-size: 13px;
-            cursor: pointer;
-            border: 1px solid var(--gm-outline);
-            color: var(--gm-text-sub);
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .admin-logout-btn:hover {
-            background: var(--gm-surface-variant);
-            color: var(--gm-text-main);
-        }
-
-        /* Sidebar & Content Layout for Admin */
-        .admin-layout {
-            display: flex;
-            min-height: calc(100vh - 65px);
-        }
-
-        .admin-nav {
-            width: 260px;
-            background: var(--gm-surface);
-            border-right: 1px solid var(--gm-outline);
-            padding: 16px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .admin-nav-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 18px;
-            border-radius: var(--gm-radius-lg);
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .admin-nav-item:hover {
-            background: var(--gm-surface-variant);
-        }
-
-        .admin-nav-item.active {
-            background: #e8f0fe;
-        }
-
-        .admin-nav-item.active .admin-nav-label {
-            color: var(--gm-primary);
-            font-weight: 600;
-        }
-
-        .admin-nav-icon {
-            font-size: 18px;
-            margin-right: 14px;
-            width: 24px;
-            text-align: center;
-        }
-
-        .admin-nav-label {
-            font-size: 14px;
-            color: var(--gm-text-sub);
-            font-weight: 500;
-        }
-
-        .admin-content {
-            flex-grow: 1;
-            padding: 32px;
-            max-width: 1000px;
-        }
-
-        /* Material Data Grids */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: var(--gm-surface);
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-md);
-            padding: 20px;
-            text-align: left;
-            box-shadow: var(--gm-shadow);
-        }
-
-        .stat-card .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--gm-text-main);
-            letter-spacing: -1px;
-        }
-
-        .stat-card .stat-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gm-text-sub);
-            margin-top: 4px;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-            background: var(--gm-surface);
-            border: 1px solid var(--gm-outline);
-            border-radius: var(--gm-radius-md);
-            margin-top: 16px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--gm-text-sub);
-            padding: 14px 18px;
-            background: var(--gm-surface-variant);
-            border-bottom: 1px solid var(--gm-outline);
-        }
-
-        td {
-            padding: 14px 18px;
-            font-size: 14px;
-            color: var(--gm-text-main);
-            border-bottom: 1px solid var(--gm-outline);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .list-item {
-            padding: 14px 0;
-            border-bottom: 1px solid var(--gm-outline);
-            font-size: 14px;
-        }
-
-        .list-item:last-child {
-            border-bottom: none;
-        }
-
-        .hidden { display: none !important; }
-        .result-box { margin-top: 16px; }
-        .loading { text-align: center; color: var(--gm-text-sub); padding: 20px; font-size: 14px; }
-        .success { color: #188038; font-weight: 500; }
-        .error { color: #d93025; font-weight: 500; }
-
-        @media (max-width: 768px) {
-            .admin-layout { flex-direction: column; }
-            .admin-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--gm-outline); }
-            .admin-content { padding: 16px; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Truck Safety</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Custom floating dock glassmorphism effect */
+    .dock-backdrop {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen pb-28">
 
-<div id="loginScreen" class="login-wrap">
-    <div class="login-box">
-        <div class="login-icon">✦</div>
-        <h1 class="login-title">FleetPro</h1>
-        <p class="login-sub">Workspace Fleet Management System</p>
-        <div class="input-group">
-            <label>Truck Number</label>
-            <input type="text" id="loginTruck" placeholder="e.g., 88817">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
         </div>
-        <div class="input-group">
-            <label>Password</label>
-            <div class="password-wrap">
-                <input type="password" id="loginPass" placeholder="Enter security password">
-                <span class="toggle-eye" onclick="togglePass()">👁️</span>
-            </div>
+        <div>
+          <h1 class="font-bold text-slate-900 text-base leading-tight">My Truck Safety</h1>
+          <p class="text-xs text-slate-500 font-medium">Fleet Management System</p>
         </div>
-        <div class="remember-row">
-            <input type="checkbox" id="rememberMe">
-            <label for="rememberMe">Remember login details</label>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div class="bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+          <i data-lucide="truck" class="w-3.5 h-3.5 text-slate-500"></i>
+          <span>Truck #88817</span>
         </div>
-        <button class="login-btn" onclick="login()">Sign In</button>
-        <div id="loginError" class="error-msg"></div>
+        <button onclick="toggleAuthModal()" class="text-xs font-semibold text-slate-600 hover:text-red-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-slate-100">
+          Sign Out
+        </button>
+      </div>
+
     </div>
-</div>
+  </header>
 
-<div id="appScreen" class="app-screen">
-    <div class="top-bar">
-        <h2>FleetPro</h2>
-        <div class="info-chip" id="truckInfo">Truck: -</div>
+  <main class="max-w-3xl mx-auto px-4 pt-8">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 md:p-8 text-center">
+      <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
+        <i data-lucide="file-clock" class="w-6 h-6"></i>
+      </div>
+      
+      <h2 class="text-xl font-bold text-slate-900">Driver History & Activity</h2>
+      <p class="text-sm text-slate-500 mt-1 mb-6 max-w-md mx-auto">Fetch and review your pre-trip inspection logs, fuel reports, and safety verification history.</p>
+      
+      <button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-lg shadow-blue-500/20 transition-all duration-150">
+        <i data-lucide="folder-search" class="w-4 h-4"></i>
+        Fetch Log History
+      </button>
     </div>
-    <div class="tabs">
-        <div class="tab active" data-tab="fuel" onclick="showTab('fuel')"><span class="tab-icon">⛽</span>Fuel</div>
-        <div class="tab" data-tab="pti" onclick="showTab('pti')"><span class="tab-icon">📋</span>PTI</div>
-        <div class="tab" data-tab="points" onclick="showTab('points')"><span class="tab-icon">💰</span>Points</div>
-        <div class="tab" data-tab="verify" onclick="showTab('verify')"><span class="tab-icon">✅</span>Verify</div>
-        <div class="tab" data-tab="history" onclick="showTab('history')"><span class="tab-icon">📜</span>History</div>
+  </main>
+
+  <div class="fixed bottom-6 inset-x-0 z-40 flex justify-center px-4">
+    <nav class="dock-backdrop border border-slate-200/90 shadow-2xl shadow-slate-300/50 rounded-2xl p-1.5 flex items-center gap-1 max-w-md w-full justify-around">
+      
+      <button class="flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 transition-all">
+        <i data-lucide="fuel" class="w-5 h-5 mb-1"></i>
+        <span class="text-[11px] font-semibold tracking-tight">Fuel</span>
+      </button>
+
+      <button class="flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 transition-all">
+        <i data-lucide="clipboard-check" class="w-5 h-5 mb-1"></i>
+        <span class="text-[11px] font-semibold tracking-tight">PTI</span>
+      </button>
+
+      <button class="flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 transition-all">
+        <i data-lucide="award" class="w-5 h-5 mb-1"></i>
+        <span class="text-[11px] font-semibold tracking-tight">Points</span>
+      </button>
+
+      <button class="flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100/60 transition-all">
+        <i data-lucide="check-circle-2" class="w-5 h-5 mb-1"></i>
+        <span class="text-[11px] font-semibold tracking-tight">Verify</span>
+      </button>
+
+      <button class="flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/25 transition-all">
+        <i data-lucide="file-clock" class="w-5 h-5 mb-1"></i>
+        <span class="text-[11px] font-semibold tracking-tight">History</span>
+      </button>
+
+    </nav>
+  </div>
+
+  <div id="authModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 relative">
+      
+      <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center mb-6 pt-2">
+        <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-blue-500/30">
+          <i data-lucide="shield-check" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900">My Truck Safety</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Workspace Fleet Management System</p>
+      </div>
+
+      <form onsubmit="event.preventDefault(); toggleAuthModal();" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Truck Number</label>
+          <div class="relative">
+            <input type="text" placeholder="e.g., 88817" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+          <div class="relative">
+            <input type="password" placeholder="Enter security password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 pr-10 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"/>
+            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="checkbox" id="remember" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-600">
+          <label for="remember" class="text-xs font-medium text-slate-600 cursor-pointer">Remember login details</label>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm py-3 rounded-xl shadow-lg shadow-blue-500/25 transition-all duration-150 mt-2">
+          Sign In
+        </button>
+      </form>
+
     </div>
-    <div class="content">
-        <div id="fuel" class="tab-content">
-            <div class="card">
-                <h3>Search Fuel Stations</h3>
-                <div class="form-group"><input type="text" id="fuelDest" placeholder="Destination route (optional)"></div>
-                <button class="btn-primary" onclick="searchFuel()">🔍 Find Fuel Stops</button>
-                <div id="fuelResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <div id="pti" class="tab-content hidden">
-            <div class="card">
-                <h3>Submit PTI Inspection</h3>
-                <div class="form-group"><input type="text" id="ptiNum" placeholder="PTI Inspection Number"></div>
-                <button class="btn-primary" onclick="submitPTI()">📤 Submit Record</button>
-                <div id="ptiResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <div id="points" class="tab-content hidden">
-            <div class="card">
-                <h3>My Points Balance</h3>
-                <button class="btn-primary" onclick="showPoints()">💰 View Driver Balance</button>
-                <div id="pointsResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <div id="verify" class="tab-content hidden">
-            <div class="card">
-                <h3>Verify Vehicle Inspection</h3>
-                <div class="form-group"><input type="text" id="verifyName" placeholder="Driver Full Name"></div>
-                <div class="form-group"><input type="file" id="verifyPhoto" accept="image/*"></div>
-                <button class="btn-primary" onclick="submitVerification()">📷 Upload Verification Photo</button>
-                <div id="verifyResult" class="result-box hidden"></div>
-            </div>
-        </div>
-        <div id="history" class="tab-content hidden">
-            <div class="card">
-                <h3>Driver History & Activity</h3>
-                <button class="btn-primary" onclick="showHistory()">📂 Fetch Log History</button>
-                <div id="historyResult" class="result-box hidden"></div>
-            </div>
-        </div>
-    </div>
-    <div class="footer"><a href="#" onclick="logout()">Sign Out</a> • <a href="/donate">Support System</a></div>
-</div>
+  </div>
 
-<div id="adminScreen" class="admin-screen">
-    <div class="admin-topbar">
-        <h2>Admin Console</h2>
-        <button class="admin-logout-btn" onclick="logout()">Sign Out</button>
-    </div>
-    <div class="admin-layout">
-        <div class="admin-nav">
-            <div class="admin-nav-item active" data-anav="overview" onclick="openAdminPage('overview')">
-                <span class="admin-nav-icon">📊</span><span class="admin-nav-label">Overview</span>
-            </div>
-            <div class="admin-nav-item" data-anav="assign" onclick="openAdminPage('assign')">
-                <span class="admin-nav-icon">🚛</span><span class="admin-nav-label">Assign Vehicles</span>
-            </div>
-            <div class="admin-nav-item" data-anav="register" onclick="openAdminPage('register')">
-                <span class="admin-nav-icon">➕</span><span class="admin-nav-label">Register Driver</span>
-            </div>
-            <div class="admin-nav-item" data-anav="trucks" onclick="openAdminPage('trucks')">
-                <span class="admin-nav-icon">⚡</span><span class="admin-nav-label">Trucks & Fuel</span>
-            </div>
-            <div class="admin-nav-item" data-anav="drivers" onclick="openAdminPage('drivers')">
-                <span class="admin-nav-icon">👤</span><span class="admin-nav-label">Drivers Directory</span>
-            </div>
-            <div class="admin-nav-item" data-anav="pti" onclick="openAdminPage('pti')">
-                <span class="admin-nav-icon">📋</span><span class="admin-nav-label">PTI Reports</span>
-            </div>
-            <div class="admin-nav-item" data-anav="fuel" onclick="openAdminPage('fuel')">
-                <span class="admin-nav-icon">⛽</span><span class="admin-nav-label">Fuel Telematics</span>
-            </div>
-            <div class="admin-nav-item" data-anav="details" onclick="openAdminPage('details')">
-                <span class="admin-nav-icon">🔍</span><span class="admin-nav-label">Driver Lookup</span>
-            </div>
-        </div>
+  <script>
+    lucide.createIcons();
 
-        <div class="admin-content">
-            <div id="overview" class="admin-section">
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Active Drivers</div></div>
-                    <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">Completed PTIs</div></div>
-                    <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Logs</div></div>
-                </div>
-                <button class="btn-primary" onclick="loadOverview()">Refresh Overview Statistics</button>
-            </div>
-
-            <div id="assign" class="admin-section hidden">
-                <div class="card">
-                    <h3>Samsara Telematics Vehicles</h3>
-                    <button class="btn-primary" onclick="loadSamsaraVehicles()">Sync Fleet Vehicles</button>
-                    <div id="samsaraVehicles" class="result-box hidden"></div>
-                </div>
-            </div>
-
-            <div id="register" class="admin-section hidden">
-                <div class="card">
-                    <h3>Register New Fleet Driver</h3>
-                    <div class="form-group"><label>Truck ID Number</label><input type="text" id="regTruck" placeholder="e.g., 88817"></div>
-                    <div class="form-group"><label>Telegram Group ID</label><input type="number" id="regGroupId" placeholder="e.g., -5218192108"></div>
-                    <div class="form-group"><label>Samsara Driver ID</label><input type="text" id="regDriverId" placeholder="e.g., driver_88817"></div>
-                    <div class="form-group"><label>Hardware Vehicle ID</label><input type="text" id="regVehicleId" placeholder="e.g., 281474980774397"></div>
-                    <div class="form-group"><label>Access Password</label><input type="text" id="regPassword" placeholder="e.g., password123"></div>
-                    <div class="form-group"><label>License Plate</label><input type="text" id="regLicense" placeholder="e.g., XYZ-1234"></div>
-                    <button class="register-btn" onclick="registerDriver()">Complete Driver Onboarding</button>
-                    <div id="registerResult" class="result-box hidden"></div>
-                </div>
-            </div>
-
-            <div id="trucks" class="admin-section hidden">
-                <div class="card">
-                    <h3>Registered Fleet & Fuel Level Monitors</h3>
-                    <button class="btn-primary" onclick="loadTrucksFuel()">Load Active Telematics</button>
-                    <div id="trucksFuelResult" class="result-box hidden"></div>
-                </div>
-            </div>
-
-            <div id="drivers" class="admin-section hidden">
-                <div class="card">
-                    <h3>Active Driver Database</h3>
-                    <button class="btn-primary" onclick="loadDriversList()">Load Driver Accounts</button>
-                    <div id="driversListResult" class="result-box hidden"></div>
-                </div>
-            </div>
-
-            <div id="pti" class="admin-section hidden">
-                <div class="card">
-                    <h3>Pre-Trip Inspection Logs</h3>
-                    <button class="btn-primary" onclick="loadPTIList()">Fetch Inspection Records</button>
-                    <div id="ptiListResult" class="result-box hidden"></div>
-                </div>
-            </div>
-
-            <div id="fuel" class="admin-section hidden">
-                <div class="card">
-                    <h3>Fuel Usage Audit Trail</h3>
-                    <button class="btn-primary" onclick="loadFuelLog()">Retrieve Fuel Logs</button>
-                    <div id="fuelLogResult" class="result-box hidden"></div>
-                </div>
-            </div>
-
-            <div id="details" class="admin-section hidden">
-                <div class="card">
-                    <h3>Driver File Search</h3>
-                    <div class="form-group"><input type="text" id="searchTruck" placeholder="Enter Truck Number"></div>
-                    <button class="btn-primary" onclick="loadDriverDetails()">Execute Search</button>
-                    <div id="detailsResult" class="result-box hidden"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.ready(); tg.expand();
-    const initData = tg.initData;
-
-    const ADMIN_TRUCK = "1234";
-    const ADMIN_PASS = "Mytrucksafetypassword3223";
-
-    window.onload = function () {
-        if (localStorage.getItem('remTruck') && localStorage.getItem('remPass')) {
-            document.getElementById('loginTruck').value = localStorage.getItem('remTruck');
-            document.getElementById('loginPass').value = localStorage.getItem('remPass');
-            document.getElementById('rememberMe').checked = true;
-        }
-    };
-
-    function togglePass() {
-        const passInput = document.getElementById('loginPass');
-        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+    function toggleAuthModal() {
+      const modal = document.getElementById('authModal');
+      modal.classList.toggle('hidden');
     }
-
-    async function login() {
-        const truck = document.getElementById('loginTruck').value.trim();
-        const pass = document.getElementById('loginPass').value.trim();
-        const remember = document.getElementById('rememberMe').checked;
-        const errEl = document.getElementById('loginError');
-        errEl.style.display = 'none';
-
-        if (!truck || !pass) {
-            errEl.textContent = "Please complete all fields";
-            errEl.style.display = 'block';
-            return;
-        }
-
-        if (truck === ADMIN_TRUCK && pass === ADMIN_PASS) {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('adminScreen').style.display = 'block';
-            loadOverview();
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ truck_number: truck, password: pass, init_data: initData })
-            });
-            const data = await response.json();
-            if (!response.ok || data.error) {
-                errEl.textContent = data.error || "Login authorization failed";
-                errEl.style.display = 'block';
-                return;
-            }
-
-            if (remember) {
-                localStorage.setItem('remTruck', truck);
-                localStorage.setItem('remPass', pass);
-            } else {
-                localStorage.removeItem('remTruck');
-                localStorage.removeItem('remPass');
-            }
-
-            document.getElementById('truckInfo').textContent = 'Truck: ' + truck;
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            showTab('fuel');
-        } catch (err) {
-            errEl.textContent = "Network connection failure";
-            errEl.style.display = 'block';
-        }
-    }
-
-    function logout() {
-        if (!document.getElementById('rememberMe').checked) {
-            localStorage.removeItem('remTruck');
-            localStorage.removeItem('remPass');
-        }
-        document.getElementById('appScreen').style.display = 'none';
-        document.getElementById('adminScreen').style.display = 'none';
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('loginPass').value = '';
-    }
-
-    function showTab(tabId) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        document.getElementById(tabId).classList.remove('hidden');
-        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
-    }
-
-    function openAdminPage(page) {
-        document.querySelectorAll('.admin-nav-item').forEach(item => item.classList.remove('active'));
-        document.querySelectorAll('.admin-section').forEach(section => section.classList.add('hidden'));
-        document.getElementById(page).classList.remove('hidden');
-        const navItem = document.querySelector(`.admin-nav-item[data-anav="${page}"]`);
-        if (navItem) navItem.classList.add('active');
-
-        if (page === 'overview') loadOverview();
-        if (page === 'assign') loadSamsaraVehicles();
-        if (page === 'trucks') loadTrucksFuel();
-        if (page === 'drivers') loadDriversList();
-        if (page === 'pti') loadPTIList();
-        if (page === 'fuel') loadFuelLog();
-    }
-
-    async function loadOverview() {
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            document.getElementById('totalDrivers').textContent = data.points.length;
-            document.getElementById('totalPTIs').textContent = data.pti.length;
-            document.getElementById('totalFuelStops').textContent = data.fuel_usage.length;
-        } catch (err) { }
-    }
-
-    async function loadSamsaraVehicles() {
-        const resDiv = document.getElementById('samsaraVehicles');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Fetching telematics data...</div>';
-        try {
-            const resp = await fetch('/api/samsara-vehicles', { method: 'GET' });
-            const data = await resp.json();
-            if (data.vehicles && data.vehicles.length) {
-                let html = '<h4 style="margin-bottom:12px;">Samsara Fleet Records</h4>';
-                data.vehicles.forEach(v => {
-                    html += `<div class="list-item">
-                        <b>${v.name || 'Unassigned Device'}</b> (${v.id})<br>
-                        <button class="btn-secondary" onclick="showAssignForm('${v.id}', '${v.name}')">Assign Driver</button>
-                    </div>`;
-                });
-                resDiv.innerHTML = html;
-            } else {
-                resDiv.innerHTML = '<p class="loading">No Samsara vehicles located.</p>';
-            }
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Failed to fetch Samsara vehicles</div>';
-        }
-    }
-
-    function showAssignForm(vehicleId, truckName) {
-        const groupId = prompt("Telegram Group ID (-XXXXXXXXX):");
-        if (!groupId) return;
-        const password = prompt("Assigned Password:");
-        if (!password) return;
-        const truckNumber = prompt("Truck Identifier:", truckName.split(' ')[0] || '');
-        if (!truckNumber) return;
-        assignDriver(vehicleId, truckNumber, groupId, password);
-    }
-
-    async function assignDriver(vehicleId, truckNumber, groupId, password) {
-        try {
-            const resp = await fetch('/api/admin/assign-driver', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    vehicle_id: vehicleId,
-                    truck_number: truckNumber,
-                    group_id: Number(groupId),
-                    password: password
-                })
-            });
-            const data = await resp.json();
-            alert(data.message || data.error);
-            loadSamsaraVehicles();
-        } catch (err) {
-            alert('Error updating driver assignment');
-        }
-    }
-
-    async function registerDriver() {
-        const truck = document.getElementById('regTruck').value.trim();
-        const groupId = document.getElementById('regGroupId').value.trim();
-        const driverId = document.getElementById('regDriverId').value.trim();
-        const vehicleId = document.getElementById('regVehicleId').value.trim();
-        const password = document.getElementById('regPassword').value.trim();
-        const license = document.getElementById('regLicense').value.trim();
-
-        if (!truck || !groupId || !driverId || !password) {
-            alert('All mandatory fields must be filled');
-            return;
-        }
-
-        const resDiv = document.getElementById('registerResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Writing profile to database...</div>';
-
-        try {
-            const resp = await fetch('/api/admin/register-driver', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    truck_number: truck,
-                    group_id: Number(groupId),
-                    samsara_driver_id: driverId,
-                    vehicle_id: vehicleId,
-                    password: password,
-                    truck_license: license
-                })
-            });
-            const data = await resp.json();
-            if (data.success) {
-                resDiv.innerHTML = `<div class="success">✓ ${data.message}</div>`;
-                document.getElementById('regTruck').value = '';
-                document.getElementById('regGroupId').value = '';
-                document.getElementById('regDriverId').value = '';
-                document.getElementById('regVehicleId').value = '';
-                document.getElementById('regPassword').value = '';
-                document.getElementById('regLicense').value = '';
-            } else {
-                resDiv.innerHTML = `<div class="error">✕ ${data.error}</div>`;
-            }
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Network exception encountered</div>';
-        }
-    }
-
-    async function loadTrucksFuel() {
-        const resDiv = document.getElementById('trucksFuelResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Analyzing telematics data...</div>';
-        try {
-            const resp = await fetch('/api/admin/trucks-with-fuel', { method: 'GET' });
-            const data = await resp.json();
-            if (data.trucks && data.trucks.length) {
-                let html = '<div class="table-wrap"><table><tr><th>Truck #</th><th>Fuel Status</th><th>Driver ID</th></tr>';
-                data.trucks.forEach(t => {
-                    const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A';
-                    html += `<tr><td><b>${t.truck_number}</b></td><td>${fuel}</td><td>${t.driver_id}</td></tr>`;
-                });
-                html += '</table></div>';
-                resDiv.innerHTML = html;
-            } else {
-                resDiv.innerHTML = '<p class="loading">No registered vehicles found.</p>';
-            }
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Failed loading telematics data</div>';
-        }
-    }
-
-    async function loadDriversList() {
-        const resDiv = document.getElementById('driversListResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Retrieving roster...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4 style="margin-bottom:12px;">Driver Roster & Points</h4>';
-            data.points.forEach(p => {
-                html += `<div class="list-item">Driver <b>${p.driver_id}</b>: <span style="color:var(--gm-primary);font-weight:600;">${p.balance} pts</span></div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Failed loading drivers roster</div>';
-        }
-    }
-
-    async function loadPTIList() {
-        const resDiv = document.getElementById('ptiListResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Retrieving inspection logs...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4 style="margin-bottom:12px;">Pre-Trip Inspection Summary</h4>';
-            data.pti.forEach(p => {
-                html += `<div class="list-item">Driver <b>${p.driver_id}</b>: ${p.count} inspections recorded</div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">Failed loading PTI logs</div>';
-        }
-    }
-</script>
+  </script>
 </body>
 </html>
