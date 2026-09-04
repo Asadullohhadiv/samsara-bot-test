@@ -445,6 +445,8 @@ async def periodic_samsara_sync(app: Application):
                     if parsed:
                         save_maintenance_alert(vehicle_id, truck_number, parsed.get('maintenance_type'), parsed.get('due_mileage'), parsed.get('location'))
             await asyncio.sleep(900)
+        except asyncio.CancelledError:
+            break
         except Exception as e:
             print(f"❌ Sync error: {e}")
             await asyncio.sleep(60)
@@ -636,11 +638,29 @@ async def auto_register_on_join(update: Update, context: ContextTypes.DEFAULT_TY
 # ======================== MAIN ========================
 
 async def post_init(application: Application):
-    asyncio.create_task(periodic_samsara_sync(application))
+    """Start background tasks and store reference for cleanup."""
+    sync_task = asyncio.create_task(periodic_samsara_sync(application))
+    application.bot_data["samsara_sync_task"] = sync_task
+
+async def post_shutdown(application: Application):
+    """Gracefully cancel and await background tasks on shutdown."""
+    task: Optional[asyncio.Task] = application.bot_data.get("samsara_sync_task")
+    if task:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            print("🛑 Samsara periodic sync task successfully cancelled.")
 
 def main():
     init_db()
-    app = Application.builder().token(TOKEN).post_init(post_init).build()
+    app = (
+        Application.builder()
+        .token(TOKEN)
+        .post_init(post_init)
+        .post_shutdown(post_shutdown)
+        .build()
+    )
 
     # Command handlers
     app.add_handler(CommandHandler("start", start))
