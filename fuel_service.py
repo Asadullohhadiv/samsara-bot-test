@@ -43,23 +43,30 @@ def get_fuel_prices_from_apify(lat, lng, radius_km=50, fuel_type=4):
     params = {"token": config.APIFY_API_TOKEN}
     payload = {"search": f"{lat},{lng}", "fuel": fuel_type, "limit": 100, "radius": radius_km}
     try:
-        resp = requests.post(url, params=params, json=payload, timeout=30)
+        resp = requests.post(url, params=params, json=payload, timeout=15)
         resp.raise_for_status()
-        run_data = resp.json()
-        run_id = run_data.get("data", {}).get("id")
+        run_data = resp.json().get("data", {})
+        run_id = run_data.get("id")
+        dataset_id = run_data.get("defaultDatasetId", run_id)
+        
         if not run_id:
             return None
+            
         status_url = f"https://api.apify.com/v2/acts/runs/{run_id}"
-        for _ in range(20):
-            time.sleep(3)
-            s_resp = requests.get(status_url, params={"token": config.APIFY_API_TOKEN})
+        
+        # Poll up to 15 seconds max (15 iterations * 1 sec sleep)
+        for _ in range(15):
+            time.sleep(1)
+            s_resp = requests.get(status_url, params={"token": config.APIFY_API_TOKEN}, timeout=5)
             s_resp.raise_for_status()
             status = s_resp.json().get("data", {}).get("status")
+            
             if status == "SUCCEEDED":
-                dataset_url = f"https://api.apify.com/v2/datasets/{run_id}/items"
-                items_resp = requests.get(dataset_url, params={"token": config.APIFY_API_TOKEN})
+                dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
+                items_resp = requests.get(dataset_url, params={"token": config.APIFY_API_TOKEN}, timeout=10)
                 items_resp.raise_for_status()
                 items = items_resp.json()
+                
                 stations = []
                 for item in items:
                     stations.append({
@@ -84,6 +91,7 @@ def get_fuel_prices_from_apify(lat, lng, radius_km=50, fuel_type=4):
 def get_comprehensive_fuel_info(lat, lng, fuel_type=4, route_mode=False, dest_lat=None, dest_lng=None):
     result = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"), "station_list": [], "errors": []}
     apify_stations = get_fuel_prices_from_apify(lat, lng, radius_km=80, fuel_type=fuel_type)
+    
     if apify_stations:
         stations = []
         for s in apify_stations:
@@ -108,6 +116,7 @@ def get_comprehensive_fuel_info(lat, lng, fuel_type=4, route_mode=False, dest_la
     if not stops:
         result["errors"].append("No truck stops found in local DB.")
         return result
+        
     stations = []
     for s in stops:
         d = haversine(lat, lng, s["lat"], s["lng"])
@@ -120,6 +129,7 @@ def get_comprehensive_fuel_info(lat, lng, fuel_type=4, route_mode=False, dest_la
         s["distance_from_truck"] = round(d, 1)
         s["maps_link"] = f"https://www.google.com/maps?q={s['lat']},{s['lng']}"
         stations.append(s)
+        
     stations.sort(key=lambda x: (x.get("price") is None, x.get("price", 999999), x.get("distance_from_truck")))
     result["station_list"] = stations[:10]
     return result
@@ -127,12 +137,20 @@ def get_comprehensive_fuel_info(lat, lng, fuel_type=4, route_mode=False, dest_la
 def format_fuel_report_with_map(fuel_info, fuel_level, range_miles, driver_id, vehicle_id):
     stations = fuel_info.get("station_list", [])
     dest = fuel_info.get("destination_address", "Unknown")
-    lines = [f"⛽ **FUEL ALERT**", f"━━━━━━━━━━━━━━━━", f"Fuel: **{fuel_level}%**",
-             f"Range: **{int(range_miles)} miles**", f"Destination: **{dest}**",
-             f"━━━━━━━━━━━━━━━━", f"Found **{len(stations)}** truck stops along your route:", ""]
+    lines = [
+        "⛽ <b>FUEL ALERT</b>",
+        "━━━━━━━━━━━━━━━━",
+        f"Fuel: <b>{fuel_level}%</b>",
+        f"Range: <b>{int(range_miles)} miles</b>",
+        f"Destination: <b>{html.escape(dest)}</b>",
+        "━━━━━━━━━━━━━━━━",
+        f"Found <b>{len(stations)}</b> truck stops along your route:",
+        ""
+    ]
     if not stations:
         lines.append("❌ No truck stops found within the corridor.")
         return "\n".join(lines)
+        
     for i, s in enumerate(stations[:5], 1):
         price = s.get("price")
         price_str = f"${price:.2f}" if price else "N/A"
@@ -142,6 +160,7 @@ def format_fuel_report_with_map(fuel_info, fuel_level, range_miles, driver_id, v
         state = html.escape(s.get("state", ""))
         dist = s.get("distance_from_truck", 0)
         map_link = s.get("maps_link", "")
+        
         lines.append(f"<b>{i}. {name}</b>")
         lines.append(f"   💰 Price: <b>{price_str}</b>")
         if addr or city or state:
@@ -150,4 +169,5 @@ def format_fuel_report_with_map(fuel_info, fuel_level, range_miles, driver_id, v
         if map_link:
             lines.append(f"   🗺️ <a href='{map_link}'>Open in Google Maps</a>")
         lines.append("")
+        
     return "\n".join(lines)
