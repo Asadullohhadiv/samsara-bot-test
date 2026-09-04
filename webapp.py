@@ -52,7 +52,6 @@ def verify_init_data(init_data: str) -> bool:
     if not init_data:
         return False
     try:
-        # Split with maxsplit=1 to handle '=' inside json user data
         params = dict(p.split('=', 1) for p in init_data.split('&') if '=' in p)
         if 'hash' not in params:
             return False
@@ -80,6 +79,16 @@ def send_telegram_message(chat_id: int, text: str):
     except Exception as e:
         print(f"❌ Failed to send Telegram message: {e}")
 
+def get_truck_mapping():
+    """Build a fast lookup dictionary mapping Samsara vehicle IDs to fleet truck numbers."""
+    drivers = get_all_drivers()
+    mapping = {}
+    for d in drivers:
+        # d format: (chat_id, driver_id, vehicle_id, truck_number, truck_license)
+        if len(d) >= 4 and d[2]:
+            mapping[d[2]] = d[3]
+    return mapping
+
 # ---------- Security Middleware / Dependencies ----------
 
 def verify_admin_auth(x_admin_token: Optional[str] = Header(None)):
@@ -88,12 +97,14 @@ def verify_admin_auth(x_admin_token: Optional[str] = Header(None)):
     if admin_secret and x_admin_token != admin_secret:
         raise HTTPException(status_code=401, detail="Unauthorized Admin Access")
 
-# ---------- Standard Routes (Using sync def to run on threadpool) ----------
+# ---------- Standard Routes ----------
 
 @app.get("/", response_class=HTMLResponse)
 def mini_app_page():
-    with open("index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h3>Driver Web Portal Running</h3>"
 
 @app.get("/donate", response_class=HTMLResponse)
 def donate_page():
@@ -102,8 +113,8 @@ def donate_page():
     <html>
     <head><title>Donate</title></head>
     <body style="font-family:Arial; text-align:center; padding:20px;">
-        <h2>💖 Support the Developer</h2>
-        <p>If you find this bot useful, consider donating:</p>
+        <h2>💖 Support Fleet Operations</h2>
+        <p>If you find this portal useful, support continued development:</p>
         <p><b>Crypto Wallet:</b> {getattr(config, 'DONATION_WALLET', 'N/A')}</p>
     </body>
     </html>
@@ -116,28 +127,34 @@ def get_user(telegram_user_id: int):
         return user
     return {"driver_name": "", "truck_number": ""}
 
-# ---------- Login ----------
+# ---------- Driver Authentication ----------
+
 class LoginRequest(BaseModel):
     truck_number: str
     password: str
-    init_data: str
+    init_data: Optional[str] = ""
 
 @app.post("/api/login")
 def login_api(req: LoginRequest):
-    if not verify_init_data(req.init_data):
+    # If init_data is passed, validate Telegram signature; otherwise validate credentials directly
+    if req.init_data and not verify_init_data(req.init_data):
         raise HTTPException(status_code=403, detail="Invalid Telegram Init Data")
     
-    result = verify_driver_login(req.truck_number, req.password)
-    if not result:
+    clean_truck = req.truck_number.strip()
+    is_valid = verify_driver_login(clean_truck, req.password.strip())
+    
+    if not is_valid:
         return {"error": "Invalid truck number or password"}
     
-    user = get_user_from_init_data(req.init_data)
-    if user:
-        tg_id = user.get("id")
-        save_mini_app_user(tg_id, "", req.truck_number)
-    return {"success": True, "truck_number": req.truck_number}
+    if req.init_data:
+        user = get_user_from_init_data(req.init_data)
+        if user:
+            tg_id = user.get("id")
+            save_mini_app_user(tg_id, "", clean_truck)
+            
+    return {"success": True, "truck_number": clean_truck}
 
-# ---------- Admin Endpoints ----------
+# ---------- Admin Dashboard Endpoints ----------
 
 @app.get("/api/bot-groups", dependencies=[Depends(verify_admin_auth)])
 def bot_groups_api():
@@ -178,16 +195,16 @@ def admin_assign_driver_api(req: AssignDriverRequest):
     try:
         driver_id = get_driver_for_vehicle(req.vehicle_id) or f"driver_{req.truck_number}"
         register_driver_admin(
-            truck_number=req.truck_number,
+            truck_number=req.truck_number.strip(),
             chat_id=req.group_id,
             samsara_driver_id=driver_id,
             vehicle_id=req.vehicle_id,
-            password=req.password,
-            truck_license=req.truck_license
+            password=req.password.strip(),
+            truck_license=req.truck_license.strip()
         )
         send_telegram_message(
             req.group_id,
-            f"🚛 **Welcome aboard!**\n\nTruck: `{req.truck_number}`\nLogin Password: `{req.password}`\n\nPlease open the Driver App and log in with these credentials."
+            f"🚛 **Welcome Aboard!**\n\nTruck: `{req.truck_number}`\nLogin Password: `{req.password}`\n\nPlease log in via the Driver Web Portal."
         )
         return {"success": True, "message": f"Truck {req.truck_number} assigned successfully!"}
     except Exception as e:
@@ -195,15 +212,12 @@ def admin_assign_driver_api(req: AssignDriverRequest):
 
 @app.get("/api/admin/trucks-with-fuel", dependencies=[Depends(verify_admin_auth)])
 def admin_trucks_with_fuel():
-    """Optimized batch endpoint to prevent N+1 Samsara API requests."""
     try:
         drivers = get_all_drivers()
-        vehicle_ids = [d[2] for d in drivers if d[2]]
+        vehicle_ids = [d[2] for d in drivers if len(d) >= 3 and d[2]]
         
-        # Batch query vehicle stats if list is not empty
         stats_map = {}
         if vehicle_ids:
-            # Querying stats in a single batched API call
             headers = {"Authorization": f"Bearer {config.SAMSARA_API_TOKEN}"}
             url = f"{config.BASE_URL}/fleet/vehicles/stats"
             params = {"types": "fuelPercents", "vehicleIds": ",".join(vehicle_ids[:50])}
@@ -216,7 +230,7 @@ def admin_trucks_with_fuel():
 
         result = []
         for driver in drivers:
-            chat_id, driver_id, vehicle_id, truck_number, truck_license = driver
+            chat_id, driver_id, vehicle_id, truck_number, truck_license = driver[:5]
             result.append({
                 "chat_id": chat_id,
                 "driver_id": driver_id,
@@ -229,35 +243,59 @@ def admin_trucks_with_fuel():
     except Exception as e:
         return {"error": str(e)}
 
-# ---------- Telematics Features ----------
+# ---------- Telematics & Safety Logging ----------
 
 @app.get("/api/fault-codes")
 def fault_codes_api(vehicle_id: Optional[str] = None):
     try:
-        raw_faults = get_fault_codes(vehicle_id=vehicle_id, limit=50)
-        fault_list = [parse_fault_code(raw) for raw in raw_faults]
+        truck_map = get_truck_mapping()
+        raw_faults = get_fault_codes(vehicle_id=vehicle_id, days_back=7, limit=100)
+        
+        parsed_faults = []
+        for raw in raw_faults:
+            parsed = parse_fault_code(raw)
+            v_id = parsed.get("vehicle_id")
+            parsed["truck_number"] = truck_map.get(v_id, "Unknown Truck")
+            parsed_faults.append(parsed)
+
         db_faults = get_all_fault_codes()
-        return {"fault_codes": fault_list, "db_count": len(db_faults)}
+        return {"fault_codes": parsed_faults, "db_count": len(db_faults)}
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/api/harsh-events")
 def harsh_events_api(vehicle_id: Optional[str] = None):
     try:
-        raw_events = get_harsh_events(vehicle_id=vehicle_id, limit=20)
-        event_list = [parse_harsh_event(raw) for raw in raw_events]
+        truck_map = get_truck_mapping()
+        raw_events = get_harsh_events(vehicle_id=vehicle_id, days_back=7, limit=50)
+        
+        parsed_events = []
+        for raw in raw_events:
+            parsed = parse_harsh_event(raw)
+            v_id = parsed.get("vehicle_id")
+            parsed["truck_number"] = truck_map.get(v_id, "Unknown Truck")
+            parsed_events.append(parsed)
+
         db_events = get_all_harsh_events()
-        return {"harsh_events": event_list, "db_count": len(db_events)}
+        return {"harsh_events": parsed_events, "db_count": len(db_events)}
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/api/maintenance-alerts")
 def maintenance_alerts_api(vehicle_id: Optional[str] = None):
     try:
-        raw_alerts = get_maintenance_alerts(vehicle_id=vehicle_id, limit=20)
-        alert_list = [parse_maintenance_alert(raw) for raw in raw_alerts]
+        truck_map = get_truck_mapping()
+        raw_alerts = get_maintenance_alerts(vehicle_id=vehicle_id, limit=50)
+        
+        parsed_alerts = []
+        for raw in raw_alerts:
+            parsed = parse_maintenance_alert(raw)
+            v_id = parsed.get("vehicle_id")
+            parsed["truck_number"] = truck_map.get(v_id, "Unknown Truck")
+            parsed_alerts.append(parsed)
+
         db_alerts = get_all_maintenance_alerts()
-        return {"maintenance_alerts": alert_list, "db_count": len(db_alerts)}
+        return {"maintenance_alerts": parsed_alerts, "db_count": len(db_alerts)}
     except Exception as e:
         return {"error": str(e)}
 
@@ -279,7 +317,6 @@ def verify_api(
     tg_id = user.get("id")
     os.makedirs("uploads", exist_ok=True)
     
-    # Secure filename creation using UUID
     ext = os.path.splitext(photo.filename)[1]
     safe_filename = f"{tg_id}_{uuid.uuid4().hex}{ext}"
     photo_path = os.path.join("uploads", safe_filename)
@@ -288,37 +325,38 @@ def verify_api(
         shutil.copyfileobj(photo.file, buffer)
         
     submit_verification(tg_id, driver_name, truck_number, photo_path)
-    return {"message": "Verification submitted. Await admin approval."}
+    return {"message": "Verification submitted successfully. Awaiting admin approval."}
 
-# ---------- Driver Details (Fixed DB context & field queries) ----------
+# ---------- Driver Details ----------
 
 @app.get("/api/driver-details/{truck_number}", dependencies=[Depends(verify_admin_auth)])
 def driver_details_api(truck_number: str):
-    driver = get_driver_by_truck(truck_number)
+    driver = get_driver_by_truck(truck_number.strip())
     if not driver:
         return {"error": "Driver not found"}
     
-    driver_id = driver["samsara_driver_id"]
+    driver_id = driver.get("samsara_driver_id", "")
     
-    # Safe Database Connection Management
     conn = get_connection()
     try:
         c = conn.cursor()
         c.execute('SELECT COALESCE(SUM(amount), 0) FROM points WHERE driver_id = %s', (driver_id,))
-        balance = c.fetchone()[0]
+        balance_row = c.fetchone()
+        balance = balance_row[0] if balance_row else 0
         
         c.execute('SELECT COUNT(*) FROM pti_submissions WHERE driver_id = %s', (driver_id,))
-        pti_count = c.fetchone()[0]
+        pti_row = c.fetchone()
+        pti_count = pti_row[0] if pti_row else 0
     finally:
         conn.close()
         
     return {
         "truck_number": truck_number,
         "driver_id": driver_id,
-        "vehicle_id": driver["vehicle_id"],
-        "truck_license": driver["truck_license"],
-        "chat_id": driver["chat_id"],
-        "password": driver["password"],
+        "vehicle_id": driver.get("vehicle_id", ""),
+        "truck_license": driver.get("truck_license", ""),
+        "chat_id": driver.get("chat_id"),
+        "password": driver.get("password", ""),
         "points": balance,
         "pti_count": pti_count
     }
