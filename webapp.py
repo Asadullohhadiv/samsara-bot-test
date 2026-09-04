@@ -23,7 +23,8 @@ from database import (
     get_driver_by_truck,
     list_all_drivers_admin,
     get_all_drivers,
-    get_all_bot_groups,  # NEW
+    get_all_bot_groups,
+    get_connection,
 )
 from samsara_client import (
     find_vehicle_by_truck_number,
@@ -38,7 +39,7 @@ import shutil
 
 app = FastAPI()
 
-# ---- Helper functions ----
+# ---------- Helpers ----------
 
 def verify_init_data(init_data: str) -> bool:
     if not init_data:
@@ -68,7 +69,7 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"❌ Failed to send Telegram message: {e}")
 
-# ---- Routes ----
+# ---------- Routes ----------
 
 @app.get("/", response_class=HTMLResponse)
 async def mini_app_page():
@@ -96,8 +97,7 @@ async def get_user(telegram_user_id: int):
         return user
     return {"driver_name": "", "truck_number": ""}
 
-# ---- Driver Login API ----
-
+# ---------- Login ----------
 class LoginRequest(BaseModel):
     truck_number: str
     password: str
@@ -109,20 +109,25 @@ async def login_api(req: LoginRequest):
     # if not verify_init_data(req.init_data):
     #     print("❌ INIT DATA INVALID")
     #     raise HTTPException(status_code=403, detail="Unauthorized")
-    
     result = verify_driver_login(req.truck_number, req.password)
     if not result:
         return {"error": "Invalid truck number or password"}
-    
     user = get_user_from_init_data(req.init_data)
     if user:
         tg_id = user.get("id")
         save_mini_app_user(tg_id, "", req.truck_number)
-    
     return {"success": True, "truck_number": req.truck_number}
 
-# ---- Admin: List Samsara Vehicles ----
+# ---------- Admin: Bot Groups ----------
+@app.get("/api/bot-groups")
+async def bot_groups_api():
+    try:
+        groups = get_all_bot_groups()
+        return {"groups": [{"chat_id": g[0], "title": g[1]} for g in groups]}
+    except Exception as e:
+        return {"error": str(e)}
 
+# ---------- Admin: Samsara Vehicles ----------
 @app.get("/api/samsara-vehicles")
 async def samsara_vehicles_api():
     try:
@@ -139,18 +144,7 @@ async def samsara_vehicles_api():
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Admin: List Bot Groups ----
-
-@app.get("/api/bot-groups")
-async def bot_groups_api():
-    try:
-        groups = get_all_bot_groups()
-        return {"groups": [{"chat_id": g[0], "title": g[1]} for g in groups]}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---- Admin: Assign Driver (from Samsara vehicle) ----
-
+# ---------- Admin: Assign Driver ----------
 class AssignDriverRequest(BaseModel):
     vehicle_id: str
     truck_number: str
@@ -164,7 +158,6 @@ async def admin_assign_driver_api(req: AssignDriverRequest):
         return {"error": "All required fields must be filled"}
     try:
         driver_id = get_driver_for_vehicle(req.vehicle_id) or f"driver_{req.truck_number}"
-        
         register_driver_admin(
             truck_number=req.truck_number,
             chat_id=req.group_id,
@@ -173,20 +166,15 @@ async def admin_assign_driver_api(req: AssignDriverRequest):
             password=req.password,
             truck_license=req.truck_license
         )
-        
         send_telegram_message(
             req.group_id,
-            f"🚛 **Welcome aboard!**\n\n"
-            f"Truck: `{req.truck_number}`\n"
-            f"Login Password: `{req.password}`\n\n"
-            f"Please open the Driver App and log in with these credentials."
+            f"🚛 **Welcome aboard!**\n\nTruck: `{req.truck_number}`\nLogin Password: `{req.password}`\n\nPlease open the Driver App and log in with these credentials."
         )
         return {"success": True, "message": f"Truck {req.truck_number} assigned successfully!"}
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Admin: Register Driver API (manual) ----
-
+# ---------- Admin: Register Driver (manual) ----------
 class AdminRegisterDriverRequest(BaseModel):
     truck_number: str
     group_id: int
@@ -210,17 +198,13 @@ async def admin_register_driver_api(req: AdminRegisterDriverRequest):
         )
         send_telegram_message(
             req.group_id,
-            f"🚛 **Welcome aboard!**\n\n"
-            f"Truck: `{req.truck_number}`\n"
-            f"Login Password: `{req.password}`\n\n"
-            f"Please open the Driver App and log in with these credentials."
+            f"🚛 **Welcome aboard!**\n\nTruck: `{req.truck_number}`\nLogin Password: `{req.password}`\n\nPlease open the Driver App and log in with these credentials."
         )
         return {"success": True, "message": f"Driver {req.truck_number} registered successfully!"}
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Admin: Get all registered trucks with fuel levels ----
-
+# ---------- Admin: Trucks with fuel ----------
 @app.get("/api/admin/trucks-with-fuel")
 async def admin_trucks_with_fuel():
     try:
@@ -245,8 +229,7 @@ async def admin_trucks_with_fuel():
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Fuel Search API ----
-
+# ---------- Fuel Search ----------
 class FuelSearchRequest(BaseModel):
     destination: Optional[str] = None
     init_data: str
@@ -293,8 +276,7 @@ async def fuel_search_api(req: FuelSearchRequest):
         })
     return {"stations": output, "fuel_level": stats.get("fuel")}
 
-# ---- Use Station API ----
-
+# ---------- Use Station ----------
 class UseStationRequest(BaseModel):
     station_name: str
     station_address: str
@@ -319,8 +301,7 @@ async def use_station_api(req: UseStationRequest):
     add_points(driver_id, config.POINTS_PER_FUEL_STOP, "fuel", f"Fuel stop at {req.station_name}")
     return {"message": f"Recorded! You earned {config.POINTS_PER_FUEL_STOP} points."}
 
-# ---- PTI API ----
-
+# ---------- PTI Submit (from webapp) ----------
 class PTIRequest(BaseModel):
     pti_number: str
     init_data: str
@@ -341,8 +322,7 @@ async def submit_pti_api(req: PTIRequest):
     add_points(driver_id, config.POINTS_PER_PTI, "pti", f"PTI {req.pti_number}")
     return {"message": f"PTI submitted! You earned {config.POINTS_PER_PTI} points."}
 
-# ---- Points API ----
-
+# ---------- Points ----------
 class PointsRequest(BaseModel):
     init_data: str
 
@@ -365,8 +345,7 @@ async def points_api(req: PointsRequest):
         history_list.append({"amount": row[0], "type": row[1], "date": row[3]})
     return {"balance": balance, "history": history_list}
 
-# ---- Verification API ----
-
+# ---------- Verify ----------
 @app.post("/api/verify")
 async def verify_api(driver_name: str = Form(...), truck_number: str = Form(...), photo: UploadFile = File(...), init_data: str = Form(...)):
     if not verify_init_data(init_data):
@@ -382,8 +361,7 @@ async def verify_api(driver_name: str = Form(...), truck_number: str = Form(...)
     submit_verification(tg_id, driver_name, truck_number, photo_path)
     return {"message": "Verification submitted. Await admin approval."}
 
-# ---- History API ----
-
+# ---------- History ----------
 @app.post("/api/history")
 async def history_api(req: PointsRequest):
     if not verify_init_data(req.init_data):
@@ -406,8 +384,7 @@ async def history_api(req: PointsRequest):
         pti_list.append({"pti_number": row[0], "submitted_at": row[1]})
     return {"fuel_usage": fuel_list, "pti_history": pti_list}
 
-# ---- Admin Summary API ----
-
+# ---------- Admin Summary ----------
 @app.get("/api/admin-summary")
 async def admin_summary_api():
     points = get_all_points_summary()
@@ -425,8 +402,7 @@ async def admin_summary_api():
         })
     return {"points": points_list, "pti": pti_list, "fuel_usage": fuel_list}
 
-# ---- Driver Details API ----
-
+# ---------- Driver Details ----------
 @app.get("/api/driver-details/{truck_number}")
 async def driver_details_api(truck_number: str):
     driver = get_driver_by_truck(truck_number)
@@ -450,7 +426,7 @@ async def driver_details_api(truck_number: str):
         "pti_count": pti_count
     }
 
-# ---- Admin page ----
+# ---------- Simple Admin page ----------
 @app.get("/admin")
 async def admin_page():
     return """
