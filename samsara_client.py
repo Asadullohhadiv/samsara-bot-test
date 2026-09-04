@@ -1,6 +1,5 @@
 import requests
 import config
-from datetime import datetime, timedelta, timezone
 
 SAMSARA_API_TOKEN = config.SAMSARA_API_TOKEN
 BASE_URL = "https://api.samsara.com"
@@ -11,7 +10,7 @@ def get_vehicle_stats(vehicle_id):
     """Fetch stats including fuel, gps, heading."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/stats"
-    params = {"types": "fuelPercents,gps", "vehicleIds": str(vehicle_id)}
+    params = {"types": "fuelPercents,gps", "vehicleIds": vehicle_id}
     try:
         response = requests.get(url, headers=headers, params=params, timeout=10)
         response.raise_for_status()
@@ -29,7 +28,7 @@ def get_vehicle_stats(vehicle_id):
             return result
         return None
     except Exception as e:
-        print(f"❌ Samsara API error: {e}")
+        print(f"❌ Samsara API error (stats): {e}")
         return None
 
 def get_vehicle_fuel_level(vehicle_id):
@@ -68,10 +67,10 @@ def find_vehicle_by_truck_number(truck_number):
         name = vehicle.get('name', '')
         external_ids = vehicle.get('externalIds', {})
         v_id = vehicle.get('id')
-        if str(truck_number) in name:
+        if truck_number in name:
             return v_id
         for key, value in external_ids.items():
-            if str(truck_number) in str(value):
+            if truck_number in str(value):
                 return v_id
     return None
 
@@ -91,129 +90,84 @@ def get_driver_for_vehicle(vehicle_id):
         print(f"❌ Error fetching driver: {e}")
         return None
 
-# ==================== UPDATED SAMSARA API FUNCTIONS ====================
+# ==================== NEW FUNCTIONS WITH CORRECT ENDPOINTS ====================
 
-def get_fault_codes(vehicle_id=None, days_back=7, limit=100):
-    """Fetch diagnostic fault codes (DTCs) from Samsara for the last 7 days."""
+def get_fault_codes(vehicle_id=None, limit=50):
+    """Fetch fault codes from Samsara (DTCs). Correct endpoint: /fleet/diagnostics"""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/fleet/diagnostics/fault-codes"
-    
-    start_time = (datetime.now(timezone.utc) - timedelta(days=days_back)).isoformat()
-    params = {"limit": limit, "startTime": start_time}
-    if vehicle_id:
-        params["vehicleIds"] = str(vehicle_id)
-        
-    try:
-        resp = requests.get(url, headers=headers, params=params, timeout=15)
-        resp.raise_for_status()
-        return resp.json().get('data', [])
-    except Exception as e:
-        print(f"❌ Error fetching 7-day fault codes: {e}")
-        return []
-
-def get_harsh_events(vehicle_id=None, days_back=7, limit=50):
-    """Fetch safety events (speeding, harsh braking, dashcam captures) for the last 7 days."""
-    headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/fleet/safety/events"
-    
-    start_time = (datetime.now(timezone.utc) - timedelta(days=days_back)).isoformat()
-    params = {"limit": limit, "startTime": start_time}
-    if vehicle_id:
-        params["vehicleIds"] = str(vehicle_id)
-        
-    try:
-        resp = requests.get(url, headers=headers, params=params, timeout=15)
-        resp.raise_for_status()
-        return resp.json().get('data', [])
-    except Exception as e:
-        print(f"❌ Error fetching 7-day safety events: {e}")
-        return []
-
-def get_maintenance_alerts(vehicle_id=None, limit=50):
-    """Fetch service schedules and maintenance alerts."""
-    headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/fleet/maintenance/service-schedules"
+    url = f"{BASE_URL}/fleet/diagnostics"
     params = {"limit": limit}
     if vehicle_id:
-        params["vehicleIds"] = str(vehicle_id)
+        params["vehicleIds"] = vehicle_id
     try:
         resp = requests.get(url, headers=headers, params=params, timeout=15)
         resp.raise_for_status()
-        return resp.json().get('data', [])
+        data = resp.json()
+        return data.get('data', [])
+    except Exception as e:
+        print(f"❌ Error fetching fault codes: {e}")
+        return []
+
+def get_harsh_events(vehicle_id=None, limit=20):
+    """Fetch harsh events (speeding, harsh braking, etc.) with video links. Correct endpoint: /safety/events"""
+    headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
+    url = f"{BASE_URL}/safety/events"
+    params = {"limit": limit}
+    if vehicle_id:
+        params["vehicleIds"] = vehicle_id
+    try:
+        resp = requests.get(url, headers=headers, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get('data', [])
+    except Exception as e:
+        print(f"❌ Error fetching harsh events: {e}")
+        return []
+
+def get_maintenance_alerts(vehicle_id=None, limit=20):
+    """Fetch maintenance alerts (oil change due, etc.). Correct endpoint: /maintenance/service-schedules"""
+    headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
+    url = f"{BASE_URL}/maintenance/service-schedules"
+    params = {"limit": limit}
+    if vehicle_id:
+        params["vehicleIds"] = vehicle_id
+    try:
+        resp = requests.get(url, headers=headers, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get('data', [])
     except Exception as e:
         print(f"❌ Error fetching maintenance alerts: {e}")
         return []
 
-# ==================== PARSERS ====================
+# Helper functions to parse raw data (same as before)
 
 def parse_fault_code(raw_fault):
-    """Convert raw J1939 / OBD-II Samsara fault into a clean dict."""
-    j1939 = raw_fault.get("j1939", {}) or {}
-    obdii = raw_fault.get("obdii", {}) or {}
-    
-    code = (
-        j1939.get("spnId") 
-        or obdii.get("dtcId") 
-        or raw_fault.get("code") 
-        or raw_fault.get("faultCode", "Unknown")
-    )
-    description = (
-        j1939.get("spnDescription") 
-        or obdii.get("dtcDescription") 
-        or raw_fault.get("description", "")
-    )
-
+    """Convert raw Samsara fault into a clean dict."""
     return {
-        "code": str(code),
-        "description": description,
+        "code": raw_fault.get("code", ""),
+        "description": raw_fault.get("description", "") or raw_fault.get("message", ""),
         "severity": raw_fault.get("severity", "unknown"),
-        "vehicle_id": raw_fault.get("vehicle", {}).get("id", raw_fault.get("vehicleId", "")),
-        "recorded_at": raw_fault.get("faultCodeTime", raw_fault.get("time", ""))
+        "vehicle_id": raw_fault.get("vehicleId", ""),
+        "recorded_at": raw_fault.get("time", "")
     }
 
 def parse_harsh_event(raw_event):
-    """Convert raw safety event into a clean dict with reliable video and location extraction."""
-    download_url = ""
-    
-    # 1. Video URL Extraction across all Samsara payload variations
-    media = raw_event.get("downloadMedia") or raw_event.get("media") or {}
-    if isinstance(media, dict):
-        download_url = media.get("downloadUrl") or media.get("videoUrl") or media.get("url", "")
-    elif isinstance(media, list) and len(media) > 0:
-        download_url = media[0].get("downloadUrl") or media[0].get("url", "")
-        
-    if not download_url:
-        download_url = raw_event.get("videoUrl", "")
-
-    # 2. Behavior Event Label Extraction
-    behaviors = raw_event.get("behaviorLabels", [])
-    event_type = "Harsh Event"
-    if behaviors and isinstance(behaviors, list) and len(behaviors) > 0:
-        event_type = behaviors[0].get("name", "Harsh Event")
-    else:
-        event_type = raw_event.get("type", "Safety Event")
-
-    # 3. Location Extraction
-    location_data = raw_event.get("location", {}) or {}
-    location = location_data.get("formattedAddress", "")
-    if not location and "latitude" in location_data and "longitude" in location_data:
-        location = f"{location_data['latitude']}, {location_data['longitude']}"
-    if not location:
-        location = "Location coordinates unavailable"
-
+    """Convert raw harsh event into a clean dict."""
     return {
-        "event_type": event_type,
-        "location": location,
-        "video_url": download_url,
-        "vehicle_id": raw_event.get("vehicle", {}).get("id", raw_event.get("vehicleId", "")),
-        "happened_at": raw_event.get("startTime", raw_event.get("time", ""))
+        "event_type": raw_event.get("type", ""),
+        "location": raw_event.get("location", "") or raw_event.get("address", ""),
+        "video_url": raw_event.get("videoUrl", "") or raw_event.get("video", ""),
+        "vehicle_id": raw_event.get("vehicleId", ""),
+        "happened_at": raw_event.get("time", "")
     }
 
 def parse_maintenance_alert(raw_alert):
-    """Convert raw service schedule into a clean dict."""
+    """Convert raw maintenance alert into a clean dict."""
     return {
-        "maintenance_type": raw_alert.get("name", raw_alert.get("type", "Scheduled Service")),
-        "due_mileage": round(raw_alert.get("dueOdometerMeters", 0) / 1609.34, 1) if raw_alert.get("dueOdometerMeters") else 0,
-        "vehicle_id": raw_alert.get("vehicle", {}).get("id", raw_alert.get("vehicleId", "")),
-        "created_at": raw_alert.get("updatedAt", "")
+        "maintenance_type": raw_alert.get("type", ""),
+        "due_mileage": raw_alert.get("dueMiles", 0),
+        "location": raw_alert.get("location", "") or "",
+        "vehicle_id": raw_alert.get("vehicleId", ""),
+        "created_at": raw_alert.get("time", "")
     }
