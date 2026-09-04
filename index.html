@@ -9,17 +9,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg:#f8f9fa; --surface:#fff; --outline:#e0e0e0; --text-main:#1f1f1f; --text-sub:#444746; --primary:#1a73e8; --gradient:linear-gradient(135deg,#1a73e8,#0b57d0); --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12); --radius-sm:8px; --radius-md:16px; --radius-lg:28px; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Google Sans Flex',-apple-system,sans-serif; -webkit-tap-highlight-color:transparent; }
+        :root { 
+            --bg: #f8f9fa; 
+            --surface: #ffffff; 
+            --outline: #e0e0e0; 
+            --text-main: #1f1f1f; 
+            --text-sub: #444746; 
+            --primary: #1a73e8; 
+            --gradient: linear-gradient(135deg, #1a73e8, #0b57d0); 
+            --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.12); 
+            --radius-sm: 8px; 
+            --radius-md: 16px; 
+            --radius-lg: 28px; 
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Google Sans Flex', -apple-system, sans-serif; -webkit-tap-highlight-color:transparent; }
         body { background:var(--bg); color:var(--text-main); min-height:100vh; }
 
         .card { background:var(--surface); border-radius:var(--radius-md); padding:24px; margin-bottom:20px; border:1px solid var(--outline); box-shadow:var(--shadow); }
         .card h3 { font-size:18px; font-weight:600; margin-bottom:16px; }
         .btn-primary { width:100%; padding:14px; background:var(--gradient); color:#fff; border:none; border-radius:var(--radius-lg); font-size:14px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); }
         .btn-secondary { width:100%; padding:10px; background:#f1f3f4; color:var(--text-main); border:1px solid var(--outline); border-radius:var(--radius-lg); font-size:13px; font-weight:500; cursor:pointer; margin-top:8px; }
+        .modal-btn { width:100%; padding:14px; background:var(--gradient); color:#fff; border:none; border-radius:var(--radius-lg); font-size:14px; font-weight:600; cursor:pointer; margin-top:16px; }
         .hidden { display:none !important; }
         .list-item { padding:14px 0; border-bottom:1px solid var(--outline); }
         .list-item:last-child { border-bottom:none; }
+        .error { color:#d93025; font-weight:500; }
+        .success { color:#188038; font-weight:500; }
+        .loading { text-align:center; color:var(--text-sub); padding:20px; }
 
         /* Login */
         .login-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
@@ -30,6 +46,8 @@
         .input-group, .form-group { margin-bottom:18px; }
         .input-group label, .form-group label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; color:var(--text-sub); margin-bottom:8px; }
         .input-group input, .form-group input, .select-field { width:100%; padding:14px; border:1px solid var(--outline); border-radius:var(--radius-sm); font-size:15px; background:var(--bg); outline:none; }
+        .password-wrap { position:relative; }
+        .toggle-eye { position:absolute; right:14px; top:50%; transform:translateY(-50%); cursor:pointer; user-select:none; }
         .remember-row { display:flex; align-items:center; gap:10px; margin-bottom:24px; font-size:14px; color:var(--text-sub); }
         .login-btn, .register-btn { width:100%; padding:14px; background:var(--gradient); color:white; border:none; border-radius:var(--radius-lg); font-size:15px; font-weight:600; cursor:pointer; }
         .error-msg { color:#d93025; font-size:13px; text-align:center; margin-top:14px; display:none; }
@@ -41,15 +59,13 @@
         .top-bar .info-chip { background:#f1f3f4; border:1px solid var(--outline); padding:6px 16px; border-radius:var(--radius-lg); font-size:13px; color:var(--text-sub); }
         .content { padding:24px; max-width:800px; margin:0 auto; }
         .result-box { margin-top:16px; }
-        .loading { text-align:center; color:var(--text-sub); padding:20px; }
 
         /* Bottom Nav */
-        .bottom-nav { position:fixed; bottom:20px; left:16px; right:16px; background:rgba(255,255,255,.75); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.4); border-radius:32px; box-shadow:0 8px 32px rgba(0,0,0,.12); display:flex; justify-content:space-around; align-items:center; padding:8px 6px; z-index:100; }
+        .bottom-nav { position:fixed; bottom:20px; left:16px; right:16px; background:rgba(255,255,255,.85); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.4); border-radius:32px; box-shadow:0 8px 32px rgba(0,0,0,.12); display:flex; justify-content:space-around; align-items:center; padding:8px 6px; z-index:100; }
         .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border-radius:24px; cursor:pointer; color:#444746; transition:all .2s; text-decoration:none; font-size:11px; font-weight:500; }
         .nav-item.active { color:var(--primary); background:rgba(26,115,232,.1); }
         .nav-icon-box { width:44px; height:44px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; }
         .nav-item.active .nav-icon-box { background:var(--gradient); color:white; box-shadow:0 4px 12px rgba(26,115,232,.3); }
-        .nav-label { font-size:11px; font-weight:600; }
 
         /* Admin */
         .admin-screen { display:none; min-height:100vh; }
@@ -75,7 +91,12 @@
         .modal-close { position:absolute; top:12px; right:12px; font-size:20px; cursor:pointer; color:var(--text-sub); }
         .modal-title { font-size:18px; font-weight:700; margin-bottom:16px; }
 
-        @media (max-width:768px) { .admin-layout { flex-direction:column; } .admin-nav { width:100%; border-right:none; border-bottom:1px solid var(--outline); flex-direction:row; overflow-x:auto; padding:8px; } .admin-nav-item { flex-shrink:0; padding:10px 14px; } .admin-content { padding:16px; } }
+        @media (max-width:768px) { 
+            .admin-layout { flex-direction:column; } 
+            .admin-nav { width:100%; border-right:none; border-bottom:1px solid var(--outline); flex-direction:row; overflow-x:auto; padding:8px; } 
+            .admin-nav-item { flex-shrink:0; padding:10px 14px; } 
+            .admin-content { padding:16px; } 
+        }
     </style>
 </head>
 <body>
@@ -122,12 +143,16 @@
             <div class="admin-nav-item" data-anav="assign" onclick="openAdminPage('assign')"><span class="admin-nav-icon">🚛</span><span class="admin-nav-label">Assign Trucks</span></div>
             <div class="admin-nav-item" data-anav="register" onclick="openAdminPage('register')"><span class="admin-nav-icon">➕</span><span class="admin-nav-label">Register Driver</span></div>
             <div class="admin-nav-item" data-anav="trucks" onclick="openAdminPage('trucks')"><span class="admin-nav-icon">⚡</span><span class="admin-nav-label">Trucks & Fuel</span></div>
+            <div class="admin-nav-item" data-anav="faults" onclick="openAdminPage('faults')"><span class="admin-nav-icon">⚠️</span><span class="admin-nav-label">Fault Codes</span></div>
+            <div class="admin-nav-item" data-anav="harsh" onclick="openAdminPage('harsh')"><span class="admin-nav-icon">📹</span><span class="admin-nav-label">Harsh Events</span></div>
+            <div class="admin-nav-item" data-anav="maintenance" onclick="openAdminPage('maintenance')"><span class="admin-nav-icon">🔧</span><span class="admin-nav-label">Maintenance</span></div>
             <div class="admin-nav-item" data-anav="drivers" onclick="openAdminPage('drivers')"><span class="admin-nav-icon">👤</span><span class="admin-nav-label">Drivers</span></div>
             <div class="admin-nav-item" data-anav="pti" onclick="openAdminPage('pti')"><span class="admin-nav-icon">📋</span><span class="admin-nav-label">PTI List</span></div>
             <div class="admin-nav-item" data-anav="fuel" onclick="openAdminPage('fuel')"><span class="admin-nav-icon">⛽</span><span class="admin-nav-label">Fuel Log</span></div>
             <div class="admin-nav-item" data-anav="details" onclick="openAdminPage('details')"><span class="admin-nav-icon">🔍</span><span class="admin-nav-label">Details</span></div>
         </div>
         <div class="admin-content">
+            <!-- Overview -->
             <div id="overview" class="admin-section">
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Drivers</div></div>
@@ -136,9 +161,11 @@
                 </div>
                 <button class="btn-primary" onclick="loadOverview()">Refresh Stats</button>
             </div>
+            <!-- Assign -->
             <div id="assign" class="admin-section hidden">
                 <div class="card"><h3>Samsara Vehicles</h3><button class="btn-primary" onclick="loadSamsaraVehicles()">Sync Fleet Vehicles</button><div id="samsaraVehicles" class="result-box hidden"></div></div>
             </div>
+            <!-- Register -->
             <div id="register" class="admin-section hidden">
                 <div class="card"><h3>Register New Driver</h3>
                     <div class="form-group"><label>Truck #</label><input type="text" id="regTruck"></div>
@@ -151,12 +178,29 @@
                     <div id="registerResult" class="result-box hidden"></div>
                 </div>
             </div>
+            <!-- Trucks & Fuel -->
             <div id="trucks" class="admin-section hidden">
                 <div class="card"><h3>Trucks & Fuel</h3><button class="btn-primary" onclick="loadTrucksFuel()">Load Trucks</button><div id="trucksFuelResult" class="result-box hidden"></div></div>
             </div>
+            <!-- Fault Codes -->
+            <div id="faults" class="admin-section hidden">
+                <div class="card"><h3>Fault Codes from Samsara</h3><button class="btn-primary" onclick="loadFaultCodes()">Load Fault Codes</button><div id="faultCodesResult" class="result-box hidden"></div></div>
+            </div>
+            <!-- Harsh Events -->
+            <div id="harsh" class="admin-section hidden">
+                <div class="card"><h3>Harsh Events from Samsara</h3><button class="btn-primary" onclick="loadHarshEvents()">Load Harsh Events</button><div id="harshEventsResult" class="result-box hidden"></div></div>
+            </div>
+            <!-- Maintenance -->
+            <div id="maintenance" class="admin-section hidden">
+                <div class="card"><h3>Maintenance Alerts</h3><button class="btn-primary" onclick="loadMaintenanceAlerts()">Load Maintenance</button><div id="maintenanceResult" class="result-box hidden"></div></div>
+            </div>
+            <!-- Drivers -->
             <div id="drivers" class="admin-section hidden"><div class="card"><h3>Drivers</h3><button class="btn-primary" onclick="loadDriversList()">Load Drivers</button><div id="driversListResult" class="result-box hidden"></div></div></div>
+            <!-- PTI List -->
             <div id="pti" class="admin-section hidden"><div class="card"><h3>PTI Submissions</h3><button class="btn-primary" onclick="loadPTIList()">Load PTIs</button><div id="ptiListResult" class="result-box hidden"></div></div></div>
+            <!-- Fuel Log -->
             <div id="fuel" class="admin-section hidden"><div class="card"><h3>Fuel Log</h3><button class="btn-primary" onclick="loadFuelLog()">Load Fuel Log</button><div id="fuelLogResult" class="result-box hidden"></div></div></div>
+            <!-- Details -->
             <div id="details" class="admin-section hidden"><div class="card"><h3>Driver Details</h3><div class="form-group"><input type="text" id="searchTruck" placeholder="Enter Truck #"></div><button class="btn-primary" onclick="loadDriverDetails()">Search</button><div id="detailsResult" class="result-box hidden"></div></div></div>
         </div>
     </div>
@@ -170,6 +214,11 @@
         <div class="form-group">
             <label>Telegram Group</label>
             <select id="assignGroupSelect" class="select-field"></select>
+            <button class="btn-secondary" onclick="loadGroupsIntoModal()" style="margin-top:6px;">↻ Refresh Groups</button>
+        </div>
+        <div class="form-group">
+            <label>Or Enter Group ID Manually</label>
+            <input type="number" id="assignGroupIdManual" placeholder="e.g., -5218192108">
         </div>
         <div class="form-group">
             <label>Driver Login (Truck Number)</label>
@@ -191,7 +240,6 @@
     const ADMIN_TRUCK = "1234";
     const ADMIN_PASS = "Mytrucksafetypassword3223";
 
-    // State
     let currentVehicleId = null;
 
     window.onload = function () {
@@ -253,13 +301,94 @@
         if (page === 'overview') loadOverview();
         if (page === 'assign') loadSamsaraVehicles();
         if (page === 'trucks') loadTrucksFuel();
+        if (page === 'faults') loadFaultCodes();
+        if (page === 'harsh') loadHarshEvents();
+        if (page === 'maintenance') loadMaintenanceAlerts();
         if (page === 'drivers') loadDriversList();
         if (page === 'pti') loadPTIList();
         if (page === 'fuel') loadFuelLog();
     }
 
+    // ===== DRIVER APP FUNCTIONS =====
+    async function searchFuel() {
+        const resDiv = document.getElementById('fuelResult');
+        const dest = document.getElementById('fuelDest').value.trim();
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
+        try {
+            const resp = await fetch('/api/search-fuel', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ destination: dest, init_data: initData }) });
+            const data = await resp.json();
+            if (data.stations && data.stations.length) {
+                let html = '<h4>Nearby Fuel Stops</h4>';
+                data.stations.forEach(s => { html += `<div class="list-item"><b>${s.name}</b><br>${s.address || 'N/A'} - $${s.price || '0.00'}/gal</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No stations found.</p>'; }
+        } catch(e) { resDiv.innerHTML = '<div class="error">Failed to fetch fuel stations</div>'; }
+    }
+
+    async function submitPTI() {
+        const resDiv = document.getElementById('ptiResult');
+        const ptiNum = document.getElementById('ptiNum').value.trim();
+        if(!ptiNum) { alert('Enter PTI Number'); return; }
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Submitting...</div>';
+        try {
+            const resp = await fetch('/api/submit-pti', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ pti_number: ptiNum, init_data: initData }) });
+            const data = await resp.json();
+            if(data.success) { resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; document.getElementById('ptiNum').value = ''; }
+            else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
+        } catch(e) { resDiv.innerHTML = '<div class="error">Submission error</div>'; }
+    }
+
+    async function showPoints() {
+        const resDiv = document.getElementById('pointsResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/driver-points', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ init_data: initData }) });
+            const data = await resp.json();
+            resDiv.innerHTML = `<h4>Current Points: <b>${data.points || 0}</b></h4>`;
+        } catch(e) { resDiv.innerHTML = '<div class="error">Error retrieving points</div>'; }
+    }
+
+    async function submitVerification() {
+        const resDiv = document.getElementById('verifyResult');
+        const name = document.getElementById('verifyName').value.trim();
+        const photo = document.getElementById('verifyPhoto').files[0];
+        if(!name || !photo) { alert('Fill all fields'); return; }
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Uploading...</div>';
+        const formData = new FormData();
+        formData.append('driver_name', name);
+        formData.append('photo', photo);
+        formData.append('init_data', initData);
+        try {
+            const resp = await fetch('/api/verify-truck', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if(data.success) { resDiv.innerHTML = `<div class="success">✅ Verification Submitted</div>`; }
+            else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
+        } catch(e) { resDiv.innerHTML = '<div class="error">Verification error</div>'; }
+    }
+
+    async function showHistory() {
+        const resDiv = document.getElementById('historyResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/driver-history', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ init_data: initData }) });
+            const data = await resp.json();
+            if(data.history && data.history.length) {
+                let html = '<h4>Activity History</h4>';
+                data.history.forEach(h => { html += `<div class="list-item"><b>${h.title}</b><br>${h.date} - ${h.details}</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No history available.</p>'; }
+        } catch(e) { resDiv.innerHTML = '<div class="error">Error loading history</div>'; }
+    }
+
+    // ===== ADMIN DATA LOADING =====
     async function loadOverview() {
-        try { const resp = await fetch('/api/admin-summary', { method: 'GET' }); const data = await resp.json(); document.getElementById('totalDrivers').textContent = data.points.length; document.getElementById('totalPTIs').textContent = data.pti.length; document.getElementById('totalFuelStops').textContent = data.fuel_usage.length; } catch (e) {}
+        try { 
+            const resp = await fetch('/api/admin-summary', { method: 'GET' }); 
+            const data = await resp.json(); 
+            document.getElementById('totalDrivers').textContent = data.points ? data.points.length : 0; 
+            document.getElementById('totalPTIs').textContent = data.pti ? data.pti.length : 0; 
+            document.getElementById('totalFuelStops').textContent = data.fuel_usage ? data.fuel_usage.length : 0; 
+        } catch (e) {}
     }
 
     async function loadSamsaraVehicles() {
@@ -278,14 +407,131 @@
         } catch (e) { resDiv.innerHTML = '<div class="error">Error loading vehicles</div>'; }
     }
 
-    // Modal functions
-    async function openAssignModal(vehicleId, vehicleName) {
-        currentVehicleId = vehicleId;
-        document.getElementById('assignModal').classList.remove('hidden');
+    async function loadTrucksFuel() {
+        const resDiv = document.getElementById('trucksFuelResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin/trucks-fuel', { method: 'GET' });
+            const data = await resp.json();
+            if (data.trucks && data.trucks.length) {
+                let html = '<h4>Trucks Fuel Stats</h4>';
+                data.trucks.forEach(t => { html += `<div class="list-item"><b>Truck #${t.truck_number}</b><br>Fuel Level: ${t.fuel_level}% | Mileage: ${t.mileage} mi</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No truck data found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading trucks</div>'; }
+    }
+
+    async function loadFaultCodes() {
+        const resDiv = document.getElementById('faultCodesResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/fault-codes', { method: 'GET' });
+            const data = await resp.json();
+            if (data.fault_codes && data.fault_codes.length) {
+                let html = '<h4>Fault Codes</h4>';
+                data.fault_codes.forEach(f => {
+                    html += `<div class="list-item"><b>${f.code}</b>: ${f.description || ''} (Severity: ${f.severity})<br>Vehicle: ${f.vehicle_id}</div>`;
+                });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No fault codes found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading faults</div>'; }
+    }
+
+    async function loadHarshEvents() {
+        const resDiv = document.getElementById('harshEventsResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/harsh-events', { method: 'GET' });
+            const data = await resp.json();
+            if (data.harsh_events && data.harsh_events.length) {
+                let html = '<h4>Harsh Events</h4>';
+                data.harsh_events.forEach(e => {
+                    html += `<div class="list-item"><b>${e.event_type}</b> at ${e.location || 'Unknown'}<br>Vehicle: ${e.vehicle_id}<br>${e.video_url ? `<a href="${e.video_url}" target="_blank">View Video</a>` : ''}</div>`;
+                });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No harsh events found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading harsh events</div>'; }
+    }
+
+    async function loadMaintenanceAlerts() {
+        const resDiv = document.getElementById('maintenanceResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/maintenance-alerts', { method: 'GET' });
+            const data = await resp.json();
+            if (data.maintenance_alerts && data.maintenance_alerts.length) {
+                let html = '<h4>Maintenance Alerts</h4>';
+                data.maintenance_alerts.forEach(m => {
+                    html += `<div class="list-item"><b>${m.maintenance_type}</b> due at ${m.due_mileage} miles<br>Vehicle: ${m.vehicle_id}</div>`;
+                });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No maintenance alerts found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading maintenance</div>'; }
+    }
+
+    async function loadDriversList() {
+        const resDiv = document.getElementById('driversListResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin/drivers', { method: 'GET' });
+            const data = await resp.json();
+            if (data.drivers && data.drivers.length) {
+                let html = '<h4>Registered Drivers</h4>';
+                data.drivers.forEach(d => { html += `<div class="list-item"><b>Truck #${d.truck_number}</b><br>Samsara ID: ${d.samsara_driver_id || 'N/A'}<br>Group ID: ${d.group_id}</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No drivers found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading drivers</div>'; }
+    }
+
+    async function loadPTIList() {
+        const resDiv = document.getElementById('ptiListResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin/ptis', { method: 'GET' });
+            const data = await resp.json();
+            if (data.ptis && data.ptis.length) {
+                let html = '<h4>Submitted PTIs</h4>';
+                data.ptis.forEach(p => { html += `<div class="list-item"><b>Truck #${p.truck_number}</b> - PTI: ${p.pti_number}<br>Time: ${p.created_at || 'N/A'}</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No PTIs submitted.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading PTIs</div>'; }
+    }
+
+    async function loadFuelLog() {
+        const resDiv = document.getElementById('fuelLogResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+        try {
+            const resp = await fetch('/api/admin/fuel-log', { method: 'GET' });
+            const data = await resp.json();
+            if (data.fuel_log && data.fuel_log.length) {
+                let html = '<h4>Fuel Usage Log</h4>';
+                data.fuel_log.forEach(f => { html += `<div class="list-item"><b>Truck #${f.truck_number}</b> - Gallons: ${f.gallons}<br>Cost: $${f.cost} | Date: ${f.date}</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No fuel records found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading fuel log</div>'; }
+    }
+
+    async function loadDriverDetails() {
+        const resDiv = document.getElementById('detailsResult');
+        const truck = document.getElementById('searchTruck').value.trim();
+        if(!truck) { alert('Enter Truck Number'); return; }
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
+        try {
+            const resp = await fetch(`/api/admin/driver-details?truck=${truck}`, { method: 'GET' });
+            const data = await resp.json();
+            if (data.driver) {
+                const d = data.driver;
+                resDiv.innerHTML = `<h4>Truck #${d.truck_number} Details</h4><div class="list-item">License: ${d.truck_license || 'N/A'}<br>Group ID: ${d.group_id}<br>Points: ${d.points || 0}<br>Samsara Driver ID: ${d.samsara_driver_id || 'N/A'}</div>`;
+            } else { resDiv.innerHTML = '<p>Driver not found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Search error</div>'; }
+    }
+
+    // ===== Modal functions =====
+    async function loadGroupsIntoModal() {
+        const select = document.getElementById('assignGroupSelect');
         try {
             const resp = await fetch('/api/bot-groups', { method: 'GET' });
             const data = await resp.json();
-            const select = document.getElementById('assignGroupSelect');
             select.innerHTML = '';
             if (data.groups && data.groups.length > 0) {
                 data.groups.forEach(g => {
@@ -294,8 +540,15 @@
                     option.textContent = `${g.title} (${g.chat_id})`;
                     select.appendChild(option);
                 });
-            } else { select.innerHTML = '<option value="">No groups found</option>'; }
+            } else { select.innerHTML = '<option value="">No groups found – enter manually below</option>'; }
         } catch (e) { select.innerHTML = '<option value="">Error loading groups</option>'; }
+    }
+
+    async function openAssignModal(vehicleId, vehicleName) {
+        currentVehicleId = vehicleId;
+        document.getElementById('assignModal').classList.remove('hidden');
+        document.getElementById('assignGroupIdManual').value = '';
+        await loadGroupsIntoModal();
         const firstWord = (vehicleName || '').split(' ')[0];
         document.getElementById('assignTruck').value = firstWord;
         document.getElementById('assignPassword').value = '';
@@ -304,18 +557,19 @@
     function closeAssignModal() { document.getElementById('assignModal').classList.add('hidden'); }
 
     async function confirmAssign() {
-        const groupId = document.getElementById('assignGroupSelect').value;
+        const groupSelect = document.getElementById('assignGroupSelect').value;
+        const manualGroupId = document.getElementById('assignGroupIdManual').value.trim();
         const truckNumber = document.getElementById('assignTruck').value.trim();
         const password = document.getElementById('assignPassword').value.trim();
+        const groupId = manualGroupId ? Number(manualGroupId) : Number(groupSelect);
         if (!groupId || !truckNumber || !password) { alert('Please fill all fields'); return; }
         try {
-            const resp = await fetch('/api/admin/assign-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicle_id: currentVehicleId, truck_number: truckNumber, group_id: Number(groupId), password: password }) });
+            const resp = await fetch('/api/admin/assign-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicle_id: currentVehicleId, truck_number: truckNumber, group_id: groupId, password: password }) });
             const data = await resp.json();
             if (data.success) { alert('✅ ' + data.message); closeAssignModal(); loadSamsaraVehicles(); } else { alert('❌ ' + data.error); }
         } catch (e) { alert('Network error'); }
     }
 
-    // Other functions
     async function registerDriver() {
         const truck = document.getElementById('regTruck').value.trim();
         const groupId = document.getElementById('regGroupId').value.trim();
@@ -323,159 +577,21 @@
         const vehicleId = document.getElementById('regVehicleId').value.trim();
         const password = document.getElementById('regPassword').value.trim();
         const license = document.getElementById('regLicense').value.trim();
-        if (!truck || !groupId || !driverId || !password) { alert('Fill all required'); return; }
+        if (!truck || !groupId || !driverId || !password) { alert('Fill all required fields'); return; }
         const resDiv = document.getElementById('registerResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Registering...</div>';
         try {
             const resp = await fetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: Number(groupId), samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, truck_license: license }) });
             const data = await resp.json();
-            if (data.success) { resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; document.getElementById('regTruck').value=''; document.getElementById('regGroupId').value=''; document.getElementById('regDriverId').value=''; document.getElementById('regVehicleId').value=''; document.getElementById('regPassword').value=''; document.getElementById('regLicense').value=''; }
-            else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function loadTrucksFuel() {
-        const resDiv = document.getElementById('trucksFuelResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin/trucks-with-fuel', { method: 'GET' });
-            const data = await resp.json();
-            if (data.trucks && data.trucks.length) {
-                let html = '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
-                data.trucks.forEach(t => { const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A'; html += `<tr><td>${t.truck_number}</td><td>${fuel}</td><td>${t.driver_id}</td></tr>`; });
-                html += '</table>';
-                resDiv.innerHTML = html;
-            } else { resDiv.innerHTML = '<p>No registered trucks.</p>'; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadDriversList() {
-        const resDiv = document.getElementById('driversListResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>Driver Roster</h4>';
-            data.points.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`; });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadPTIList() {
-        const resDiv = document.getElementById('ptiListResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>PTI Counts</h4>';
-            data.pti.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.count}</div>`; });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadFuelLog() {
-        const resDiv = document.getElementById('fuelLogResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
-            const data = await resp.json();
-            let html = '<h4>Fuel Usage</h4>';
-            data.fuel_usage.forEach(f => { html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`; });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    async function loadDriverDetails() {
-        const truck = document.getElementById('searchTruck').value.trim();
-        const resDiv = document.getElementById('detailsResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
-        try {
-            const resp = await fetch('/api/driver-details/' + truck, { method: 'GET' });
-            const data = await resp.json();
-            if (data.error) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; }
-            else { resDiv.innerHTML = `<h4>Driver ${truck}</h4><div class="list-item">Points: ${data.points}</div><div class="list-item">PTIs: ${data.pti_count}</div><div class="list-item">Vehicle: ${data.vehicle_id}</div>`; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    // Driver app functions
-    async function searchFuel() {
-        const dest = document.getElementById('fuelDest').value.trim();
-        const resDiv = document.getElementById('fuelResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
-        try {
-            const resp = await fetch('/api/fuel-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destination: dest, init_data: initData }) });
-            const data = await resp.json();
-            if (!resp.ok) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; return; }
-            let html = '<h4>Stations</h4>';
-            data.stations.forEach(s => {
-                html += `<div class="list-item"><b>${s.name}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="btn-secondary" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function useStation(name, address, lat, lng, price) {
-        if (!confirm('Confirm?')) return;
-        try {
-            const resp = await fetch('/api/use-station', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: initData }) });
-            const data = await resp.json();
-            alert(data.message || 'Recorded!');
-        } catch (e) { alert('Error'); }
-    }
-
-    async function submitPTI() {
-        const pti = document.getElementById('ptiNum').value.trim();
-        if (!pti) { alert('Enter PTI'); return; }
-        const resDiv = document.getElementById('ptiResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Submitting...</div>';
-        try {
-            const resp = await fetch('/api/submit-pti', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pti_number: pti, init_data: initData }) });
-            const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function showPoints() {
-        const resDiv = document.getElementById('pointsResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/points', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ init_data: initData }) });
-            const data = await resp.json();
-            let html = `<h3>Balance: ${data.balance} pts</h3>`;
-            data.history.forEach(t => html += `<div class="list-item">${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount}</div>`);
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function submitVerification() {
-        const name = document.getElementById('verifyName').value.trim();
-        const photoInput = document.getElementById('verifyPhoto');
-        if (!name || !photoInput.files.length) { alert('Fill all'); return; }
-        const resDiv = document.getElementById('verifyResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Uploading...</div>';
-        const fd = new FormData();
-        fd.append('driver_name', name);
-        fd.append('truck_number', localStorage.getItem('remTruck') || '');
-        fd.append('photo', photoInput.files[0]);
-        fd.append('init_data', initData);
-        try {
-            const resp = await fetch('/api/verify', { method: 'POST', body: fd });
-            const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function showHistory() {
-        const resDiv = document.getElementById('historyResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ init_data: initData }) });
-            const data = await resp.json();
-            let html = '<h3>Fuel</h3>';
-            data.fuel_usage.forEach(u => html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`);
-            html += '<h3>PTI</h3>';
-            data.pti_history.forEach(p => html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`);
-            resDiv.innerHTML = html;
+            if (data.success) { 
+                resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; 
+                document.getElementById('regTruck').value=''; 
+                document.getElementById('regGroupId').value=''; 
+                document.getElementById('regDriverId').value=''; 
+                document.getElementById('regVehicleId').value=''; 
+                document.getElementById('regPassword').value=''; 
+                document.getElementById('regLicense').value=''; 
+            } else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
         } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 </script>
