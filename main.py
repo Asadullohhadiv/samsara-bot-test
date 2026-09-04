@@ -107,7 +107,7 @@ async def start_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     state = {
         "step": 0,
-        "photos": [],
+        "photos": [],           # list of (step_index, file_id, comment)
         "truck_number": None,
         "trailer_number": None,
         "driver_name": None,
@@ -136,6 +136,8 @@ async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not state:
         return
     text = update.message.text.strip()
+
+    # Waiting for truck number
     if state["step"] == 0 and state.get("truck_number") is None:
         if not re.match(r'^[\dA-Za-z-]+$', text):
             await update.message.reply_text("❌ Invalid truck number. Please enter a valid truck number.")
@@ -146,6 +148,8 @@ async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Now enter your **Trailer Number** (optional, type 'N/A' if none)."
         )
         return
+
+    # Waiting for trailer number
     if state["step"] == 0 and state.get("truck_number") is not None:
         state["trailer_number"] = text if text.upper() != "N/A" else ""
         state["step"] = 1
@@ -159,28 +163,29 @@ async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         await ask_next_photo(update, state)
         return
+
+    # Waiting for driver name
     if state["step"] == -1:
         state["driver_name"] = text
         state["step"] = 1
         await ask_next_photo(update, state)
         return
-    await update.message.reply_text("Please send a photo, or use /cancel to stop.")
 
-async def ask_next_photo(update: Update, state: Dict):
-    chat_id = update.effective_chat.id
-    step = state["step"]
-    if step > len(PTI_STEPS):
-        await show_review(update, state)
+    # If waiting for a comment after a photo, store it
+    if state.get("waiting_comment") == True:
+        # Store comment for the last photo
+        if state["photos"]:
+            last_photo = state["photos"][-1]
+            # last_photo is (step, file_id, comment) - update comment
+            state["photos"][-1] = (last_photo[0], last_photo[1], text)
+        # Clear waiting flag and proceed to next photo request (or review)
+        state["waiting_comment"] = False
+        state["step"] += 1
+        await ask_next_photo(update, state)
         return
-    label, prompt = PTI_STEPS[step - 1]
-    keyboard = [[InlineKeyboardButton("Skip / N/A", callback_data=f"pti_skip_{step}")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        f"📸 **Step {step} of {len(PTI_STEPS)}**\n\n"
-        f"**{label}**\n{prompt}",
-        parse_mode="Markdown",
-        reply_markup=reply_markup
-    )
+
+    # If in photo step and text, ignore
+    await update.message.reply_text("Please send a photo, or use /cancel to stop.")
 
 async def handle_pti_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -190,12 +195,36 @@ async def handle_pti_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if state["step"] < 1:
         await update.message.reply_text("Please complete the text steps first.")
         return
+
+    # If we were waiting for a comment, but driver sent a photo, ignore or treat as new? We'll ignore.
+    if state.get("waiting_comment") == True:
+        await update.message.reply_text("Please type a comment or press 'Next' to continue.")
+        return
+
     photo = update.message.photo[-1]
     file_id = photo.file_id
     step = state["step"]
-    state["photos"].append((step, file_id))
-    state["step"] += 1
-    await ask_next_photo(update, state)
+    # Store photo with placeholder comment
+    state["photos"].append((step, file_id, ""))
+    # Ask for comment or next
+    await ask_comment_or_next(update, state)
+
+async def ask_comment_or_next(update: Update, state: Dict):
+    """Ask driver to add comment (optional) or press Next."""
+    chat_id = update.effective_chat.id
+    step_label = PTI_STEP_LABELS[state["step"] - 1] if state["step"] - 1 < len(PTI_STEP_LABELS) else "Photo"
+    keyboard = [[
+        InlineKeyboardButton("⏭️ Next Photo", callback_data=f"pti_next_{state['step']}")
+    ]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        f"📸 **{step_label}** photo received.\n"
+        "If there is an issue, type a comment now (e.g., 'Lights damaged').\n"
+        "Or press **Next Photo** to continue.",
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+    state["waiting_comment"] = True
 
 async def handle_pti_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -205,22 +234,56 @@ async def handle_pti_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not state:
         return
     data = query.data
-    if data.startswith("pti_skip_"):
+
+    if data.startswith("pti_next_"):
+        # When user presses Next after a photo
+        if state.get("waiting_comment") == True:
+            state["waiting_comment"] = False
+            state["step"] += 1
+            await ask_next_photo(update, state)
+        else:
+            # If not waiting comment, ignore
+            await query.message.reply_text("This action is not active.")
+
+    elif data.startswith("pti_skip_"):
         step = int(data.split("_")[2])
         if state["step"] == step:
+            # Skip this step, advance without photo
+            state["photos"].append((step, "", "Skipped"))
             state["step"] += 1
             await ask_next_photo(update, state)
         else:
             await query.message.reply_text("This step is no longer active.")
+
     elif data == "pti_submit":
         await submit_pti(update, state)
+
     elif data == "pti_cancel":
         set_pti_state(chat_id, None)
         await query.message.reply_text("❌ PTI inspection cancelled.")
 
+async def ask_next_photo(update: Update, state: Dict):
+    chat_id = update.effective_chat.id
+    step = state["step"]
+    if step > len(PTI_STEPS):
+        await show_review(update, state)
+        return
+    label, prompt = PTI_STEPS[step - 1]
+    keyboard = [[
+        InlineKeyboardButton("Skip / N/A", callback_data=f"pti_skip_{step}")
+    ]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        f"📸 **Step {step} of {len(PTI_STEPS)}**\n\n"
+        f"**{label}**\n{prompt}",
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+    state["waiting_comment"] = False
+
 async def show_review(update: Update, state: Dict):
     chat_id = update.effective_chat.id
-    collected = len(state["photos"])
+    collected = len([p for p in state["photos"] if p[1] != ""])  # count non-skipped
     total = len(PTI_STEPS)
     text = (
         f"📋 **PTI Summary**\n\n"
@@ -242,45 +305,58 @@ async def submit_pti(update: Update, state: Dict):
     if not state["photos"]:
         await update.message.reply_text("No photos collected. Cannot submit.")
         return
+
+    # Build media group: only photos with file_id (not skipped)
     media_group = []
-    for step_idx, file_id in state["photos"]:
+    for step_idx, file_id, comment in state["photos"]:
+        if file_id == "":
+            continue  # skipped
         label = PTI_STEP_LABELS[step_idx - 1] if step_idx - 1 < len(PTI_STEP_LABELS) else "Photo"
+        caption = label
+        if comment:
+            caption += f"\n⚠️ Comment: {comment}"
         media_group.append({
             "type": "photo",
             "media": file_id,
-            "caption": label,
+            "caption": caption,
         })
+
     caption = (
         f"📋 **NEW PRE-TRIP INSPECTION REPORT**\n\n"
         f"👤 Driver: {state.get('driver_name', 'Unknown')}\n"
         f"🚛 Truck #: {state.get('truck_number', 'N/A')}\n"
         f"📦 Trailer #: {state.get('trailer_number', 'N/A')}\n"
         f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
-        f"📸 Collected {len(state['photos'])} photos"
+        f"📸 Collected {len(media_group)} photos"
     )
+
     try:
+        # Send media group to PTI group
         await context.bot.send_media_group(
-            chat_id=config.ADMIN_GROUP_ID,
+            chat_id=config.PTI_GROUP_ID,
             media=media_group,
             caption=caption,
         )
+        # Send brief notification to dispatcher group (if different)
         dispatcher_msg = (
             f"📋 **PTI COMPLETED**\n"
             f"👤 Driver: {state.get('driver_name', 'Unknown')}\n"
             f"🚛 Truck #: {state.get('truck_number', 'N/A')}\n"
             f"📦 Trailer #: {state.get('trailer_number', 'N/A')}\n"
-            f"📊 Photos: {len(state['photos'])}\n"
+            f"📊 Photos: {len(media_group)}\n"
             f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         )
-        await context.bot.send_message(
-            chat_id=config.DISPATCHER_GROUP_ID,
-            text=dispatcher_msg,
-            parse_mode="Markdown"
-        )
+        if config.DISPATCHER_GROUP_ID and config.DISPATCHER_GROUP_ID != config.PTI_GROUP_ID:
+            await context.bot.send_message(
+                chat_id=config.DISPATCHER_GROUP_ID,
+                text=dispatcher_msg,
+                parse_mode="Markdown"
+            )
+        # Record in database
         driver_id = state.get('driver_name', '')
         truck_number = state.get('truck_number', '')
         trailer_number = state.get('trailer_number', '')
-        photo_count = len(state['photos'])
+        photo_count = len(media_group)
         pti_number = f"PTI-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         add_pti(driver_id, pti_number)
         add_points(driver_id, config.POINTS_PER_PTI, "pti", f"PTI {pti_number}")
