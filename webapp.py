@@ -22,7 +22,8 @@ from database import (
     register_driver_admin,
     get_driver_by_truck,
     list_all_drivers_admin,
-    get_all_drivers
+    get_all_drivers,
+    get_all_bot_groups,  # NEW
 )
 from samsara_client import (
     find_vehicle_by_truck_number,
@@ -60,7 +61,6 @@ def get_user_from_init_data(init_data: str):
         return None
 
 def send_telegram_message(chat_id, text):
-    """Send a message to a Telegram group using the bot token."""
     try:
         url = f"https://api.telegram.org/bot{config.TELEGRAM_TOKEN}/sendMessage"
         payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
@@ -139,6 +139,16 @@ async def samsara_vehicles_api():
     except Exception as e:
         return {"error": str(e)}
 
+# ---- Admin: List Bot Groups ----
+
+@app.get("/api/bot-groups")
+async def bot_groups_api():
+    try:
+        groups = get_all_bot_groups()
+        return {"groups": [{"chat_id": g[0], "title": g[1]} for g in groups]}
+    except Exception as e:
+        return {"error": str(e)}
+
 # ---- Admin: Assign Driver (from Samsara vehicle) ----
 
 class AssignDriverRequest(BaseModel):
@@ -213,9 +223,8 @@ async def admin_register_driver_api(req: AdminRegisterDriverRequest):
 
 @app.get("/api/admin/trucks-with-fuel")
 async def admin_trucks_with_fuel():
-    """List all registered drivers with their truck number and current fuel level."""
     try:
-        drivers = get_all_drivers()  # Returns list of (chat_id, driver_id, vehicle_id, truck_number, truck_license)
+        drivers = get_all_drivers()
         result = []
         for driver in drivers:
             chat_id, driver_id, vehicle_id, truck_number, truck_license = driver
