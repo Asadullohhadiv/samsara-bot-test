@@ -382,26 +382,63 @@ async def list_groups_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 # ======================== BACKGROUND TASK ========================
 
 async def periodic_samsara_sync(app: Application):
-    """Fetch fault codes, harsh events, maintenance alerts every 15 min and save to DB."""
+    """Fetch fault codes, harsh events, maintenance alerts every 15 min and save to DB + alert Admin Group."""
     while True:
         try:
             vehicles = get_all_vehicles() or []
             for v in vehicles:
                 vehicle_id = v.get('id')
-                truck_number = v.get('name', '').split()[0] if v.get('name') else ''
+                truck_number = v.get('name', '').split()[0] if v.get('name') else 'Unknown'
                 
+                # 1. Fetch & save Fault Codes
                 faults = get_fault_codes(vehicle_id) or []
                 for f in faults:
                     parsed = parse_fault_code(f)
                     if parsed:
                         save_fault_code(vehicle_id, truck_number, parsed.get('code'), parsed.get('description'), parsed.get('severity'))
                 
+                # 2. Fetch, save & alert Harsh Events
                 events = get_harsh_events(vehicle_id) or []
                 for e in events:
                     parsed = parse_harsh_event(e)
                     if parsed:
-                        save_harsh_event(vehicle_id, truck_number, parsed.get('event_type'), parsed.get('location'), parsed.get('video_url'))
+                        event_type = parsed.get('event_type', 'Harsh Event')
+                        location = parsed.get('location', 'Location unavailable')
+                        video_url = parsed.get('video_url')
+                        
+                        save_harsh_event(vehicle_id, truck_number, event_type, location, video_url)
+                        
+                        # Send notification message directly to Admin Group
+                        alert_msg = (
+                            f"🚨 **HARSH EVENT DETECTED** 🚨\n\n"
+                            f"🚛 **Truck Number:** {truck_number}\n"
+                            f"⚠️ **Event Type:** {event_type}\n"
+                            f"📍 **Location:** {location}\n"
+                            f"🕐 **Time:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                        )
+                        
+                        if video_url:
+                            alert_msg += f"\n📹 [Watch Incident Video]({video_url})"
+                            
+                        try:
+                            if config.ADMIN_GROUP_ID:
+                                if video_url and video_url.endswith(('.mp4', '.mov')):
+                                    await app.bot.send_video(
+                                        chat_id=config.ADMIN_GROUP_ID,
+                                        video=video_url,
+                                        caption=alert_msg,
+                                        parse_mode="Markdown"
+                                    )
+                                else:
+                                    await app.bot.send_message(
+                                        chat_id=config.ADMIN_GROUP_ID,
+                                        text=alert_msg,
+                                        parse_mode="Markdown"
+                                    )
+                        except Exception as telegram_err:
+                            print(f"❌ Failed to dispatch Harsh Event to Admin Group: {telegram_err}")
                 
+                # 3. Fetch & save Maintenance Alerts
                 alerts = get_maintenance_alerts(vehicle_id) or []
                 for a in alerts:
                     parsed = parse_maintenance_alert(a)
