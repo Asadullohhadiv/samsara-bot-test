@@ -7,7 +7,6 @@ BASE_URL = "https://api.samsara.com"
 # ==================== EXISTING FUNCTIONS ====================
 
 def get_vehicle_stats(vehicle_id):
-    """Fetch stats including fuel, gps, heading."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/stats"
     params = {"types": "fuelPercents,gps", "vehicleIds": vehicle_id}
@@ -42,7 +41,6 @@ def get_vehicle_location(vehicle_id):
     return None
 
 def get_all_vehicles():
-    """Fetch all vehicles from Samsara."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles"
     params = {"limit": 100}
@@ -140,10 +138,9 @@ def get_maintenance_alerts(vehicle_id=None, limit=20):
         print(f"❌ Error fetching maintenance alerts: {e}")
         return []
 
-# Helper functions to parse raw data (same as before)
+# Helpers to parse raw data
 
 def parse_fault_code(raw_fault):
-    """Convert raw Samsara fault into a clean dict."""
     return {
         "code": raw_fault.get("code", ""),
         "description": raw_fault.get("description", "") or raw_fault.get("message", ""),
@@ -153,7 +150,6 @@ def parse_fault_code(raw_fault):
     }
 
 def parse_harsh_event(raw_event):
-    """Convert raw harsh event into a clean dict."""
     return {
         "event_type": raw_event.get("type", ""),
         "location": raw_event.get("location", "") or raw_event.get("address", ""),
@@ -163,7 +159,6 @@ def parse_harsh_event(raw_event):
     }
 
 def parse_maintenance_alert(raw_alert):
-    """Convert raw maintenance alert into a clean dict."""
     return {
         "maintenance_type": raw_alert.get("type", ""),
         "due_mileage": raw_alert.get("dueMiles", 0),
