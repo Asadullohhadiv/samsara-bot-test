@@ -45,7 +45,7 @@
         .content { padding:24px; max-width:800px; margin:0 auto; }
         .result-box { margin-top:16px; }
 
-        /* Bottom Nav */
+        /* Bottom Nav (only Fuel & PTI) */
         .bottom-nav { position:fixed; bottom:20px; left:16px; right:16px; background:rgba(255,255,255,.75); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.4); border-radius:32px; box-shadow:0 8px 32px rgba(0,0,0,.12); display:flex; justify-content:space-around; align-items:center; padding:8px 6px; z-index:100; }
         .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border-radius:24px; cursor:pointer; color:#444746; transition:all .2s; text-decoration:none; font-size:11px; font-weight:500; }
         .nav-item.active { color:var(--primary); background:rgba(26,115,232,.1); }
@@ -96,22 +96,37 @@
     </div>
 </div>
 
-<!-- DRIVER APP -->
+<!-- DRIVER APP (only Fuel & PTI) -->
 <div id="appScreen" class="app-screen">
     <div class="top-bar"><h2>My Truck Safety</h2><div class="info-chip" id="truckInfo">Truck: -</div></div>
     <div class="content">
-        <div id="fuel" class="tab-content"><div class="card"><h3>Search Fuel Stations</h3><div class="form-group"><input type="text" id="fuelDest" placeholder="Destination (optional)"></div><button class="btn-primary" onclick="searchFuel()">🔍 Find Fuel Stops</button><div id="fuelResult" class="result-box hidden"></div></div></div>
-        <div id="pti" class="tab-content hidden"><div class="card"><h3>Submit PTI</h3><div class="form-group"><input type="text" id="ptiNum" placeholder="PTI Number"></div><button class="btn-primary" onclick="submitPTI()">📤 Submit</button><div id="ptiResult" class="result-box hidden"></div></div></div>
-        <div id="points" class="tab-content hidden"><div class="card"><h3>My Points</h3><button class="btn-primary" onclick="showPoints()">💰 View Balance</button><div id="pointsResult" class="result-box hidden"></div></div></div>
-        <div id="verify" class="tab-content hidden"><div class="card"><h3>Verify Truck</h3><div class="form-group"><input type="text" id="verifyName" placeholder="Driver Name"></div><div class="form-group"><input type="file" id="verifyPhoto"></div><button class="btn-primary" onclick="submitVerification()">📷 Submit</button><div id="verifyResult" class="result-box hidden"></div></div></div>
-        <div id="history" class="tab-content hidden"><div class="card"><h3>History</h3><button class="btn-primary" onclick="showHistory()">📂 Load</button><div id="historyResult" class="result-box hidden"></div></div></div>
+        <div id="fuel" class="tab-content">
+            <div class="card">
+                <h3>Search Fuel Stations</h3>
+                <div class="form-group"><input type="text" id="fuelDest" placeholder="Destination (optional)"></div>
+                <button class="btn-primary" onclick="searchFuel()">🔍 Find Fuel Stops</button>
+                <div id="fuelResult" class="result-box hidden"></div>
+            </div>
+        </div>
+        <div id="pti" class="tab-content hidden">
+            <div class="card">
+                <h3>Submit PTI</h3>
+                <p id="ptiStatus" class="loading">Not started</p>
+                <button class="btn-primary" onclick="startPTI()" id="startPtiBtn">📸 Start PTI</button>
+                <div id="ptiPhotoSection" class="hidden">
+                    <p id="ptiStepPrompt"></p>
+                    <input type="file" id="ptiPhotoInput" accept="image/*" style="margin-top:10px; padding:10px;">
+                    <div class="form-group"><input type="text" id="ptiComment" placeholder="Optional comment (issue)"></div>
+                    <button class="btn-primary" onclick="uploadPTIPhoto()">📤 Upload Photo</button>
+                    <button class="btn-secondary" onclick="submitPTI()" id="submitPtiBtn" style="margin-top:12px;">✅ Submit PTI</button>
+                </div>
+                <div id="ptiResult" class="result-box hidden"></div>
+            </div>
+        </div>
     </div>
     <div class="bottom-nav">
         <a class="nav-item active" data-tab="fuel" onclick="showTab('fuel')"><div class="nav-icon-box"><span>⛽</span></div><span class="nav-label">Fuel</span></a>
         <a class="nav-item" data-tab="pti" onclick="showTab('pti')"><div class="nav-icon-box"><span>📋</span></div><span class="nav-label">PTI</span></a>
-        <a class="nav-item" data-tab="points" onclick="showTab('points')"><div class="nav-icon-box"><span>💰</span></div><span class="nav-label">Points</span></a>
-        <a class="nav-item" data-tab="verify" onclick="showTab('verify')"><div class="nav-icon-box"><span>✅</span></div><span class="nav-label">Verify</span></a>
-        <a class="nav-item" data-tab="history" onclick="showTab('history')"><div class="nav-icon-box"><span>📜</span></div><span class="nav-label">History</span></a>
     </div>
 </div>
 
@@ -133,7 +148,6 @@
             <div class="admin-nav-item" data-anav="details" onclick="openAdminPage('details')"><span class="admin-nav-icon">🔍</span><span class="admin-nav-label">Details</span></div>
         </div>
         <div class="admin-content">
-            <!-- Overview -->
             <div id="overview" class="admin-section">
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Drivers</div></div>
@@ -142,11 +156,9 @@
                 </div>
                 <button class="btn-primary" onclick="loadOverview()">Refresh Stats</button>
             </div>
-            <!-- Assign -->
             <div id="assign" class="admin-section hidden">
                 <div class="card"><h3>Samsara Vehicles</h3><button class="btn-primary" onclick="loadSamsaraVehicles()">Sync Fleet Vehicles</button><div id="samsaraVehicles" class="result-box hidden"></div></div>
             </div>
-            <!-- Register -->
             <div id="register" class="admin-section hidden">
                 <div class="card"><h3>Register New Driver</h3>
                     <div class="form-group"><label>Truck #</label><input type="text" id="regTruck"></div>
@@ -159,29 +171,21 @@
                     <div id="registerResult" class="result-box hidden"></div>
                 </div>
             </div>
-            <!-- Trucks & Fuel -->
             <div id="trucks" class="admin-section hidden">
                 <div class="card"><h3>Trucks & Fuel</h3><button class="btn-primary" onclick="loadTrucksFuel()">Load Trucks</button><div id="trucksFuelResult" class="result-box hidden"></div></div>
             </div>
-            <!-- Fault Codes -->
             <div id="faults" class="admin-section hidden">
                 <div class="card"><h3>Fault Codes from Samsara</h3><button class="btn-primary" onclick="loadFaultCodes()">Load Fault Codes</button><div id="faultCodesResult" class="result-box hidden"></div></div>
             </div>
-            <!-- Harsh Events -->
             <div id="harsh" class="admin-section hidden">
                 <div class="card"><h3>Harsh Events from Samsara</h3><button class="btn-primary" onclick="loadHarshEvents()">Load Harsh Events</button><div id="harshEventsResult" class="result-box hidden"></div></div>
             </div>
-            <!-- Maintenance -->
             <div id="maintenance" class="admin-section hidden">
                 <div class="card"><h3>Maintenance Alerts</h3><button class="btn-primary" onclick="loadMaintenanceAlerts()">Load Maintenance</button><div id="maintenanceResult" class="result-box hidden"></div></div>
             </div>
-            <!-- Drivers -->
             <div id="drivers" class="admin-section hidden"><div class="card"><h3>Drivers</h3><button class="btn-primary" onclick="loadDriversList()">Load Drivers</button><div id="driversListResult" class="result-box hidden"></div></div></div>
-            <!-- PTI List -->
             <div id="pti" class="admin-section hidden"><div class="card"><h3>PTI Submissions</h3><button class="btn-primary" onclick="loadPTIList()">Load PTIs</button><div id="ptiListResult" class="result-box hidden"></div></div></div>
-            <!-- Fuel Log -->
             <div id="fuel" class="admin-section hidden"><div class="card"><h3>Fuel Log</h3><button class="btn-primary" onclick="loadFuelLog()">Load Fuel Log</button><div id="fuelLogResult" class="result-box hidden"></div></div></div>
-            <!-- Details -->
             <div id="details" class="admin-section hidden"><div class="card"><h3>Driver Details</h3><div class="form-group"><input type="text" id="searchTruck" placeholder="Enter Truck #"></div><button class="btn-primary" onclick="loadDriverDetails()">Search</button><div id="detailsResult" class="result-box hidden"></div></div></div>
         </div>
     </div>
@@ -222,6 +226,10 @@
     const ADMIN_PASS = "Mytrucksafetypassword3223";
 
     let currentVehicleId = null;
+    let ptiStep = 0;
+    let ptiTotalSteps = 6;
+    let ptiTruckNumber = '';
+    let ptiTrailerNumber = '';
 
     window.onload = function () {
         if (localStorage.getItem('remTruck') && localStorage.getItem('remPass')) {
@@ -310,7 +318,6 @@
         } catch (e) { resDiv.innerHTML = '<div class="error">Error loading vehicles</div>'; }
     }
 
-    // New admin functions
     async function loadFaultCodes() {
         const resDiv = document.getElementById('faultCodesResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
@@ -359,7 +366,6 @@
         } catch (e) { resDiv.innerHTML = '<div class="error">Error loading maintenance</div>'; }
     }
 
-    // Modal functions
     async function loadGroupsIntoModal() {
         const select = document.getElementById('assignGroupSelect');
         try {
@@ -403,7 +409,6 @@
         } catch (e) { alert('Network error'); }
     }
 
-    // Other admin functions
     async function registerDriver() {
         const truck = document.getElementById('regTruck').value.trim();
         const groupId = document.getElementById('regGroupId').value.trim();
@@ -485,7 +490,7 @@
         } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
 
-    // ===== DRIVER APP FUNCTIONS =====
+    // ===== DRIVER FUNCTIONS =====
 
     async function searchFuel() {
         const dest = document.getElementById('fuelDest').value.trim();
@@ -512,73 +517,74 @@
         } catch (e) { alert('Error'); }
     }
 
-    // FIXED PTI submit
-    async function submitPTI() {
-        const pti = document.getElementById('ptiNum').value.trim();
-        if (!pti) { alert('Enter PTI'); return; }
-        const resDiv = document.getElementById('ptiResult');
-        resDiv.classList.remove('hidden');
-        resDiv.innerHTML = '<div class="loading">Submitting...</div>';
+    // ===== PTI FLOW (new) =====
+    async function startPTI() {
+        const truckNumber = localStorage.getItem('remTruck') || document.getElementById('loginTruck').value.trim();
+        ptiTruckNumber = truckNumber;
+        ptiStep = 0;
+        ptiTrailerNumber = '';
+        document.getElementById('ptiStatus').textContent = 'Starting...';
         try {
-            const resp = await fetch('/api/submit-pti', {
+            const resp = await fetch('/api/pti/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pti_number: pti, init_data: initData })
+                body: JSON.stringify({ truck_number: truckNumber, init_data: initData })
             });
             const data = await resp.json();
-            if (data.message) {
-                resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`;
-                document.getElementById('ptiNum').value = '';
+            if (data.success) {
+                document.getElementById('startPtiBtn').classList.add('hidden');
+                document.getElementById('ptiPhotoSection').classList.remove('hidden');
+                document.getElementById('ptiStepPrompt').textContent = `Step 1: ${data.first_step[0]}`;
+                document.getElementById('ptiStatus').textContent = `PTI started for Truck ${truckNumber}`;
             } else {
-                resDiv.innerHTML = `<div class="error">❌ ${data.error || 'Unknown error'}</div>`;
+                alert('❌ ' + data.error);
             }
-        } catch (err) {
-            resDiv.innerHTML = '<div class="error">❌ Network error</div>';
-        }
+        } catch (e) { alert('Network error'); }
     }
 
-    async function showPoints() {
-        const resDiv = document.getElementById('pointsResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
+    async function uploadPTIPhoto() {
+        const fileInput = document.getElementById('ptiPhotoInput');
+        if (!fileInput.files.length) { alert('Select a photo'); return; }
+        const comment = document.getElementById('ptiComment').value.trim();
+        const formData = new FormData();
+        formData.append('photo', fileInput.files[0]);
+        formData.append('step_index', ptiStep.toString());
+        formData.append('comment', comment);
+        formData.append('init_data', initData);
         try {
-            const resp = await fetch('/api/points', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ init_data: initData }) });
+            const resp = await fetch('/api/pti/photo', { method: 'POST', body: formData });
             const data = await resp.json();
-            let html = `<h3>Balance: ${data.balance} pts</h3>`;
-            data.history.forEach(t => html += `<div class="list-item">${t.type}: ${t.amount > 0 ? '+' : ''}${t.amount}</div>`);
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
+            if (data.error) { alert('❌ ' + data.error); return; }
+            if (data.complete) {
+                document.getElementById('ptiStepPrompt').textContent = 'All photos collected! Press Submit.';
+                document.getElementById('submitPtiBtn').classList.remove('hidden');
+            } else {
+                ptiStep = data.next_step;
+                document.getElementById('ptiStepPrompt').textContent = `Step ${ptiStep + 1}: ${data.step_info[0]}`;
+            }
+            fileInput.value = '';
+            document.getElementById('ptiComment').value = '';
+        } catch (e) { alert('Network error'); }
     }
 
-    async function submitVerification() {
-        const name = document.getElementById('verifyName').value.trim();
-        const photoInput = document.getElementById('verifyPhoto');
-        if (!name || !photoInput.files.length) { alert('Fill all'); return; }
-        const resDiv = document.getElementById('verifyResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Uploading...</div>';
-        const fd = new FormData();
-        fd.append('driver_name', name);
-        fd.append('truck_number', localStorage.getItem('remTruck') || '');
-        fd.append('photo', photoInput.files[0]);
-        fd.append('init_data', initData);
+    async function submitPTI() {
         try {
-            const resp = await fetch('/api/verify', { method: 'POST', body: fd });
+            const resp = await fetch('/api/pti/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ init_data: initData })
+            });
             const data = await resp.json();
-            resDiv.innerHTML = data.message ? `<div class="success">✅ ${data.message}</div>` : `<div class="error">${data.error}</div>`;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function showHistory() {
-        const resDiv = document.getElementById('historyResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
-        try {
-            const resp = await fetch('/api/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ init_data: initData }) });
-            const data = await resp.json();
-            let html = '<h3>Fuel</h3>';
-            data.fuel_usage.forEach(u => html += `<div class="list-item">${u.station_name} - ${u.used_at}</div>`);
-            html += '<h3>PTI</h3>';
-            data.pti_history.forEach(p => html += `<div class="list-item">${p.pti_number} - ${p.submitted_at}</div>`);
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
+            if (data.success) {
+                document.getElementById('ptiResult').classList.remove('hidden');
+                document.getElementById('ptiResult').innerHTML = `<div class="success">✅ ${data.message}</div>`;
+                document.getElementById('startPtiBtn').classList.remove('hidden');
+                document.getElementById('ptiPhotoSection').classList.add('hidden');
+                document.getElementById('ptiStatus').textContent = 'Not started';
+            } else {
+                alert('❌ ' + data.error);
+            }
+        } catch (e) { alert('Network error'); }
     }
 </script>
 </body>
