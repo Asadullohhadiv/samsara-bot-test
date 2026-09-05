@@ -4,9 +4,10 @@ import config
 SAMSARA_API_TOKEN = config.SAMSARA_API_TOKEN
 BASE_URL = "https://api.samsara.com"
 
-# ==================== EXISTING FUNCTIONS ====================
+# ==================== VEHICLE STATS ====================
 
 def get_vehicle_stats(vehicle_id):
+    """Fetch fuel, GPS, heading."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/stats"
     params = {"types": "fuelPercents,gps", "vehicleIds": vehicle_id}
@@ -40,7 +41,10 @@ def get_vehicle_location(vehicle_id):
         return {"latitude": stats["lat"], "longitude": stats["lng"], "heading": stats.get("heading")}
     return None
 
+# ==================== VEHICLES ====================
+
 def get_all_vehicles():
+    """Fetch all vehicles from Samsara."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles"
     params = {"limit": 100}
@@ -88,12 +92,12 @@ def get_driver_for_vehicle(vehicle_id):
         print(f"❌ Error fetching driver: {e}")
         return None
 
-# ==================== NEW FUNCTIONS WITH CORRECT ENDPOINTS ====================
+# ==================== FAULT CODES (DTCs) ====================
 
 def get_fault_codes(vehicle_id=None, limit=50):
-    """Fetch fault codes from Samsara (DTCs). Correct endpoint: /fleet/diagnostics"""
+    """Fetch diagnostic trouble codes from Samsara."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/fleet/diagnostics"
+    url = f"{BASE_URL}/fleet/vehicles/diagnostics"  # Correct endpoint
     params = {"limit": limit}
     if vehicle_id:
         params["vehicleIds"] = vehicle_id
@@ -106,8 +110,10 @@ def get_fault_codes(vehicle_id=None, limit=50):
         print(f"❌ Error fetching fault codes: {e}")
         return []
 
+# ==================== SAFETY EVENTS (Harsh Events) ====================
+
 def get_harsh_events(vehicle_id=None, limit=20):
-    """Fetch harsh events (speeding, harsh braking, etc.) with video links. Correct endpoint: /safety/events"""
+    """Fetch safety events (speeding, harsh braking, etc.) with video links."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/safety/events"
     params = {"limit": limit}
@@ -119,11 +125,13 @@ def get_harsh_events(vehicle_id=None, limit=20):
         data = resp.json()
         return data.get('data', [])
     except Exception as e:
-        print(f"❌ Error fetching harsh events: {e}")
+        print(f"❌ Error fetching safety events: {e}")
         return []
 
+# ==================== MAINTENANCE ====================
+
 def get_maintenance_alerts(vehicle_id=None, limit=20):
-    """Fetch maintenance alerts (oil change due, etc.). Correct endpoint: /maintenance/service-schedules"""
+    """Fetch upcoming maintenance schedules (oil change etc.)."""
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/maintenance/service-schedules"
     params = {"limit": limit}
@@ -138,7 +146,7 @@ def get_maintenance_alerts(vehicle_id=None, limit=20):
         print(f"❌ Error fetching maintenance alerts: {e}")
         return []
 
-# Helpers to parse raw data
+# ==================== PARSERS ====================
 
 def parse_fault_code(raw_fault):
     return {
@@ -166,3 +174,24 @@ def parse_maintenance_alert(raw_alert):
         "vehicle_id": raw_alert.get("vehicleId", ""),
         "created_at": raw_alert.get("time", "")
     }
+
+# ==================== ACTIVE FUEL LEVELS FOR ALL VEHICLES ====================
+
+def get_fleet_fuel_levels():
+    """Fetch fuel levels for all vehicles."""
+    vehicles = get_all_vehicles()
+    result = []
+    for v in vehicles:
+        vid = v.get("id")
+        if not vid:
+            continue
+        stats = get_vehicle_stats(vid)
+        if stats and "fuel" in stats:
+            result.append({
+                "id": vid,
+                "name": v.get("name", ""),
+                "fuel_percent": stats["fuel"],
+                "latitude": stats.get("lat"),
+                "longitude": stats.get("lng")
+            })
+    return result
