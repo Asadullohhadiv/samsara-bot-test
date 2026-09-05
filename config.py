@@ -18,7 +18,6 @@ OPENROUTESERVICE_API_KEY = os.environ.get(
     ""
 )
 
-
 # Supabase/PostgreSQL database connection string
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
@@ -26,6 +25,12 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 # Telegram group where all collected data is sent (admin group)
 ADMIN_GROUP_ID = int(os.environ.get("ADMIN_GROUP_ID", "-5396003539"))  # Your admin group ID
+
+# Dedicated PTI group to receive submitted PTI reports (if different from admin)
+PTI_GROUP_ID = int(os.environ.get("PTI_GROUP_ID", "-5396003539"))  # Replace with your PTI group ID
+
+# Dispatcher group for PTI notifications (if different from admin/PTI)
+DISPATCHER_GROUP_ID = int(os.environ.get("DISPATCHER_GROUP_ID", "-5396003539"))  # Replace if needed
 
 # Points configuration
 POINTS_PER_FUEL_STOP = int(os.environ.get("POINTS_PER_FUEL_STOP", "10"))
