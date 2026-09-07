@@ -9,8 +9,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg:#f8f9fa; --surface:#fff; --outline:#e0e0e0; --text-main:#1f1f1f; --text-sub:#444746; --primary:#1a73e8; --gradient:linear-gradient(135deg,#1a73e8,#0b57d0); --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.12); --radius-sm:8px; --radius-md:16px; --radius-lg:28px; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Google Sans Flex',-apple-system,sans-serif; -webkit-tap-highlight-color:transparent; }
+        :root { 
+            --bg: #f8f9fa; 
+            --surface: #ffffff; 
+            --outline: #e0e0e0; 
+            --text-main: #1f1f1f; 
+            --text-sub: #444746; 
+            --primary: #1a73e8; 
+            --gradient: linear-gradient(135deg, #1a73e8, #0b57d0); 
+            --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.12); 
+            --radius-sm: 8px; 
+            --radius-md: 16px; 
+            --radius-lg: 28px; 
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Google Sans Flex', -apple-system, sans-serif; -webkit-tap-highlight-color:transparent; }
         body { background:var(--bg); color:var(--text-main); min-height:100vh; }
 
         .card { background:var(--surface); border-radius:var(--radius-md); padding:24px; margin-bottom:20px; border:1px solid var(--outline); box-shadow:var(--shadow); }
@@ -33,8 +45,10 @@
         .input-group, .form-group { margin-bottom:18px; }
         .input-group label, .form-group label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; color:var(--text-sub); margin-bottom:8px; }
         .input-group input, .form-group input, .select-field { width:100%; padding:14px; border:1px solid var(--outline); border-radius:var(--radius-sm); font-size:15px; background:var(--bg); outline:none; }
+        .password-wrap { position:relative; }
+        .toggle-eye { position:absolute; right:14px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:18px; }
         .remember-row { display:flex; align-items:center; gap:10px; margin-bottom:24px; font-size:14px; color:var(--text-sub); }
-        .login-btn, .register-btn { width:100%; padding:14px; background:var(--gradient); color:white; border:none; border-radius:var(--radius-lg); font-size:15px; font-weight:600; cursor:pointer; }
+        .login-btn, .register-btn, .modal-btn { width:100%; padding:14px; background:var(--gradient); color:white; border:none; border-radius:var(--radius-lg); font-size:15px; font-weight:600; cursor:pointer; }
         .error-msg { color:#d93025; font-size:13px; text-align:center; margin-top:14px; display:none; }
 
         /* Driver App */
@@ -45,7 +59,7 @@
         .content { padding:24px; max-width:800px; margin:0 auto; }
         .result-box { margin-top:16px; }
 
-        /* Bottom Nav (only Fuel & PTI) */
+        /* Bottom Nav */
         .bottom-nav { position:fixed; bottom:20px; left:16px; right:16px; background:rgba(255,255,255,.75); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.4); border-radius:32px; box-shadow:0 8px 32px rgba(0,0,0,.12); display:flex; justify-content:space-around; align-items:center; padding:8px 6px; z-index:100; }
         .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border-radius:24px; cursor:pointer; color:#444746; transition:all .2s; text-decoration:none; font-size:11px; font-weight:500; }
         .nav-item.active { color:var(--primary); background:rgba(26,115,232,.1); }
@@ -71,13 +85,23 @@
         .stat-card .stat-value { font-size:32px; font-weight:700; }
         .stat-card .stat-label { font-size:13px; color:var(--text-sub); margin-top:4px; }
 
+        /* Tables */
+        table { width:100%; border-collapse:collapse; margin-top:12px; }
+        th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--outline); font-size:14px; }
+        th { background:#f1f3f4; font-weight:600; }
+
         /* Modal */
         .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
         .modal-content { background:var(--surface); border-radius:20px; padding:24px; width:90%; max-width:420px; box-shadow:0 10px 40px rgba(0,0,0,.2); position:relative; }
         .modal-close { position:absolute; top:12px; right:12px; font-size:20px; cursor:pointer; color:var(--text-sub); }
         .modal-title { font-size:18px; font-weight:700; margin-bottom:16px; }
 
-        @media (max-width:768px) { .admin-layout { flex-direction:column; } .admin-nav { width:100%; border-right:none; border-bottom:1px solid var(--outline); flex-direction:row; overflow-x:auto; padding:8px; } .admin-nav-item { flex-shrink:0; padding:10px 14px; } .admin-content { padding:16px; } }
+        @media (max-width:768px) { 
+            .admin-layout { flex-direction:column; } 
+            .admin-nav { width:100%; border-right:none; border-bottom:1px solid var(--outline); flex-direction:row; overflow-x:auto; padding:8px; } 
+            .admin-nav-item { flex-shrink:0; padding:10px 14px; } 
+            .admin-content { padding:16px; } 
+        }
     </style>
 </head>
 <body>
@@ -114,9 +138,9 @@
                 <p id="ptiStatus" class="loading">Not started</p>
                 <button class="btn-primary" onclick="startPTI()" id="startPtiBtn">📸 Start PTI</button>
                 <div id="ptiPhotoSection" class="hidden">
-                    <p id="ptiStepPrompt"></p>
-                    <input type="file" id="ptiPhotoInput" accept="image/*" style="margin-top:10px; padding:10px;">
-                    <div class="form-group"><input type="text" id="ptiComment" placeholder="Optional comment (issue)"></div>
+                    <p id="ptiStepPrompt" style="margin-bottom:10px; font-weight:600;"></p>
+                    <input type="file" id="ptiPhotoInput" accept="image/*" style="margin-top:10px; padding:10px; width:100%;">
+                    <div class="form-group" style="margin-top:10px;"><input type="text" id="ptiComment" placeholder="Optional comment (issue)"></div>
                     <button class="btn-primary" onclick="uploadPTIPhoto()">📤 Upload Photo</button>
                     <button class="btn-secondary" onclick="submitPTI()" id="submitPtiBtn" style="margin-top:12px;">✅ Submit PTI</button>
                 </div>
@@ -229,7 +253,15 @@
     let ptiStep = 0;
     let ptiTotalSteps = 6;
     let ptiTruckNumber = '';
-    let ptiTrailerNumber = '';
+
+    const ptiPrompts = [
+        "Step 1: Take photo of Front / Engine Compartment",
+        "Step 2: Take photo of Front Axle & Tires",
+        "Step 3: Take photo of Left Side of Truck & Trailer",
+        "Step 4: Take photo of Rear Trailer & Lights",
+        "Step 5: Take photo of Right Side of Truck & Trailer",
+        "Step 6: Take photo of Cab / Dashboard"
+    ];
 
     window.onload = function () {
         if (localStorage.getItem('remTruck') && localStorage.getItem('remPass')) {
@@ -259,6 +291,7 @@
             const data = await response.json();
             if (!response.ok || data.error) { errEl.textContent = data.error || "Login failed"; errEl.style.display = 'block'; return; }
             if (remember) { localStorage.setItem('remTruck', truck); localStorage.setItem('remPass', pass); } else { localStorage.removeItem('remTruck'); localStorage.removeItem('remPass'); }
+            ptiTruckNumber = truck;
             document.getElementById('truckInfo').textContent = 'Truck: ' + truck;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
@@ -281,6 +314,73 @@
         document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
     }
 
+    /* Driver PTI & Fuel Handlers */
+    async function searchFuel() {
+        const dest = document.getElementById('fuelDest').value.trim();
+        const resDiv = document.getElementById('fuelResult');
+        resDiv.classList.remove('hidden');
+        resDiv.innerHTML = '<div class="loading">Searching fuel stops...</div>';
+        try {
+            const resp = await fetch('/api/search-fuel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destination: dest, truck_number: ptiTruckNumber }) });
+            const data = await resp.json();
+            if (data.stations && data.stations.length) {
+                let html = '<h4>Recommended Stops</h4>';
+                data.stations.forEach(s => { html += `<div class="list-item"><b>${s.name}</b> - ${s.location}<br>Price: ${s.price || 'N/A'}</div>`; });
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No fuel stops found.</p>'; }
+        } catch(e) { resDiv.innerHTML = '<div class="error">Error searching fuel</div>'; }
+    }
+
+    function startPTI() {
+        ptiStep = 0;
+        document.getElementById('startPtiBtn').classList.add('hidden');
+        document.getElementById('ptiPhotoSection').classList.remove('hidden');
+        document.getElementById('ptiStatus').textContent = `Step 1 of ${ptiTotalSteps}`;
+        document.getElementById('ptiStepPrompt').textContent = ptiPrompts[0];
+    }
+
+    async function uploadPTIPhoto() {
+        const fileInput = document.getElementById('ptiPhotoInput');
+        const comment = document.getElementById('ptiComment').value;
+        if (!fileInput.files.length) { alert('Please select a photo'); return; }
+        
+        const formData = new FormData();
+        formData.append('photo', fileInput.files[0]);
+        formData.append('step', ptiStep + 1);
+        formData.append('truck_number', ptiTruckNumber);
+        formData.append('comment', comment);
+
+        try {
+            const resp = await fetch('/api/pti/upload-step', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.success) {
+                fileInput.value = '';
+                document.getElementById('ptiComment').value = '';
+                ptiStep++;
+                if (ptiStep < ptiTotalSteps) {
+                    document.getElementById('ptiStatus').textContent = `Step ${ptiStep + 1} of ${ptiTotalSteps}`;
+                    document.getElementById('ptiStepPrompt').textContent = ptiPrompts[ptiStep];
+                } else {
+                    document.getElementById('ptiStepPrompt').textContent = "All steps completed! Press Submit.";
+                    document.getElementById('ptiPhotoInput').classList.add('hidden');
+                }
+            } else { alert(data.error || 'Upload failed'); }
+        } catch(e) { alert('Network error uploading photo'); }
+    }
+
+    async function submitPTI() {
+        try {
+            const resp = await fetch('/api/pti/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: ptiTruckNumber }) });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('ptiPhotoSection').classList.add('hidden');
+                document.getElementById('startPtiBtn').classList.remove('hidden');
+                document.getElementById('ptiStatus').textContent = "PTI Submitted Successfully! ✅";
+            } else { alert(data.error || 'Submission failed'); }
+        } catch(e) { alert('Error submitting PTI'); }
+    }
+
+    /* Admin Navigation & API Handlers */
     function openAdminPage(page) {
         document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
         document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
@@ -299,7 +399,13 @@
     }
 
     async function loadOverview() {
-        try { const resp = await fetch('/api/admin-summary', { method: 'GET' }); const data = await resp.json(); document.getElementById('totalDrivers').textContent = data.points.length; document.getElementById('totalPTIs').textContent = data.pti.length; document.getElementById('totalFuelStops').textContent = data.fuel_usage.length; } catch (e) {}
+        try { 
+            const resp = await fetch('/api/admin-summary', { method: 'GET' }); 
+            const data = await resp.json(); 
+            document.getElementById('totalDrivers').textContent = data.points ? data.points.length : 0; 
+            document.getElementById('totalPTIs').textContent = data.pti ? data.pti.length : 0; 
+            document.getElementById('totalFuelStops').textContent = data.fuel_usage ? data.fuel_usage.length : 0; 
+        } catch (e) {}
     }
 
     async function loadSamsaraVehicles() {
@@ -416,14 +522,16 @@
         const vehicleId = document.getElementById('regVehicleId').value.trim();
         const password = document.getElementById('regPassword').value.trim();
         const license = document.getElementById('regLicense').value.trim();
-        if (!truck || !groupId || !driverId || !password) { alert('Fill all required'); return; }
+        if (!truck || !groupId || !driverId || !password) { alert('Fill all required fields'); return; }
         const resDiv = document.getElementById('registerResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Registering...</div>';
         try {
             const resp = await fetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: Number(groupId), samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, truck_license: license }) });
             const data = await resp.json();
-            if (data.success) { resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; document.getElementById('regTruck').value=''; document.getElementById('regGroupId').value=''; document.getElementById('regDriverId').value=''; document.getElementById('regVehicleId').value=''; document.getElementById('regPassword').value=''; document.getElementById('regLicense').value=''; }
-            else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
+            if (data.success) { 
+                resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; 
+                document.getElementById('regTruck').value=''; document.getElementById('regGroupId').value=''; document.getElementById('regDriverId').value=''; document.getElementById('regVehicleId').value=''; document.getElementById('regPassword').value=''; document.getElementById('regLicense').value=''; 
+            } else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
         } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
@@ -435,156 +543,70 @@
             const data = await resp.json();
             if (data.trucks && data.trucks.length) {
                 let html = '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
-                data.trucks.forEach(t => { const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A'; html += `<tr><td>${t.truck_number}</td><td>${fuel}</td><td>${t.driver_id}</td></tr>`; });
+                data.trucks.forEach(t => { const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A'; html += `<tr><td>${t.truck_number}</td><td>${fuel}</td><td>${t.driver_id || 'N/A'}</td></tr>`; });
                 html += '</table>';
                 resDiv.innerHTML = html;
             } else { resDiv.innerHTML = '<p>No registered trucks.</p>'; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading trucks</div>'; }
     }
 
     async function loadDriversList() {
         const resDiv = document.getElementById('driversListResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const resp = await fetch('/api/admin/drivers', { method: 'GET' });
             const data = await resp.json();
-            let html = '<h4>Driver Roster</h4>';
-            data.points.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`; });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+            if (data.drivers && data.drivers.length) {
+                let html = '<table><tr><th>Truck</th><th>Driver ID</th><th>Group ID</th></tr>';
+                data.drivers.forEach(d => { html += `<tr><td>${d.truck_number}</td><td>${d.samsara_driver_id || 'N/A'}</td><td>${d.group_id}</td></tr>`; });
+                html += '</table>';
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No drivers found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading drivers</div>'; }
     }
 
     async function loadPTIList() {
         const resDiv = document.getElementById('ptiListResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const resp = await fetch('/api/admin/pti-list', { method: 'GET' });
             const data = await resp.json();
-            let html = '<h4>PTI Counts</h4>';
-            data.pti.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.count}</div>`; });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+            if (data.pti_records && data.pti_records.length) {
+                let html = '<table><tr><th>Truck</th><th>Date</th><th>Status</th></tr>';
+                data.pti_records.forEach(p => { html += `<tr><td>${p.truck_number}</td><td>${p.timestamp || 'N/A'}</td><td>${p.status}</td></tr>`; });
+                html += '</table>';
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No PTI submissions.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading PTIs</div>'; }
     }
 
     async function loadFuelLog() {
         const resDiv = document.getElementById('fuelLogResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const resp = await fetch('/api/admin/fuel-log', { method: 'GET' });
             const data = await resp.json();
-            let html = '<h4>Fuel Usage</h4>';
-            data.fuel_usage.forEach(f => { html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`; });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
+            if (data.fuel_log && data.fuel_log.length) {
+                let html = '<table><tr><th>Truck</th><th>Station</th><th>Date</th></tr>';
+                data.fuel_log.forEach(f => { html += `<tr><td>${f.truck_number}</td><td>${f.station_name}</td><td>${f.timestamp || 'N/A'}</td></tr>`; });
+                html += '</table>';
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No fuel logs found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading fuel log</div>'; }
     }
 
     async function loadDriverDetails() {
         const truck = document.getElementById('searchTruck').value.trim();
+        if(!truck) { alert('Enter Truck Number'); return; }
         const resDiv = document.getElementById('detailsResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
         try {
-            const resp = await fetch('/api/driver-details/' + truck, { method: 'GET' });
+            const resp = await fetch(`/api/admin/driver-details?truck_number=${truck}`, { method: 'GET' });
             const data = await resp.json();
-            if (data.error) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; }
-            else { resDiv.innerHTML = `<h4>Driver ${truck}</h4><div class="list-item">Points: ${data.points}</div><div class="list-item">PTIs: ${data.pti_count}</div><div class="list-item">Vehicle: ${data.vehicle_id}</div>`; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
-    }
-
-    // ===== DRIVER FUNCTIONS =====
-
-    async function searchFuel() {
-        const dest = document.getElementById('fuelDest').value.trim();
-        const resDiv = document.getElementById('fuelResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
-        try {
-            const resp = await fetch('/api/fuel-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destination: dest, init_data: initData }) });
-            const data = await resp.json();
-            if (!resp.ok) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; return; }
-            let html = '<h4>Stations</h4>';
-            data.stations.forEach(s => {
-                html += `<div class="list-item"><b>${s.name}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="btn-secondary" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
-            });
-            resDiv.innerHTML = html;
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
-
-    async function useStation(name, address, lat, lng, price) {
-        if (!confirm('Confirm?')) return;
-        try {
-            const resp = await fetch('/api/use-station', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: initData }) });
-            const data = await resp.json();
-            alert(data.message || 'Recorded!');
-        } catch (e) { alert('Error'); }
-    }
-
-    // ===== PTI FLOW (new) =====
-    async function startPTI() {
-        const truckNumber = localStorage.getItem('remTruck') || document.getElementById('loginTruck').value.trim();
-        ptiTruckNumber = truckNumber;
-        ptiStep = 0;
-        ptiTrailerNumber = '';
-        document.getElementById('ptiStatus').textContent = 'Starting...';
-        try {
-            const resp = await fetch('/api/pti/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ truck_number: truckNumber, init_data: initData })
-            });
-            const data = await resp.json();
-            if (data.success) {
-                document.getElementById('startPtiBtn').classList.add('hidden');
-                document.getElementById('ptiPhotoSection').classList.remove('hidden');
-                document.getElementById('ptiStepPrompt').textContent = `Step 1: ${data.first_step[0]}`;
-                document.getElementById('ptiStatus').textContent = `PTI started for Truck ${truckNumber}`;
-            } else {
-                alert('❌ ' + data.error);
-            }
-        } catch (e) { alert('Network error'); }
-    }
-
-    async function uploadPTIPhoto() {
-        const fileInput = document.getElementById('ptiPhotoInput');
-        if (!fileInput.files.length) { alert('Select a photo'); return; }
-        const comment = document.getElementById('ptiComment').value.trim();
-        const formData = new FormData();
-        formData.append('photo', fileInput.files[0]);
-        formData.append('step_index', ptiStep.toString());
-        formData.append('comment', comment);
-        formData.append('init_data', initData);
-        try {
-            const resp = await fetch('/api/pti/photo', { method: 'POST', body: formData });
-            const data = await resp.json();
-            if (data.error) { alert('❌ ' + data.error); return; }
-            if (data.complete) {
-                document.getElementById('ptiStepPrompt').textContent = 'All photos collected! Press Submit.';
-                document.getElementById('submitPtiBtn').classList.remove('hidden');
-            } else {
-                ptiStep = data.next_step;
-                document.getElementById('ptiStepPrompt').textContent = `Step ${ptiStep + 1}: ${data.step_info[0]}`;
-            }
-            fileInput.value = '';
-            document.getElementById('ptiComment').value = '';
-        } catch (e) { alert('Network error'); }
-    }
-
-    async function submitPTI() {
-        try {
-            const resp = await fetch('/api/pti/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ init_data: initData })
-            });
-            const data = await resp.json();
-            if (data.success) {
-                document.getElementById('ptiResult').classList.remove('hidden');
-                document.getElementById('ptiResult').innerHTML = `<div class="success">✅ ${data.message}</div>`;
-                document.getElementById('startPtiBtn').classList.remove('hidden');
-                document.getElementById('ptiPhotoSection').classList.add('hidden');
-                document.getElementById('ptiStatus').textContent = 'Not started';
-            } else {
-                alert('❌ ' + data.error);
-            }
-        } catch (e) { alert('Network error'); }
+            if (data.driver) {
+                resDiv.innerHTML = `<div class="list-item"><b>Truck:</b> ${data.driver.truck_number}<br><b>Driver ID:</b> ${data.driver.samsara_driver_id}<br><b>Group ID:</b> ${data.driver.group_id}<br><b>License:</b> ${data.driver.truck_license || 'N/A'}</div>`;
+            } else { resDiv.innerHTML = '<p>Driver not found.</p>'; }
+        } catch(e) { resDiv.innerHTML = '<div class="error">Error fetching details</div>'; }
     }
 </script>
 </body>
