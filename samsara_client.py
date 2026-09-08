@@ -5,6 +5,8 @@ import config
 SAMSARA_API_TOKEN = config.SAMSARA_API_TOKEN
 BASE_URL = "https://api.samsara.com"
 
+# ==================== VEHICLE STATS ====================
+
 def get_vehicle_stats(vehicle_id):
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/stats"
@@ -28,6 +30,19 @@ def get_vehicle_stats(vehicle_id):
     except Exception as e:
         print(f"❌ Samsara API error (stats): {e}")
         return None
+
+def get_vehicle_fuel_level(vehicle_id):
+    """Return fuel percentage for a vehicle, or None if unavailable."""
+    stats = get_vehicle_stats(vehicle_id)
+    return stats.get("fuel") if stats else None
+
+def get_vehicle_location(vehicle_id):
+    stats = get_vehicle_stats(vehicle_id)
+    if stats and "lat" in stats:
+        return {"latitude": stats["lat"], "longitude": stats["lng"], "heading": stats.get("heading")}
+    return None
+
+# ==================== VEHICLES ====================
 
 def get_all_vehicles():
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
@@ -77,20 +92,12 @@ def get_driver_for_vehicle(vehicle_id):
         print(f"❌ Error fetching driver: {e}")
         return None
 
-# ==================== CORRECTED ENDPOINTS ====================
+# ==================== FAULT CODES ====================
 
 def get_fault_codes(vehicle_id=None, limit=50):
-    """
-    Fetch fault codes (DTCs) from Samsara.
-    Correct endpoint: /fleet/vehicles/diagnostics
-    Requires 'types' parameter.
-    """
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/fleet/vehicles/diagnostics"
-    params = {
-        "limit": limit,
-        "types": "dtcInfo"  # Required to fetch fault codes
-    }
+    params = {"limit": limit, "types": "dtcInfo"}  # Required to fetch DTCs
     if vehicle_id:
         params["vehicleIds"] = vehicle_id
     try:
@@ -102,22 +109,15 @@ def get_fault_codes(vehicle_id=None, limit=50):
         print(f"❌ Error fetching fault codes: {e}")
         return []
 
+# ==================== SAFETY EVENTS (Harsh Events) ====================
+
 def get_harsh_events(vehicle_id=None, limit=20):
-    """
-    Fetch safety events (harsh driving).
-    Correct endpoint: /safety/events
-    Requires startTime and endTime (ISO 8601).
-    """
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/safety/events"
     now = datetime.utcnow()
     start_time = (now - timedelta(days=7)).isoformat() + "Z"
     end_time = now.isoformat() + "Z"
-    params = {
-        "limit": limit,
-        "startTime": start_time,
-        "endTime": end_time
-    }
+    params = {"limit": limit, "startTime": start_time, "endTime": end_time}
     if vehicle_id:
         params["vehicleIds"] = vehicle_id
     try:
@@ -129,11 +129,9 @@ def get_harsh_events(vehicle_id=None, limit=20):
         print(f"❌ Error fetching safety events: {e}")
         return []
 
+# ==================== MAINTENANCE ====================
+
 def get_maintenance_alerts(vehicle_id=None, limit=20):
-    """
-    Fetch upcoming maintenance schedules.
-    Correct endpoint: /maintenance/service-schedules
-    """
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
     url = f"{BASE_URL}/maintenance/service-schedules"
     params = {"limit": limit}
@@ -176,3 +174,24 @@ def parse_maintenance_alert(raw_alert):
         "vehicle_id": raw_alert.get("vehicleId", ""),
         "created_at": raw_alert.get("time", "")
     }
+
+# ==================== FLEET FUEL LEVELS ====================
+
+def get_fleet_fuel_levels():
+    """Fetch fuel levels for all vehicles (used by background monitor)."""
+    vehicles = get_all_vehicles()
+    result = []
+    for v in vehicles:
+        vid = v.get("id")
+        if not vid:
+            continue
+        stats = get_vehicle_stats(vid)
+        if stats and "fuel" in stats:
+            result.append({
+                "id": vid,
+                "name": v.get("name", ""),
+                "fuel_percent": stats["fuel"],
+                "latitude": stats.get("lat"),
+                "longitude": stats.get("lng")
+            })
+    return result
