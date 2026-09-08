@@ -27,240 +27,104 @@
             --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
             --shadow-lg: 0 12px 30px rgba(0,0,0,0.08);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text-main); min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
 
-        /* ---- SPLASH SCREEN ---- */
+        /* Splash Screen */
         #splash {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             transition: opacity 0.6s ease;
         }
         #splash.hidden { opacity: 0; pointer-events: none; }
-        .splash-logo {
-            font-size: 64px;
-            margin-bottom: 16px;
-            animation: float 3s ease-in-out infinite;
-        }
-        .splash-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -0.02em;
-            margin-bottom: 24px;
-        }
-        .splash-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        .splash-logo { font-size: 64px; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
+        .splash-title { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.02em; margin-bottom: 24px; }
+        .splash-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* ---- General Cards ---- */
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius-md);
-            padding: 24px;
-            margin-bottom: 20px;
-            border: 1px solid var(--outline);
-            box-shadow: var(--shadow-sm);
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
-        }
+        /* Cards */
+        .card { background: var(--surface); border-radius: var(--radius-md); padding: 24px; margin-bottom: 20px; border: 1px solid var(--outline); box-shadow: var(--shadow-sm); transition: box-shadow 0.2s ease; }
         .card:hover { box-shadow: var(--shadow-md); }
         .card h3 { font-size: 17px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
 
-        /* ---- Buttons ---- */
-        .btn-primary {
-            width: 100%; padding: 14px 20px;
-            background: var(--primary); color: #fff;
-            border: none; border-radius: var(--radius-sm);
-            font-size: 15px; font-weight: 600; cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
+        /* Buttons */
+        .btn-primary { width: 100%; padding: 14px 20px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-primary:active { transform: scale(0.98); }
-
-        .btn-secondary {
-            width: 100%; padding: 12px 16px;
-            background: var(--surface); color: var(--text-main);
-            border: 1px solid var(--outline); border-radius: var(--radius-sm);
-            font-size: 14px; font-weight: 500; cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
-        }
+        .btn-secondary { width: 100%; padding: 12px 16px; background: var(--surface); color: var(--text-main); border: 1px solid var(--outline); border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
         .btn-secondary:hover { background: var(--bg); border-color: #cbd5e1; }
 
-        /* ---- Hidden ---- */
+        /* Hidden */
         .hidden { display: none !important; }
 
-        /* ---- Login ---- */
-        .login-wrap {
-            display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; padding: 24px;
-            background: radial-gradient(circle at top, #f8fafc 0%, #eff6ff 100%);
-        }
-        .login-box {
-            width: 100%; max-width: 400px;
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            padding: 40px 32px;
-            border: 1px solid var(--outline);
-            box-shadow: var(--shadow-lg);
-            animation: fadeInUp 0.5s ease;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* Login */
+        .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: radial-gradient(circle at top, #f8fafc 0%, #eff6ff 100%); }
+        .login-box { width: 100%; max-width: 400px; background: var(--surface); border-radius: var(--radius-lg); padding: 40px 32px; border: 1px solid var(--outline); box-shadow: var(--shadow-lg); animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .login-icon { text-align: center; font-size: 48px; margin-bottom: 12px; }
         .login-title { text-align: center; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); }
         .login-sub { text-align: center; font-size: 14px; color: var(--text-sub); margin-bottom: 28px; }
-
         .input-group, .form-group { margin-bottom: 18px; }
-        .input-group label, .form-group label {
-            display: block; font-size: 12px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.05em;
-            color: var(--text-sub); margin-bottom: 8px;
-        }
-        .input-group input, .form-group input, .select-field {
-            width: 100%; padding: 14px 16px;
-            border: 1px solid var(--outline); border-radius: var(--radius-sm);
-            font-size: 15px; background: var(--surface); color: var(--text-main);
-            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .input-group input:focus, .form-group input:focus, .select-field:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
+        .input-group label, .form-group label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-sub); margin-bottom: 8px; }
+        .input-group input, .form-group input, .select-field { width: 100%; padding: 14px 16px; border: 1px solid var(--outline); border-radius: var(--radius-sm); font-size: 15px; background: var(--surface); color: var(--text-main); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .input-group input:focus, .form-group input:focus, .select-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
         .password-wrap { position: relative; }
-        .toggle-eye {
-            position: absolute; right: 14px; top: 50%;
-            transform: translateY(-50%); cursor: pointer; opacity: 0.6; font-size: 15px;
-        }
+        .toggle-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; font-size: 15px; }
         .remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-sub); }
         .remember-row input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
-        .login-btn {
-            width: 100%; padding: 14px;
-            background: var(--primary); color: white;
-            border: none; border-radius: var(--radius-sm);
-            font-size: 15px; font-weight: 600; cursor: pointer;
-            transition: background 0.2s;
-        }
+        .login-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .login-btn:hover { background: var(--primary-hover); }
         .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-top: 14px; display: none; }
 
-        /* ---- Driver App ---- */
+        /* Driver App */
         .app-screen { display: none; min-height: 100vh; padding-bottom: 100px; }
-        .top-bar {
-            background: var(--surface); border-bottom: 1px solid var(--outline);
-            padding: 16px 24px; display: flex; justify-content: space-between;
-            align-items: center; position: sticky; top: 0; z-index: 10;
-            backdrop-filter: blur(10px);
-        }
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--outline); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
         .top-bar h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
-        .top-bar .info-chip {
-            background: var(--bg); border: 1px solid var(--outline);
-            padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text-sub);
-        }
+        .top-bar .info-chip { background: var(--bg); border: 1px solid var(--outline); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text-sub); }
         .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .result-box { margin-top: 16px; }
 
-        /* ---- Bottom Nav (glassmorphism) ---- */
-        .bottom-nav {
-            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-            width: calc(100% - 32px); max-width: 420px;
-            background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.4);
-            border-radius: 32px; box-shadow: var(--shadow-lg);
-            display: flex; justify-content: space-around; align-items: center;
-            padding: 6px; z-index: 100;
-        }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-            padding: 8px 0; border-radius: 24px; cursor: pointer; color: var(--text-sub);
-            transition: background 0.2s, color 0.2s; text-decoration: none;
-        }
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 420px; background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.4); border-radius: 32px; box-shadow: var(--shadow-lg); display: flex; justify-content: space-around; align-items: center; padding: 6px; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 24px; cursor: pointer; color: var(--text-sub); transition: background 0.2s, color 0.2s; text-decoration: none; }
         .nav-item.active { color: var(--primary); background: var(--primary-light); }
         .nav-icon-box { font-size: 20px; }
         .nav-label { font-size: 11px; font-weight: 600; }
 
-        /* ---- Admin Console ---- */
+        /* Admin */
         .admin-screen { display: none; min-height: 100vh; background: var(--bg); }
-        .admin-topbar {
-            background: var(--surface); border-bottom: 1px solid var(--outline);
-            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .admin-topbar { background: var(--surface); border-bottom: 1px solid var(--outline); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
         .admin-topbar h2 { font-size: 18px; font-weight: 700; }
-        .admin-logout-btn {
-            background: transparent; padding: 8px 16px; border-radius: var(--radius-sm);
-            font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--outline); color: var(--text-sub);
-        }
+        .admin-logout-btn { background: transparent; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--outline); color: var(--text-sub); }
         .admin-logout-btn:hover { background: var(--bg); color: var(--text-main); }
-
         .admin-layout { display: flex; min-height: calc(100vh - 57px); }
-        .admin-nav {
-            width: 240px; background: var(--surface); border-right: 1px solid var(--outline);
-            padding: 16px 8px; display: flex; flex-direction: column; gap: 4px;
-        }
-        .admin-nav-item {
-            display: flex; align-items: center; padding: 12px 14px;
-            border-radius: var(--radius-sm); cursor: pointer;
-            transition: background 0.15s, color 0.15s;
-            color: var(--text-sub); font-size: 13px; font-weight: 500;
-        }
+        .admin-nav { width: 240px; background: var(--surface); border-right: 1px solid var(--outline); padding: 16px 8px; display: flex; flex-direction: column; gap: 4px; }
+        .admin-nav-item { display: flex; align-items: center; padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s, color 0.15s; color: var(--text-sub); font-size: 13px; font-weight: 500; }
         .admin-nav-item:hover { background: var(--bg); color: var(--text-main); }
         .admin-nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
         .admin-nav-icon { font-size: 16px; margin-right: 10px; }
-
         .admin-content { flex-grow: 1; padding: 28px; max-width: 900px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card {
-            background: var(--surface); border: 1px solid var(--outline); border-radius: var(--radius-md);
-            padding: 20px; box-shadow: var(--shadow-sm);
-        }
+        .stat-card { background: var(--surface); border: 1px solid var(--outline); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
         .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text-main); }
         .stat-card .stat-label { font-size: 12px; font-weight: 500; color: var(--text-sub); margin-top: 4px; }
 
-        /* ---- Table ---- */
+        /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--outline); }
         th { font-weight: 600; color: var(--text-sub); background: var(--bg); }
 
-        /* ---- Modal ---- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15,23,42,0.4); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-content {
-            background: var(--surface); border-radius: var(--radius-md); padding: 24px;
-            width: 90%; max-width: 420px; border: 1px solid var(--outline);
-            box-shadow: var(--shadow-lg); position: relative;
-            animation: scaleIn 0.2s ease;
-        }
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: var(--surface); border-radius: var(--radius-md); padding: 24px; width: 90%; max-width: 420px; border: 1px solid var(--outline); box-shadow: var(--shadow-lg); position: relative; animation: scaleIn 0.2s ease; }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-close { position: absolute; top: 16px; right: 16px; font-size: 18px; cursor: pointer; color: var(--text-sub); }
         .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
 
-        @media (max-width: 768px) {
-            .admin-layout { flex-direction: column; }
-            .admin-nav {
-                width: 100%; border-right: none; border-bottom: 1px solid var(--outline);
-                flex-direction: row; overflow-x: auto; padding: 8px;
-            }
-            .admin-nav-item { flex-shrink: 0; padding: 10px 14px; }
-            .admin-content { padding: 16px; }
-        }
+        @media (max-width: 768px) { .admin-layout { flex-direction: column; } .admin-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--outline); flex-direction: row; overflow-x: auto; padding: 8px; } .admin-nav-item { flex-shrink: 0; padding: 10px 14px; } .admin-content { padding: 16px; } }
     </style>
 </head>
 <body>
@@ -438,9 +302,7 @@
 
 <script>
     // Splash screen – hide after 2 seconds
-    setTimeout(() => {
-        document.getElementById('splash').classList.add('hidden');
-    }, 2000);
+    setTimeout(() => { document.getElementById('splash').classList.add('hidden'); }, 2000);
 
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
@@ -551,7 +413,7 @@
             if (data.fault_codes && data.fault_codes.length) {
                 let html = '<h4>Fault Codes</h4>';
                 data.fault_codes.forEach(f => {
-                    html += `<div class="list-item"><b>${f.code}</b>: ${f.description || ''} (Severity: ${f.severity})<br>Vehicle: ${f.vehicle_id}</div>`;
+                    html += `<div class="list-item"><b>${f.code}</b>: ${f.description || ''} (Severity: ${f.severity})<br>Vehicle: ${f.vehicle_id} (${f.truck_number})</div>`;
                 });
                 resDiv.innerHTML = html;
             } else { resDiv.innerHTML = '<p>No fault codes found.</p>'; }
@@ -567,7 +429,7 @@
             if (data.harsh_events && data.harsh_events.length) {
                 let html = '<h4>Harsh Events</h4>';
                 data.harsh_events.forEach(e => {
-                    html += `<div class="list-item"><b>${e.event_type}</b> at ${e.location || 'Unknown'}<br>Vehicle: ${e.vehicle_id}<br>${e.video_url ? `<a href="${e.video_url}" target="_blank">View Video</a>` : ''}</div>`;
+                    html += `<div class="list-item"><b>${e.event_type}</b> at ${e.location || 'Unknown'}<br>Vehicle: ${e.vehicle_id} (${e.truck_number})<br>${e.video_url ? `<a href="${e.video_url}" target="_blank">View Video</a>` : ''}</div>`;
                 });
                 resDiv.innerHTML = html;
             } else { resDiv.innerHTML = '<p>No harsh events found.</p>'; }
@@ -583,7 +445,7 @@
             if (data.maintenance_alerts && data.maintenance_alerts.length) {
                 let html = '<h4>Maintenance Alerts</h4>';
                 data.maintenance_alerts.forEach(m => {
-                    html += `<div class="list-item"><b>${m.maintenance_type}</b> due at ${m.due_mileage} miles<br>Vehicle: ${m.vehicle_id}</div>`;
+                    html += `<div class="list-item"><b>${m.maintenance_type}</b> due at ${m.due_mileage} miles<br>Vehicle: ${m.vehicle_id} (${m.truck_number})</div>`;
                 });
                 resDiv.innerHTML = html;
             } else { resDiv.innerHTML = '<p>No maintenance alerts found.</p>'; }
@@ -666,73 +528,6 @@
         } catch (e) { resDiv.innerHTML = '<div class="error">Error loading trucks</div>'; }
     }
 
-    // PTI functions (unchanged from your logic)
-    async function startPTI() {
-        const truckNumber = localStorage.getItem('remTruck') || document.getElementById('loginTruck').value.trim();
-        ptiTruckNumber = truckNumber;
-        ptiStep = 0;
-        ptiTrailerNumber = '';
-        document.getElementById('ptiStatus').textContent = 'Starting...';
-        try {
-            const resp = await fetch('/api/pti/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ truck_number: truckNumber, init_data: initData })
-            });
-            const data = await resp.json();
-            if (data.success) {
-                document.getElementById('startPtiBtn').classList.add('hidden');
-                document.getElementById('ptiPhotoSection').classList.remove('hidden');
-                document.getElementById('ptiStepPrompt').textContent = `Step 1: ${data.first_step[0]}`;
-                document.getElementById('ptiStatus').textContent = `PTI started for Truck ${truckNumber}`;
-            } else { alert('❌ ' + data.error); }
-        } catch (e) { alert('Network error'); }
-    }
-
-    async function uploadPTIPhoto() {
-        const fileInput = document.getElementById('ptiPhotoInput');
-        if (!fileInput.files.length) { alert('Select a photo'); return; }
-        const comment = document.getElementById('ptiComment').value.trim();
-        const formData = new FormData();
-        formData.append('photo', fileInput.files[0]);
-        formData.append('step_index', ptiStep.toString());
-        formData.append('comment', comment);
-        formData.append('init_data', initData);
-        try {
-            const resp = await fetch('/api/pti/photo', { method: 'POST', body: formData });
-            const data = await resp.json();
-            if (data.error) { alert('❌ ' + data.error); return; }
-            if (data.complete) {
-                document.getElementById('ptiStepPrompt').textContent = 'All photos collected! Press Submit.';
-                document.getElementById('submitPtiBtn').classList.remove('hidden');
-            } else {
-                ptiStep = data.next_step;
-                document.getElementById('ptiStepPrompt').textContent = `Step ${ptiStep + 1}: ${data.step_info[0]}`;
-            }
-            fileInput.value = '';
-            document.getElementById('ptiComment').value = '';
-        } catch (e) { alert('Network error'); }
-    }
-
-    async function submitPTI() {
-        try {
-            const resp = await fetch('/api/pti/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ init_data: initData })
-            });
-            const data = await resp.json();
-            if (data.success) {
-                document.getElementById('ptiResult').classList.remove('hidden');
-                document.getElementById('ptiResult').innerHTML = `<div class="success">✅ ${data.message}</div>`;
-                document.getElementById('startPtiBtn').classList.remove('hidden');
-                document.getElementById('ptiPhotoSection').classList.add('hidden');
-                document.getElementById('ptiStatus').textContent = 'Not started';
-            } else { alert('❌ ' + data.error); }
-        } catch (e) { alert('Network error'); }
-    }
-
-    // Missing admin functions (drivers, PTI list, fuel log, details)
     async function loadDriversList() {
         const resDiv = document.getElementById('driversListResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
@@ -781,11 +576,89 @@
         } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
 
-    // searchFuel function (if needed)
-    async function searchFuel() { /* same as your existing function */ }
+    // ===== DRIVER FUNCTIONS =====
+    async function searchFuel() {
+        const dest = document.getElementById('fuelDest').value.trim();
+        const resDiv = document.getElementById('fuelResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
+        try {
+            const resp = await fetch('/api/fuel-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destination: dest, init_data: initData }) });
+            const data = await resp.json();
+            if (!resp.ok) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; return; }
+            let html = '<h4>Stations</h4>';
+            data.stations.forEach(s => {
+                html += `<div class="list-item"><b>${s.name}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="btn-secondary" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
+            });
+            resDiv.innerHTML = html;
+        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
+    }
 
-    // useStation function (if needed)
-    async function useStation(name, address, lat, lng, price) { /* same as your existing function */ }
+    async function useStation(name, address, lat, lng, price) {
+        if (!confirm('Confirm?')) return;
+        try {
+            const resp = await fetch('/api/use-station', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: initData }) });
+            const data = await resp.json();
+            alert(data.message || 'Recorded!');
+        } catch (e) { alert('Error'); }
+    }
+
+    // ===== PTI FLOW =====
+    async function startPTI() {
+        const truckNumber = localStorage.getItem('remTruck') || document.getElementById('loginTruck').value.trim();
+        ptiTruckNumber = truckNumber;
+        ptiStep = 0;
+        ptiTrailerNumber = '';
+        document.getElementById('ptiStatus').textContent = 'Starting...';
+        try {
+            const resp = await fetch('/api/pti/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truckNumber, init_data: initData }) });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('startPtiBtn').classList.add('hidden');
+                document.getElementById('ptiPhotoSection').classList.remove('hidden');
+                document.getElementById('ptiStepPrompt').textContent = `Step 1: ${data.first_step[0]}`;
+                document.getElementById('ptiStatus').textContent = `PTI started for Truck ${truckNumber}`;
+            } else { alert('❌ ' + data.error); }
+        } catch (e) { alert('Network error'); }
+    }
+
+    async function uploadPTIPhoto() {
+        const fileInput = document.getElementById('ptiPhotoInput');
+        if (!fileInput.files.length) { alert('Select a photo'); return; }
+        const comment = document.getElementById('ptiComment').value.trim();
+        const formData = new FormData();
+        formData.append('photo', fileInput.files[0]);
+        formData.append('step_index', ptiStep.toString());
+        formData.append('comment', comment);
+        formData.append('init_data', initData);
+        try {
+            const resp = await fetch('/api/pti/photo', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.error) { alert('❌ ' + data.error); return; }
+            if (data.complete) {
+                document.getElementById('ptiStepPrompt').textContent = 'All photos collected! Press Submit.';
+                document.getElementById('submitPtiBtn').classList.remove('hidden');
+            } else {
+                ptiStep = data.next_step;
+                document.getElementById('ptiStepPrompt').textContent = `Step ${ptiStep + 1}: ${data.step_info[0]}`;
+            }
+            fileInput.value = '';
+            document.getElementById('ptiComment').value = '';
+        } catch (e) { alert('Network error'); }
+    }
+
+    async function submitPTI() {
+        try {
+            const resp = await fetch('/api/pti/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ init_data: initData }) });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('ptiResult').classList.remove('hidden');
+                document.getElementById('ptiResult').innerHTML = `<div class="success">✅ ${data.message}</div>`;
+                document.getElementById('startPtiBtn').classList.remove('hidden');
+                document.getElementById('ptiPhotoSection').classList.add('hidden');
+                document.getElementById('ptiStatus').textContent = 'Not started';
+            } else { alert('❌ ' + data.error); }
+        } catch (e) { alert('Network error'); }
+    }
 </script>
 </body>
 </html>
