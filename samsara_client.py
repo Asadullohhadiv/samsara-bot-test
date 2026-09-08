@@ -5,7 +5,7 @@ import config
 SAMSARA_API_TOKEN = config.SAMSARA_API_TOKEN
 BASE_URL = "https://api.samsara.com"
 
-# ==================== VEHICLE STATS ====================
+# ==================== VEHICLE STATS (fuel, GPS, location) ====================
 
 def get_vehicle_stats(vehicle_id):
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
@@ -32,7 +32,6 @@ def get_vehicle_stats(vehicle_id):
         return None
 
 def get_vehicle_fuel_level(vehicle_id):
-    """Return fuel percentage for a vehicle, or None if unavailable."""
     stats = get_vehicle_stats(vehicle_id)
     return stats.get("fuel") if stats else None
 
@@ -41,8 +40,6 @@ def get_vehicle_location(vehicle_id):
     if stats and "lat" in stats:
         return {"latitude": stats["lat"], "longitude": stats["lng"], "heading": stats.get("heading")}
     return None
-
-# ==================== VEHICLES ====================
 
 def get_all_vehicles():
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
@@ -92,12 +89,20 @@ def get_driver_for_vehicle(vehicle_id):
         print(f"❌ Error fetching driver: {e}")
         return None
 
-# ==================== FAULT CODES ====================
+# ==================== CONFIRMED WORKING ENDPOINTS ====================
 
 def get_fault_codes(vehicle_id=None, limit=50):
+    """
+    Fetch fault codes (DTCs) from Samsara.
+    Confirmed endpoint: /fleet/vehicles/stats?types=faultCodes&vehicleIds=...
+    """
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/fleet/vehicles/diagnostics"
-    params = {"limit": limit, "types": "dtcInfo"}  # Required to fetch DTCs
+    url = f"{BASE_URL}/fleet/vehicles/stats"
+    params = {
+        "types": "faultCodes",
+        "decorations": "vehicle",
+        "limit": limit
+    }
     if vehicle_id:
         params["vehicleIds"] = vehicle_id
     try:
@@ -109,15 +114,21 @@ def get_fault_codes(vehicle_id=None, limit=50):
         print(f"❌ Error fetching fault codes: {e}")
         return []
 
-# ==================== SAFETY EVENTS (Harsh Events) ====================
-
 def get_harsh_events(vehicle_id=None, limit=20):
+    """
+    Fetch safety events (harsh events) with video links.
+    Confirmed endpoint: /fleet/safety-events?limit=5&startTime=...&endTime=...
+    """
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/safety/events"
+    url = f"{BASE_URL}/fleet/safety-events"
     now = datetime.utcnow()
     start_time = (now - timedelta(days=7)).isoformat() + "Z"
     end_time = now.isoformat() + "Z"
-    params = {"limit": limit, "startTime": start_time, "endTime": end_time}
+    params = {
+        "limit": limit,
+        "startTime": start_time,
+        "endTime": end_time
+    }
     if vehicle_id:
         params["vehicleIds"] = vehicle_id
     try:
@@ -129,14 +140,16 @@ def get_harsh_events(vehicle_id=None, limit=20):
         print(f"❌ Error fetching safety events: {e}")
         return []
 
-# ==================== MAINTENANCE ====================
-
 def get_maintenance_alerts(vehicle_id=None, limit=20):
+    """
+    Fetch upcoming preventive maintenance schedules.
+    Confirmed endpoint: /maintenance/preventive/upcoming?limit=5
+    """
     headers = {"Authorization": f"Bearer {SAMSARA_API_TOKEN}"}
-    url = f"{BASE_URL}/maintenance/service-schedules"
+    url = f"{BASE_URL}/maintenance/preventive/upcoming"
     params = {"limit": limit}
     if vehicle_id:
-        params["vehicleIds"] = vehicle_id
+        params["assetIds"] = vehicle_id  # Note: parameter is assetIds, not vehicleIds
     try:
         resp = requests.get(url, headers=headers, params=params, timeout=15)
         resp.raise_for_status()
@@ -146,32 +159,55 @@ def get_maintenance_alerts(vehicle_id=None, limit=20):
         print(f"❌ Error fetching maintenance alerts: {e}")
         return []
 
-# ==================== PARSERS ====================
+# ==================== PARSERS (convert raw Samsara data to clean dicts) ====================
 
-def parse_fault_code(raw_fault):
-    return {
-        "code": raw_fault.get("code", ""),
-        "description": raw_fault.get("description", "") or raw_fault.get("message", ""),
-        "severity": raw_fault.get("severity", "unknown"),
-        "vehicle_id": raw_fault.get("vehicleId", ""),
-        "recorded_at": raw_fault.get("time", "")
-    }
+def parse_fault_code(raw_vehicle_stat):
+    """
+    raw_vehicle_stat is one item from /fleet/vehicles/stats?types=faultCodes
+    Returns a list of fault codes for that vehicle.
+    """
+    vehicle_id = raw_vehicle_stat.get("id", "")
+    name = raw_vehicle_stat.get("name", "")
+    fault_codes = raw_vehicle_stat.get("faultCodes", {})
+    dtcs = []
+    j1939 = fault_codes.get("j1939", {})
+    # Get diagnosticTroubleCodes from j1939
+    for dtc in j1939.get("diagnosticTroubleCodes", []):
+        dtcs.append({
+            "vehicle_id": vehicle_id,
+            "truck_number": name,
+            "code": f"SPN{dtc.get('spnId')}-FMI{dtc.get('fmiId')}",
+            "description": dtc.get("spnDescription", ""),
+            "severity": "unknown",  # could derive from checkEngineLights
+            "recorded_at": fault_codes.get("time", "")
+        })
+    return dtcs
 
 def parse_harsh_event(raw_event):
+    """
+    raw_event is one item from /fleet/safety-events
+    """
+    vehicle = raw_event.get("vehicle", {})
     return {
-        "event_type": raw_event.get("type", ""),
-        "location": raw_event.get("location", "") or raw_event.get("address", ""),
-        "video_url": raw_event.get("videoUrl", "") or raw_event.get("video", ""),
-        "vehicle_id": raw_event.get("vehicleId", ""),
+        "event_type": raw_event.get("eventType", "") or raw_event.get("type", ""),
+        "location": raw_event.get("location", "") or "",
+        "video_url": raw_event.get("downloadForwardVideoUrl", "") or "",
+        "vehicle_id": vehicle.get("id", ""),
+        "truck_number": vehicle.get("name", ""),
         "happened_at": raw_event.get("time", "")
     }
 
 def parse_maintenance_alert(raw_alert):
+    """
+    raw_alert is one item from /maintenance/preventive/upcoming
+    """
+    asset = raw_alert.get("asset", {})
     return {
-        "maintenance_type": raw_alert.get("type", ""),
-        "due_mileage": raw_alert.get("dueMiles", 0),
-        "location": raw_alert.get("location", "") or "",
-        "vehicle_id": raw_alert.get("vehicleId", ""),
+        "vehicle_id": asset.get("id", ""),
+        "truck_number": asset.get("name", ""),
+        "maintenance_type": "Scheduled Maintenance",
+        "due_mileage": raw_alert.get("dueInOdometer", 0),
+        "location": "",
         "created_at": raw_alert.get("time", "")
     }
 
