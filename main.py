@@ -30,10 +30,8 @@ from database import (
     get_truck_number_from_group,
     get_mapping_by_truck_number,
     register_driver_auto,
-    set_driver_credentials,
     add_points,
     get_points_balance,
-    get_points_history,
     add_pti,
     add_pti_submission,
     save_bot_group,
@@ -57,21 +55,21 @@ from samsara_client import (
 
 TOKEN = config.TELEGRAM_TOKEN
 
-# ======================== PTI STATE (simple, in-memory) ========================
+# ======================== PTI STATE (in-memory) ========================
 PTI_STATES: Dict[int, Dict] = {}
 PTI_STEPS = [
-    ("Truck Front & Lights", "Send photo of truck front"),
-    ("Engine Compartment", "Send photo of engine bay"),
-    ("Truck Tires & Side", "Send photo of side and tires"),
-    ("Coupling & Airlines", "Send photo of fifth wheel"),
-    ("Trailer & Tires", "Send photo of trailer body and tires"),
-    ("Rear & Lights", "Send photo of rear lights"),
+    ("Truck Front & Lights", "Send a photo of the front of the truck."),
+    ("Engine Compartment", "Send a photo of the engine bay."),
+    ("Truck Tires & Side", "Send a photo of the side and tires."),
+    ("Coupling & Airlines", "Send a photo of the fifth wheel."),
+    ("Trailer & Tires", "Send a photo of the trailer body and tires."),
+    ("Rear & Lights", "Send a photo of the rear lights."),
 ]
 
-def get_pti_state(chat_id):
+def get_pti_state(chat_id: int) -> Optional[Dict]:
     return PTI_STATES.get(chat_id)
 
-def set_pti_state(chat_id, state):
+def set_pti_state(chat_id: int, state: Optional[Dict]):
     if state is None:
         PTI_STATES.pop(chat_id, None)
     else:
@@ -82,14 +80,22 @@ def set_pti_state(chat_id, state):
 async def start_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     if get_pti_state(chat_id):
-        await update.message.reply_text("You have an unfinished PTI. Use /cancel first.")
+        await update.message.reply_text("You already have an unfinished PTI. Use /cancel first.")
         return
-    state = {"step": 0, "photos": [], "truck_number": None, "trailer_number": None, "driver_name": None}
+    state = {
+        "step": 0,
+        "photos": [],
+        "truck_number": None,
+        "trailer_number": None,
+        "driver_name": None,
+    }
     set_pti_state(chat_id, state)
     driver_info = get_driver_by_chat(chat_id)
     if driver_info and driver_info.get("truck_number"):
         state["truck_number"] = driver_info["truck_number"]
-        await update.message.reply_text(f"Truck # {state['truck_number']} detected. Enter trailer number (or N/A):")
+        await update.message.reply_text(
+            f"Truck # {state['truck_number']} detected.\nEnter trailer number (or N/A):"
+        )
     else:
         await update.message.reply_text("Please enter your Truck Number:")
 
@@ -100,6 +106,7 @@ async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     text = update.message.text.strip()
 
+    # Waiting for truck number
     if state["step"] == 0 and state.get("truck_number") is None:
         if not re.match(r"^[\dA-Za-z-]+$", text):
             await update.message.reply_text("Invalid truck number.")
@@ -108,6 +115,7 @@ async def handle_pti_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Enter trailer number (or N/A):")
         return
 
+    # Waiting for trailer number
     if state["step"] == 0 and state.get("truck_number") is not None:
         state["trailer_number"] = text if text.upper() != "N/A" else ""
         state["step"] = 1
@@ -186,10 +194,10 @@ async def show_review(update: Update, state: Dict):
         [InlineKeyboardButton("Cancel", callback_data="pti_cancel")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(f"PTI complete. Ready to submit?", reply_markup=reply_markup)
+    await update.message.reply_text("PTI complete. Ready to submit?", reply_markup=reply_markup)
 
 async def submit_pti(update: Update, context: ContextTypes.DEFAULT_TYPE, state: Dict):
-    # Send media group to admin group (or PTI group)
+    # Build media group
     media_group = []
     for step_idx, file_id, comment in state["photos"]:
         label = PTI_STEPS[step_idx - 1][0]
@@ -200,17 +208,28 @@ async def submit_pti(update: Update, context: ContextTypes.DEFAULT_TYPE, state: 
     if not media_group:
         await update.message.reply_text("No photos submitted.")
         return
-    caption = f"📋 PTI REPORT\nTruck: {state['truck_number']}\nTrailer: {state['trailer_number']}\nDriver: {state['driver_name']}"
+
+    caption = (
+        f"📋 **NEW PRE-TRIP INSPECTION REPORT**\n"
+        f"👤 Driver: {state['driver_name']}\n"
+        f"🚛 Truck #: {state['truck_number']}\n"
+        f"📦 Trailer #: {state['trailer_number']}\n"
+        f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        f"📸 Photos: {len(media_group)}"
+    )
+
     target_group = getattr(config, "PTI_GROUP_ID", None) or config.ADMIN_GROUP_ID
     try:
         await context.bot.send_media_group(chat_id=target_group, media=media_group, caption=caption)
-        # Record points
-        add_pti(state["driver_name"], f"PTI-{datetime.now().strftime('%Y%m%d%H%M%S')}")
+        # Record in database
+        pti_number = f"PTI-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        add_pti(state["driver_name"], pti_number)
         add_points(state["driver_name"], config.POINTS_PER_PTI, "pti", "PTI submitted")
         add_pti_submission(state["driver_name"], state["truck_number"], state["trailer_number"], len(media_group))
         await update.message.reply_text(f"✅ PTI submitted! You earned {config.POINTS_PER_PTI} points.")
     except Exception as e:
-        await update.message.reply_text(f"❌ Failed: {e}")
+        await update.message.reply_text(f"❌ Failed to submit PTI: {e}")
+
     set_pti_state(update.effective_chat.id, None)
 
 async def cancel_pti(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -244,7 +263,10 @@ async def groups_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Not authorized.")
         return
     groups = get_all_bot_groups()
-    text = "📋 Groups:\n" + "\n".join(f"• {g[1]} ({g[0]})" for g in groups) if groups else "No groups."
+    if not groups:
+        await update.message.reply_text("No groups found.")
+        return
+    text = "📋 Groups:\n" + "\n".join(f"• {g[1]} ({g[0]})" for g in groups)
     await update.message.reply_text(text)
 
 async def points_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -291,7 +313,7 @@ async def auto_register_on_join(update: Update, context: ContextTypes.DEFAULT_TY
                     f"🚛 Truck {truck_number} connected! Driver ID: {driver_id}",
                 )
 
-# ======================== BACKGROUND SAMSARA SYNC ========================
+# ======================== BACKGROUND SAMSARA MONITOR (with error handling) ========================
 
 async def samsara_monitor(app: Application):
     while True:
@@ -302,51 +324,82 @@ async def samsara_monitor(app: Application):
                 truck_number = v.get("name", "").split()[0] if v.get("name") else ""
 
                 # Fault codes
-                for f in get_fault_codes(vid) or []:
-                    parsed = parse_fault_code(f)
-                    save_fault_code(vid, truck_number, parsed["code"], parsed["description"], parsed["severity"])
-                    # Find driver group
-                    driver = get_driver_by_truck(truck_number)
-                    if driver and driver.get("chat_id"):
-                        await app.bot.send_message(
-                            driver["chat_id"],
-                            f"⚠️ FAULT: {parsed['code']} – {parsed['description']}",
-                        )
+                try:
+                    faults = get_fault_codes(vid)
+                    for f in faults:
+                        parsed = parse_fault_code(f)
+                        save_fault_code(vid, truck_number, parsed["code"], parsed["description"], parsed["severity"])
+                        driver = get_driver_by_truck(truck_number)
+                        if driver and driver.get("chat_id"):
+                            await app.bot.send_message(
+                                driver["chat_id"],
+                                f"⚠️ FAULT: {parsed['code']} – {parsed['description']}"
+                            )
+                except Exception as e:
+                    print(f"❌ Fault monitoring error: {e}")
 
                 # Harsh events
-                for e in get_harsh_events(vid) or []:
-                    parsed = parse_harsh_event(e)
-                    save_harsh_event(vid, truck_number, parsed["event_type"], parsed["location"], parsed["video_url"])
-                    driver = get_driver_by_truck(truck_number)
-                    if driver and driver.get("chat_id"):
-                        msg = f"🚨 HARSH EVENT: {parsed['event_type']} at {parsed['location']}"
-                        if parsed.get("video_url"):
-                            msg += f"\n📹 {parsed['video_url']}"
-                        await app.bot.send_message(driver["chat_id"], msg)
+                try:
+                    events = get_harsh_events(vid)
+                    for e in events:
+                        parsed = parse_harsh_event(e)
+                        save_harsh_event(vid, truck_number, parsed["event_type"], parsed["location"], parsed["video_url"])
+                        driver = get_driver_by_truck(truck_number)
+                        if driver and driver.get("chat_id"):
+                            msg = f"🚨 HARSH EVENT: {parsed['event_type']} at {parsed['location']}"
+                            if parsed.get("video_url"):
+                                msg += f"\n📹 {parsed['video_url']}"
+                            await app.bot.send_message(driver["chat_id"], msg)
+                except Exception as e:
+                    print(f"❌ Harsh event monitoring error: {e}")
 
                 # Maintenance
-                for m in get_maintenance_alerts(vid) or []:
-                    parsed = parse_maintenance_alert(m)
-                    save_maintenance_alert(vid, truck_number, parsed["maintenance_type"], parsed["due_mileage"], parsed["location"])
-                    driver = get_driver_by_truck(truck_number)
-                    if driver and driver.get("chat_id"):
-                        await app.bot.send_message(
-                            driver["chat_id"],
-                            f"🔧 MAINTENANCE: {parsed['maintenance_type']} due in {parsed['due_mileage']} miles",
-                        )
+                try:
+                    alerts = get_maintenance_alerts(vid)
+                    for m in alerts:
+                        parsed = parse_maintenance_alert(m)
+                        save_maintenance_alert(vid, truck_number, parsed["maintenance_type"], parsed["due_mileage"], parsed["location"])
+                        driver = get_driver_by_truck(truck_number)
+                        if driver and driver.get("chat_id"):
+                            await app.bot.send_message(
+                                driver["chat_id"],
+                                f"🔧 MAINTENANCE: {parsed['maintenance_type']} due in {parsed['due_mileage']} miles"
+                            )
+                except Exception as e:
+                    print(f"❌ Maintenance monitoring error: {e}")
 
             await asyncio.sleep(900)  # 15 minutes
+        except asyncio.CancelledError:
+            break
         except Exception as e:
-            print(f"❌ Monitor error: {e}")
+            print(f"❌ Main monitor error: {e}")
             await asyncio.sleep(60)
 
 # ======================== MAIN ========================
 
+async def post_init(application: Application):
+    application.bot_data["samsara_task"] = asyncio.create_task(samsara_monitor(application))
+
+async def post_shutdown(application: Application):
+    task = application.bot_data.get("samsara_task")
+    if task:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
 def main():
     init_db()
-    app = Application.builder().token(TOKEN).build()
+    app = (
+        Application.builder()
+        .token(TOKEN)
+        .post_init(post_init)
+        .post_shutdown(post_shutdown)
+        .build()
+    )
 
-    # Commands
+    # Command handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("pti", start_pti))
     app.add_handler(CommandHandler("cancel", cancel_pti))
@@ -355,21 +408,15 @@ def main():
     app.add_handler(CommandHandler("addgroup", add_group_command))
     app.add_handler(CommandHandler("groups", groups_command))
 
-    # Callbacks
+    # Callback handlers
     app.add_handler(CallbackQueryHandler(handle_pti_callback, pattern="pti_"))
 
-    # Photos / Text
+    # Photos and text
     app.add_handler(MessageHandler(filters.PHOTO, handle_pti_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pti_text))
 
     # Group join
     app.add_handler(ChatMemberHandler(auto_register_on_join, ChatMemberHandler.MY_CHAT_MEMBER))
-
-    # Background task
-    async def post_init(application: Application):
-        asyncio.create_task(samsara_monitor(application))
-
-    app.post_init = post_init
 
     # Web server
     from webapp import app as web_app
