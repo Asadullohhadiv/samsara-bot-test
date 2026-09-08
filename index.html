@@ -3,126 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Truck Safety</title>
+    <title>My Truck Safety — Fleet Management System</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --outline: #e2e8f0;
-            --text-main: #0f172a;
-            --text-sub: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --primary-light: #eff6ff;
+            --bg-dark: #05080f;
+            --surface-dark: rgba(13, 19, 33, 0.7);
+            --surface-card: rgba(21, 29, 46, 0.65);
+            --outline: rgba(255, 255, 255, 0.08);
+            --outline-glow: rgba(59, 130, 246, 0.3);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --primary-glow: #2563eb;
+            --accent-gold: #c5a059;
             --danger: #ef4444;
             --success: #10b981;
             --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --radius-md: 14px;
+            --radius-lg: 24px;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --shadow-cinematic: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(37, 99, 235, 0.15);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text-main); min-height: 100vh; line-height: 1.5; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-dark); color: var(--text-main); min-height: 100vh; line-height: 1.5; overflow-x: hidden; position: relative; }
 
-        /* General UI Components */
-        .card { background: var(--surface); border-radius: var(--radius-md); padding: 24px; margin-bottom: 20px; border: 1px solid var(--outline); box-shadow: var(--shadow-sm); }
-        .card h3 { font-size: 17px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); letter-spacing: -0.01em; }
-        
-        .btn-primary { width: 100%; padding: 12px 20px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s ease; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        
-        .btn-secondary { width: 100%; padding: 10px 16px; background: var(--surface); color: var(--text-main); border: 1px solid var(--outline); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; }
-        .btn-secondary:hover { background: var(--bg); border-color: #cbd5e1; }
-        
+        /* Ambient Background Mesh */
+        .ambient-mesh {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.18) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(197, 160, 89, 0.1) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(5, 8, 15, 1) 0%, #030509 100%);
+            background-blend-mode: screen;
+        }
+
+        .film-noise {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; opacity: 0.035; pointer-events: none;
+            background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+        }
+
+        /* Movie Intro Overlay Canvas */
+        #cinemaOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999;
+            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #cinemaOverlay.active { opacity: 1; pointer-events: all; }
+
+        .cinema-bar-top, .cinema-bar-bottom {
+            position: absolute; left: 0; width: 100%; height: 0vh; background: #000; z-index: 10000;
+            transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #cinemaOverlay.active .cinema-bar-top { top: 0; height: 10vh; }
+        #cinemaOverlay.active .cinema-bar-bottom { bottom: 0; height: 10vh; }
+
+        .lens-flare {
+            position: absolute; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.8) 30%, rgba(255, 255, 255, 0.95) 50%, rgba(197, 160, 89, 0.8) 70%, transparent 100%);
+            box-shadow: 0 0 25px 4px rgba(59, 130, 246, 0.6);
+            opacity: 0; transform: scaleX(0.1); transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #cinemaOverlay.active .lens-flare { opacity: 1; transform: scaleX(1); }
+
+        .cinema-title {
+            font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; letter-spacing: 0.35em; color: #fff;
+            text-transform: uppercase; text-shadow: 0 0 30px rgba(255, 255, 255, 0.6); opacity: 0; transform: scale(0.9) blur(10px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .cinema-sub {
+            font-family: 'Space Grotesk', sans-serif; font-size: 11px; letter-spacing: 0.5em; color: var(--accent-gold);
+            text-transform: uppercase; margin-top: 14px; opacity: 0; transition: all 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+        }
+        #cinemaOverlay.active .cinema-title { opacity: 1; transform: scale(1) blur(0px); }
+        #cinemaOverlay.active .cinema-sub { opacity: 0.9; }
+
+        /* UI Cards & Glassmorphism */
+        .card {
+            background: var(--surface-card); backdrop-filter: blur(20px); border-radius: var(--radius-md);
+            padding: 24px; margin-bottom: 20px; border: var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden; transition: all 0.3s ease;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+        .card h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text-main); letter-spacing: 0.02em; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); position: relative; overflow: hidden;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.04); color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: var(--radius-sm); font-size: 12px;
+            font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.25); }
+
         .hidden { display: none !important; }
-        .list-item { padding: 14px 0; border-bottom: 1px solid var(--outline); font-size: 14px; }
+        .list-item { padding: 14px 0; border-bottom: 1px solid var(--outline); font-size: 13px; color: var(--text-sub); }
         .list-item:last-child { border-bottom: none; }
-        .error { color: var(--danger); font-size: 13px; font-weight: 500; }
-        .success { color: var(--success); font-size: 13px; font-weight: 500; }
-        .loading { text-align: center; color: var(--text-sub); padding: 20px; font-size: 14px; }
+        .error { color: var(--danger); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+        .success { color: var(--success); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+        .loading { text-align: center; color: var(--text-muted); padding: 20px; font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
 
-        .input-group, .form-group { margin-bottom: 16px; }
-        .input-group label, .form-group label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-sub); margin-bottom: 6px; }
-        .input-group input, .form-group input, .select-field { width: 100%; padding: 12px 14px; border: 1px solid var(--outline); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); color: var(--text-main); outline: none; transition: border-color 0.15s ease; }
-        .input-group input:focus, .form-group input:focus, .select-field:focus { border-color: var(--primary); }
+        /* Form Inputs */
+        .input-group, .form-group { margin-bottom: 20px; }
+        .input-group label, .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-gold); margin-bottom: 8px; font-family: 'Space Grotesk', sans-serif; }
+        .input-group input, .form-group input, .select-field {
+            width: 100%; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm);
+            font-size: 14px; background: rgba(0, 0, 0, 0.4); color: var(--text-main); outline: none; transition: all 0.25s ease;
+        }
+        .input-group input:focus, .form-group input:focus, .select-field:focus {
+            border-color: var(--primary); box-shadow: 0 0 12px rgba(59, 130, 246, 0.3); background: rgba(0, 0, 0, 0.6);
+        }
 
         .password-wrap { position: relative; }
-        .toggle-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; font-size: 14px; }
+        .toggle-eye { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.5; font-size: 14px; filter: grayscale(1); }
+        .toggle-eye:hover { opacity: 1; }
 
         /* Login Screen */
-        .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .login-box { width: 100%; max-width: 380px; background: var(--surface); border-radius: var(--radius-lg); padding: 40px 32px; border: 1px solid var(--outline); box-shadow: var(--shadow-lg); }
-        .login-icon { text-align: center; font-size: 42px; margin-bottom: 16px; display: inline-block; width: 100%; }
-        .login-title { text-align: center; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); }
-        .login-sub { text-align: center; font-size: 13px; color: var(--text-sub); margin-bottom: 28px; }
-        .remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-sub); }
-        .remember-row input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
-        .login-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s ease; }
-        .login-btn:hover { background: var(--primary-hover); }
-        .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-top: 14px; display: none; }
+        .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; position: relative; z-index: 1; }
+        .login-box {
+            width: 100%; max-width: 400px; background: var(--surface-dark); backdrop-filter: blur(25px);
+            border-radius: var(--radius-lg); padding: 48px 36px; border: var(--glass-border); box-shadow: var(--shadow-cinematic);
+            position: relative;
+        }
+        .login-box::before {
+            content: ''; position: absolute; inset: -1px; border-radius: var(--radius-lg); padding: 1px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+        }
+        .login-icon { text-align: center; font-size: 44px; margin-bottom: 20px; display: inline-block; width: 100%; filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.5)); }
+        .login-title { text-align: center; font-size: 24px; font-weight: 800; letter-spacing: 0.05em; color: var(--text-main); font-family: 'Cinzel', serif; text-transform: uppercase; }
+        .login-sub { text-align: center; font-size: 11px; color: var(--text-sub); margin-bottom: 32px; letter-spacing: 0.25em; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; opacity: 0.8; }
+        .remember-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font-size: 12px; color: var(--text-sub); font-weight: 500; }
+        .remember-row input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+        .login-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4); }
+        .login-btn:hover { background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%); box-shadow: 0 6px 25px rgba(37, 99, 235, 0.6); }
+        .error-msg { color: var(--danger); font-size: 12px; text-align: center; margin-top: 16px; display: none; font-weight: 600; letter-spacing: 0.02em; }
 
-        /* Driver App */
-        .app-screen { display: none; min-height: 100vh; padding-bottom: 90px; }
-        .top-bar { background: var(--surface); border-bottom: 1px solid var(--outline); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-        .top-bar h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
-        .top-bar .info-chip { background: var(--bg); border: 1px solid var(--outline); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text-sub); }
-        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
-        .result-box { margin-top: 16px; }
+        /* Driver App View */
+        .app-screen { display: none; min-height: 100vh; padding-bottom: 110px; position: relative; z-index: 1; }
+        .top-bar { background: rgba(5, 8, 15, 0.85); backdrop-filter: blur(15px); border-bottom: var(--glass-border); padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .top-bar h2 { font-size: 18px; font-weight: 800; letter-spacing: 0.08em; font-family: 'Cinzel', serif; text-transform: uppercase; background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .top-bar .info-chip { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--accent-gold); font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+        .content { padding: 24px; max-width: 640px; margin: 0 auto; }
+        .result-box { margin-top: 18px; }
 
-        /* Modern Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 400px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid var(--outline); border-radius: 30px; box-shadow: var(--shadow-lg); display: flex; justify-content: space-around; align-items: center; padding: 6px; z-index: 100; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 20px; cursor: pointer; color: var(--text-sub); transition: all 0.2s ease; text-decoration: none; }
-        .nav-item.active { color: var(--primary); background: var(--primary-light); }
+        /* Modern Navigation Float */
+        .bottom-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: calc(100% - 48px); max-width: 380px; background: rgba(13, 19, 33, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; justify-content: space-around; align-items: center; padding: 6px; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0; border-radius: 25px; cursor: pointer; color: var(--text-muted); transition: all 0.25s ease; text-decoration: none; }
+        .nav-item.active { color: #fff; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); }
         .nav-icon-box { font-size: 18px; }
-        .nav-label { font-size: 11px; font-weight: 600; }
+        .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; }
 
-        /* Admin Console */
-        .admin-screen { display: none; min-height: 100vh; background: var(--bg); }
-        .admin-topbar { background: var(--surface); border-bottom: 1px solid var(--outline); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-        .admin-topbar h2 { font-size: 18px; font-weight: 700; }
-        .admin-logout-btn { background: transparent; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--outline); color: var(--text-sub); }
-        .admin-logout-btn:hover { background: var(--bg); color: var(--text-main); }
-        
-        .admin-layout { display: flex; min-height: calc(100vh - 57px); }
-        .admin-nav { width: 240px; background: var(--surface); border-right: 1px solid var(--outline); padding: 16px 8px; display: flex; flex-direction: column; gap: 2px; }
-        .admin-nav-item { display: flex; align-items: center; padding: 10px 14px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s ease; color: var(--text-sub); font-size: 13px; font-weight: 500; }
-        .admin-nav-item:hover { background: var(--bg); color: var(--text-main); }
-        .admin-nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-        .admin-nav-icon { font-size: 16px; margin-right: 10px; }
-        
-        .admin-content { flex-grow: 1; padding: 28px; max-width: 900px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: var(--surface); border: 1px solid var(--outline); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
-        .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text-main); }
-        .stat-card .stat-label { font-size: 12px; font-weight: 500; color: var(--text-sub); margin-top: 2px; }
+        /* Admin Console View */
+        .admin-screen { display: none; min-height: 100vh; background: var(--bg-dark); position: relative; z-index: 1; }
+        .admin-topbar { background: rgba(13, 19, 33, 0.85); backdrop-filter: blur(15px); border-bottom: var(--glass-border); padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-topbar h2 { font-size: 18px; font-weight: 800; font-family: 'Cinzel', serif; letter-spacing: 0.08em; text-transform: uppercase; }
+        .admin-logout-btn { background: rgba(239, 68, 68, 0.1); padding: 8px 16px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); transition: all 0.2s ease; }
+        .admin-logout-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); }
+
+        .admin-layout { display: flex; min-height: calc(100vh - 65px); }
+        .admin-nav { width: 250px; background: rgba(13, 19, 33, 0.5); backdrop-filter: blur(15px); border-right: var(--glass-border); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .admin-nav-item { display: flex; align-items: center; padding: 12px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease; color: var(--text-sub); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-family: 'Space Grotesk', sans-serif; }
+        .admin-nav-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-main); }
+        .admin-nav-item.active { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #fff; font-weight: 700; }
+        .admin-nav-icon { font-size: 16px; margin-right: 12px; }
+
+        .admin-content { flex-grow: 1; padding: 32px; max-width: 1000px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 28px; }
+        .stat-card { background: var(--surface-card); border: var(--glass-border); border-radius: var(--radius-md); padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .stat-card .stat-value { font-size: 32px; font-weight: 800; color: var(--text-main); font-family: 'Space Grotesk', sans-serif; }
+        .stat-card .stat-label { font-size: 11px; font-weight: 700; color: var(--accent-gold); margin-top: 4px; letter-spacing: 0.12em; text-transform: uppercase; }
 
         /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--outline); }
-        th { font-weight: 600; color: var(--text-sub); background: var(--bg); }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+        th { font-weight: 700; color: var(--accent-gold); background: rgba(0, 0, 0, 0.3); letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; font-family: 'Space Grotesk', sans-serif; }
 
-        /* Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: var(--surface); border-radius: var(--radius-md); padding: 24px; width: 90%; max-width: 400px; box-shadow: var(--shadow-lg); border: 1px solid var(--outline); position: relative; }
-        .modal-close { position: absolute; top: 16px; right: 16px; font-size: 18px; cursor: pointer; color: var(--text-sub); }
-        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 5, 9, 0.85); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: var(--surface-dark); border-radius: var(--radius-md); padding: 32px; width: 90%; max-width: 440px; box-shadow: var(--shadow-cinematic); border: var(--glass-border); position: relative; }
+        .modal-close { position: absolute; top: 18px; right: 20px; font-size: 20px; cursor: pointer; color: var(--text-muted); transition: color 0.2s ease; }
+        .modal-close:hover { color: #fff; }
+        .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; font-family: 'Cinzel', serif; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-main); }
 
         @media (max-width: 768px) {
             .admin-layout { flex-direction: column; }
-            .admin-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--outline); flex-direction: row; overflow-x: auto; padding: 8px; }
-            .admin-nav-item { flex-shrink: 0; padding: 8px 12px; }
-            .admin-content { padding: 16px; }
+            .admin-nav { width: 100%; border-right: none; border-bottom: var(--glass-border); flex-direction: row; overflow-x: auto; padding: 12px; }
+            .admin-nav-item { flex-shrink: 0; padding: 10px 14px; font-size: 11px; }
+            .admin-content { padding: 20px; }
         }
     </style>
 </head>
 <body>
+
+<div class="ambient-mesh"></div>
+<div class="film-noise"></div>
+
+<!-- CINEMATIC MOVIE INTRO OVERLAY -->
+<div id="cinemaOverlay">
+    <div class="cinema-bar-top"></div>
+    <div class="cinema-bar-bottom"></div>
+    <div class="lens-flare"></div>
+    <div class="cinema-title" id="cinemaTitle">MY TRUCK SAFETY</div>
+    <div class="cinema-sub" id="cinemaSub">SYSTEM INITIALIZED • AUTHENTICATING</div>
+</div>
 
 <!-- LOGIN -->
 <div id="loginScreen" class="login-wrap">
@@ -145,7 +246,7 @@
             <input type="checkbox" id="rememberMe">
             <label for="rememberMe">Remember login details</label>
         </div>
-        <button class="login-btn" onclick="login()">Sign In</button>
+        <button class="login-btn" onclick="triggerCinemaLogin()">Sign In</button>
         <div id="loginError" class="error-msg"></div>
     </div>
 </div>
@@ -173,13 +274,13 @@
                 <p id="ptiStatus" class="loading">Not started</p>
                 <button class="btn-primary" onclick="startPTI()" id="startPtiBtn">📸 Start PTI</button>
                 <div id="ptiPhotoSection" class="hidden">
-                    <p id="ptiStepPrompt" style="margin-top:12px; font-weight:500; font-size:14px;"></p>
-                    <input type="file" id="ptiPhotoInput" accept="image/*" style="margin-top:10px; width:100%;">
-                    <div class="form-group" style="margin-top:10px;">
+                    <p id="ptiStepPrompt" style="margin-top:12px; font-weight:500; font-size:14px; color: var(--accent-gold);"></p>
+                    <input type="file" id="ptiPhotoInput" accept="image/*" style="margin-top:12px; width:100%; color:var(--text-sub);">
+                    <div class="form-group" style="margin-top:12px;">
                         <input type="text" id="ptiComment" placeholder="Optional comment (issue)">
                     </div>
                     <button class="btn-primary" onclick="uploadPTIPhoto()">📤 Upload Photo</button>
-                    <button class="btn-secondary" onclick="submitPTI()" id="submitPtiBtn" style="margin-top:8px;">✅ Submit PTI</button>
+                    <button class="btn-secondary" onclick="submitPTI()" id="submitPtiBtn" style="margin-top:10px;">✅ Submit PTI</button>
                 </div>
                 <div id="ptiResult" class="result-box hidden"></div>
             </div>
@@ -270,7 +371,7 @@
         <div class="form-group">
             <label>Telegram Group</label>
             <select id="assignGroupSelect" class="select-field"></select>
-            <button class="btn-secondary" onclick="loadGroupsIntoModal()" style="margin-top:6px;">↻ Refresh Groups</button>
+            <button class="btn-secondary" onclick="loadGroupsIntoModal()" style="margin-top:8px;">↻ Refresh Groups</button>
         </div>
         <div class="form-group">
             <label>Or Enter Group ID Manually</label>
@@ -312,28 +413,70 @@
 
     function togglePass() { const p = document.getElementById('loginPass'); p.type = p.type === 'password' ? 'text' : 'password'; }
 
-    async function login() {
+    // Synthesize Movie Intro Sound FX
+    function playCinemaSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(40, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.2);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.8);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 1.8);
+        } catch(e){}
+    }
+
+    // Trigger Cinema Transition Flow
+    async function triggerCinemaLogin() {
         const truck = document.getElementById('loginTruck').value.trim();
         const pass = document.getElementById('loginPass').value.trim();
         const remember = document.getElementById('rememberMe').checked;
         const errEl = document.getElementById('loginError');
         errEl.style.display = 'none';
+
         if (!truck || !pass) { errEl.textContent = "Fill all fields"; errEl.style.display = 'block'; return; }
+
+        playCinemaSound();
+        const overlay = document.getElementById('cinemaOverlay');
+        const cinemaTitle = document.getElementById('cinemaTitle');
+        const cinemaSub = document.getElementById('cinemaSub');
+
         if (truck === ADMIN_TRUCK && pass === ADMIN_PASS) {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('adminScreen').style.display = 'block';
-            loadOverview();
+            cinemaTitle.textContent = "ADMIN ACCESS GRANTED";
+            cinemaSub.textContent = "INITIALIZING FLEET CONTROL CONSOLE";
+            overlay.classList.add('active');
+
+            setTimeout(() => {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminScreen').style.display = 'block';
+                loadOverview();
+                overlay.classList.remove('active');
+            }, 2000);
             return;
         }
+
         try {
             const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, password: pass, init_data: initData }) });
             const data = await response.json();
             if (!response.ok || data.error) { errEl.textContent = data.error || "Login failed"; errEl.style.display = 'block'; return; }
+
+            cinemaTitle.textContent = "TRUCK #" + truck;
+            cinemaSub.textContent = "AUTHENTICATION SUCCESSFUL • WELCOME";
+            overlay.classList.add('active');
+
             if (remember) { localStorage.setItem('remTruck', truck); localStorage.setItem('remPass', pass); } else { localStorage.removeItem('remTruck'); localStorage.removeItem('remPass'); }
-            document.getElementById('truckInfo').textContent = 'Truck: ' + truck;
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            showTab('fuel');
+
+            setTimeout(() => {
+                document.getElementById('truckInfo').textContent = 'Truck: ' + truck;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appScreen').style.display = 'block';
+                showTab('fuel');
+                overlay.classList.remove('active');
+            }, 2000);
+
         } catch (err) { errEl.textContent = "Network error"; errEl.style.display = 'block'; }
     }
 
@@ -414,7 +557,7 @@
             if (data.harsh_events && data.harsh_events.length) {
                 let html = '<h4>Harsh Events</h4>';
                 data.harsh_events.forEach(e => {
-                    html += `<div class="list-item"><b>${e.event_type}</b> at ${e.location || 'Unknown'}<br>Vehicle: ${e.vehicle_id}<br>${e.video_url ? `<a href="${e.video_url}" target="_blank">View Video</a>` : ''}</div>`;
+                    html += `<div class="list-item"><b>${e.event_type}</b> at ${e.location || 'Unknown'}<br>Vehicle: ${e.vehicle_id}<br>${e.video_url ? `<a href="${e.video_url}" target="_blank" style="color:var(--primary)">View Video</a>` : ''}</div>`;
                 });
                 resDiv.innerHTML = html;
             } else { resDiv.innerHTML = '<p>No harsh events found.</p>'; }
@@ -487,30 +630,14 @@
         const vehicleId = document.getElementById('regVehicleId').value.trim();
         const password = document.getElementById('regPassword').value.trim();
         const license = document.getElementById('regLicense').value.trim();
-        if (!truck || !groupId || !driverId || !password) { alert('Fill all required'); return; }
         const resDiv = document.getElementById('registerResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Registering...</div>';
-        try {
-            const resp = await fetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: Number(groupId), samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, truck_license: license }) });
-            const data = await resp.json();
-            if (data.success) { resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; document.getElementById('regTruck').value=''; document.getElementById('regGroupId').value=''; document.getElementById('regDriverId').value=''; document.getElementById('regVehicleId').value=''; document.getElementById('regPassword').value=''; document.getElementById('regLicense').value=''; }
-            else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
-    }
 
-    async function loadTrucksFuel() {
-        const resDiv = document.getElementById('trucksFuelResult');
-        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin/trucks-with-fuel', { method: 'GET' });
+            const resp = await fetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: groupId, samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, license: license }) });
             const data = await resp.json();
-            if (data.trucks && data.trucks.length) {
-                let html = '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
-                data.trucks.forEach(t => { const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A'; html += `<tr><td>${t.truck_number}</td><td>${fuel}</td><td>${t.driver_id}</td></tr>`; });
-                html += '</table>';
-                resDiv.innerHTML = html;
-            } else { resDiv.innerHTML = '<p>No registered trucks.</p>'; }
-        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading trucks</div>'; }
+            if (data.success) { resDiv.innerHTML = '<div class="success">✅ Driver registered successfully</div>'; } else { resDiv.innerHTML = `<div class="error">❌ ${data.error || 'Error registering driver'}</div>`; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 </script>
 </body>
