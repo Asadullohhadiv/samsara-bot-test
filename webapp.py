@@ -3,7 +3,6 @@ import json
 import hmac
 import hashlib
 import base64
-import time
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -102,13 +101,11 @@ def send_media_group(chat_id, media_group, caption):
     except Exception as e:
         print(f"❌ Failed to send media group: {e}")
 
-# Upload photo to Telegram and get file_id
 def upload_photo_to_telegram(photo_bytes):
-    """Upload photo bytes to Telegram and return file_id."""
     try:
         url = f"https://api.telegram.org/bot{config.TELEGRAM_TOKEN}/sendPhoto"
         files = {"photo": ("photo.jpg", photo_bytes, "image/jpeg")}
-        data = {"chat_id": config.ADMIN_GROUP_ID}  # Use admin group as temp chat
+        data = {"chat_id": config.ADMIN_GROUP_ID}
         resp = requests.post(url, files=files, data=data, timeout=10)
         if resp.status_code == 200:
             result = resp.json()
@@ -266,21 +263,24 @@ async def admin_trucks_with_fuel():
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Fault Codes ----
+# ---- Fault Codes (corrected endpoint) ----
 @app.get("/api/fault-codes")
 async def fault_codes_api(vehicle_id: Optional[str] = None):
     try:
         raw_faults = get_fault_codes(vehicle_id=vehicle_id, limit=50)
         fault_list = []
         for raw in raw_faults:
-            parsed = parse_fault_code(raw)
-            fault_list.append(parsed)
-        db_faults = get_all_fault_codes()
-        return {"fault_codes": fault_list, "db_count": len(db_faults)}
+            parsed_list = parse_fault_code(raw)
+            for item in parsed_list:
+                fault_list.append(item)
+        # Also save to DB (optional)
+        for fault in fault_list:
+            save_fault_code(fault["vehicle_id"], fault["truck_number"], fault["code"], fault["description"], fault["severity"])
+        return {"fault_codes": fault_list}
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Harsh Events ----
+# ---- Harsh Events (corrected endpoint) ----
 @app.get("/api/harsh-events")
 async def harsh_events_api(vehicle_id: Optional[str] = None):
     try:
@@ -289,12 +289,12 @@ async def harsh_events_api(vehicle_id: Optional[str] = None):
         for raw in raw_events:
             parsed = parse_harsh_event(raw)
             event_list.append(parsed)
-        db_events = get_all_harsh_events()
-        return {"harsh_events": event_list, "db_count": len(db_events)}
+            save_harsh_event(parsed["vehicle_id"], parsed["truck_number"], parsed["event_type"], parsed["location"], parsed["video_url"])
+        return {"harsh_events": event_list}
     except Exception as e:
         return {"error": str(e)}
 
-# ---- Maintenance Alerts ----
+# ---- Maintenance Alerts (corrected endpoint) ----
 @app.get("/api/maintenance-alerts")
 async def maintenance_alerts_api(vehicle_id: Optional[str] = None):
     try:
@@ -303,8 +303,8 @@ async def maintenance_alerts_api(vehicle_id: Optional[str] = None):
         for raw in raw_alerts:
             parsed = parse_maintenance_alert(raw)
             alert_list.append(parsed)
-        db_alerts = get_all_maintenance_alerts()
-        return {"maintenance_alerts": alert_list, "db_count": len(db_alerts)}
+            save_maintenance_alert(parsed["vehicle_id"], parsed["truck_number"], parsed["maintenance_type"], parsed["due_mileage"], parsed["location"])
+        return {"maintenance_alerts": alert_list}
     except Exception as e:
         return {"error": str(e)}
 
@@ -355,6 +355,31 @@ async def fuel_search_api(req: FuelSearchRequest):
         })
     return {"stations": output, "fuel_level": stats.get("fuel")}
 
+# ---- Use Station ----
+class UseStationRequest(BaseModel):
+    station_name: str
+    station_address: str
+    station_lat: float
+    station_lng: float
+    price: float
+    init_data: str
+
+@app.post("/api/use-station")
+async def use_station_api(req: UseStationRequest):
+    if not verify_init_data(req.init_data):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    user = get_user_from_init_data(req.init_data)
+    if not user:
+        raise HTTPException(status_code=400, detail="No user")
+    tg_id = user.get("id")
+    driver_info = get_driver_by_chat(tg_id)
+    if not driver_info:
+        return {"error": "Driver not registered."}
+    driver_id = driver_info["driver_id"]
+    add_fuel_station_usage(driver_id, req.station_name, req.station_address, req.station_lat, req.station_lng, req.price)
+    add_points(driver_id, config.POINTS_PER_FUEL_STOP, "fuel", f"Fuel stop at {req.station_name}")
+    return {"message": f"Recorded! You earned {config.POINTS_PER_FUEL_STOP} points."}
+
 # ---- PTI: Start ----
 class PTIStartRequest(BaseModel):
     truck_number: str
@@ -370,7 +395,7 @@ async def pti_start(req: PTIStartRequest):
     # Store session
     PTI_SESSIONS[tg_id] = {
         "step": 0,
-        "photos": [],  # list of {step, file_id, comment}
+        "photos": [],
         "truck_number": req.truck_number,
         "trailer_number": req.trailer_number or "",
         "created_at": datetime.now(),
@@ -395,9 +420,7 @@ async def pti_photo(req: PTIPhotoRequest, photo: UploadFile = File(...)):
     if req.step_index != session["step"]:
         return {"error": f"Expected step {session['step']}, got {req.step_index}"}
     
-    # Read photo bytes
     photo_bytes = await photo.read()
-    # Upload to Telegram to get file_id
     file_id = upload_photo_to_telegram(photo_bytes)
     if not file_id:
         return {"error": "Failed to upload photo"}
@@ -445,11 +468,9 @@ async def pti_submit(req: PTISubmitRequest):
         f"📸 Collected {len(session['photos'])} photos"
     )
     
-    # Send to PTI group (or admin group)
     target_group = getattr(config, "PTI_GROUP_ID", None) or config.ADMIN_GROUP_ID
     try:
         send_media_group(target_group, media_group, caption)
-        # Record in database
         driver_id = session.get("truck_number", "")
         add_pti_submission(driver_id, session.get("truck_number"), session.get("trailer_number"), len(session["photos"]))
         add_points(driver_id, config.POINTS_PER_PTI, "pti", f"PTI {datetime.now().strftime('%Y%m%d%H%M%S')}")
