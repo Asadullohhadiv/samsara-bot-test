@@ -1,9 +1,9 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>My Truck Safety</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -14,22 +14,33 @@
 
     <style>
         :root {
-            --black: #050505;
-            --black-soft: #0d0d0d;
-            --white: #f7f7f2;
-            --white-pure: #ffffff;
-            --gray: #a3a3a3;
-            --gray-dark: #202020;
-            --line: rgba(255,255,255,.12);
+            --bg: #050505;
+            --bg-soft: #0a0a0a;
+            --surface: #101010;
+            --surface-2: #151515;
+            --surface-3: #1b1b1b;
 
-            --green: #c8ff00;
-            --green-dark: #9dca00;
-            --red: #ff4d4d;
-            --blue: #7c9cff;
+            --line: rgba(255,255,255,0.10);
+            --line-strong: rgba(255,255,255,0.16);
 
-            --radius: 22px;
-            --radius-lg: 34px;
-            --shadow: 0 25px 80px rgba(0,0,0,.35);
+            --text: #f5f5f5;
+            --muted: #929292;
+            --muted-2: #666;
+
+            --accent: #d8ff3e;
+            --accent-hover: #c5eb2f;
+            --accent-dark: #111;
+
+            --danger: #ff4d5f;
+            --success: #8cff5b;
+            --warning: #ffc857;
+
+            --radius-sm: 10px;
+            --radius-md: 18px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+
+            --shadow: 0 20px 70px rgba(0,0,0,.45);
         }
 
         * {
@@ -41,56 +52,49 @@
         }
 
         html {
-            background: var(--black);
-            scroll-behavior: smooth;
+            background: var(--bg);
         }
 
         body {
-            background: var(--black);
-            color: var(--white);
+            background:
+                radial-gradient(circle at 50% -10%, rgba(216,255,62,.08), transparent 30%),
+                var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            line-height: 1.45;
+            line-height: 1.5;
             overflow-x: hidden;
         }
 
         button,
         input,
         select {
-            font: inherit;
+            font-family: inherit;
         }
 
         button {
-            cursor: pointer;
+            -webkit-appearance: none;
         }
-
-        ::selection {
-            background: var(--green);
-            color: var(--black);
-        }
-
-        /* =========================================================
-           GLOBAL
-        ========================================================= */
 
         .hidden {
             display: none !important;
         }
 
-        .loading {
-            color: var(--gray);
-            padding: 14px 0;
-        }
+        /* =========================================================
+           GLOBAL BACKGROUND
+        ========================================================= */
 
-        .success {
-            color: var(--green);
-            padding: 12px 0;
-            font-weight: 700;
-        }
-
-        .error {
-            color: var(--red);
-            padding: 12px 0;
-            font-weight: 600;
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            opacity: .28;
+            background-image:
+                linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: linear-gradient(to bottom, black, transparent 75%);
         }
 
         /* =========================================================
@@ -100,25 +104,19 @@
         #splash {
             position: fixed;
             inset: 0;
-            background: var(--black);
+            background:
+                radial-gradient(circle at center, rgba(216,255,62,.10), transparent 32%),
+                #050505;
             z-index: 9999;
+
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity .7s ease, visibility .7s ease;
-            overflow: hidden;
-        }
 
-        #splash::before {
-            content: "";
-            position: absolute;
-            width: 700px;
-            height: 700px;
-            border-radius: 50%;
-            background: var(--green);
-            filter: blur(160px);
-            opacity: .08;
+            transition:
+                opacity .7s ease,
+                visibility .7s ease;
         }
 
         #splash.hidden {
@@ -128,49 +126,64 @@
         }
 
         .splash-logo {
-            position: relative;
-            font-size: 92px;
-            margin-bottom: 8px;
-            animation: truckFloat 2.5s ease-in-out infinite;
-            filter: grayscale(1);
+            width: 100px;
+            height: 100px;
+            border-radius: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 54px;
+
+            background: var(--accent);
+            color: #000;
+
+            box-shadow:
+                0 0 0 1px rgba(216,255,62,.4),
+                0 0 80px rgba(216,255,62,.15);
+
+            animation: splashFloat 3s ease-in-out infinite;
         }
 
         .splash-title {
-            position: relative;
-            font-size: clamp(30px, 7vw, 58px);
-            line-height: .95;
-            font-weight: 900;
-            letter-spacing: -.07em;
-            text-transform: uppercase;
+            margin-top: 24px;
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -.04em;
         }
 
-        .splash-title span {
-            color: var(--green);
+        .splash-subtitle {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .16em;
         }
 
         .splash-spinner {
-            position: relative;
             width: 34px;
             height: 34px;
             margin-top: 30px;
-            border: 3px solid rgba(255,255,255,.15);
-            border-top-color: var(--green);
+
+            border: 2px solid rgba(255,255,255,.12);
+            border-top-color: var(--accent);
             border-radius: 50%;
+
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
 
-        @keyframes truckFloat {
+        @keyframes splashFloat {
             0%,100% {
-                transform: translateY(0) rotate(0deg);
+                transform: translateY(0);
             }
+
             50% {
-                transform: translateY(-12px) rotate(-2deg);
+                transform: translateY(-8px);
             }
         }
 
@@ -180,64 +193,68 @@
 
         .login-wrap {
             min-height: 100vh;
-            background:
-                radial-gradient(circle at 80% 20%, rgba(200,255,0,.08), transparent 28%),
-                var(--black);
+            padding: 24px;
+
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 22px;
+
             position: relative;
             overflow: hidden;
         }
 
         .login-wrap::before {
-            content: "TRUCK";
-            position: absolute;
-            left: -30px;
-            bottom: -50px;
-            font-size: clamp(130px, 28vw, 380px);
-            line-height: .7;
-            font-weight: 900;
-            letter-spacing: -.1em;
-            color: rgba(255,255,255,.025);
-            pointer-events: none;
-            white-space: nowrap;
-        }
-
-        .login-wrap::after {
             content: "";
             position: absolute;
-            width: 500px;
-            height: 500px;
-            right: -220px;
-            top: -220px;
+            width: 520px;
+            height: 520px;
             border-radius: 50%;
-            border: 1px solid rgba(200,255,0,.15);
-            box-shadow:
-                0 0 0 80px rgba(200,255,0,.025),
-                0 0 0 160px rgba(200,255,0,.018);
+
+            background: radial-gradient(
+                circle,
+                rgba(216,255,62,.10),
+                transparent 68%
+            );
+
+            top: -250px;
+            left: 50%;
+            transform: translateX(-50%);
+
+            pointer-events: none;
         }
 
         .login-box {
             width: 100%;
-            max-width: 520px;
+            max-width: 430px;
+
             position: relative;
-            z-index: 2;
-            padding: 44px;
-            background: rgba(17,17,17,.9);
-            border: 1px solid rgba(255,255,255,.1);
-            border-radius: var(--radius-lg);
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.07),
+                    rgba(255,255,255,.025)
+                );
+
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+
+            padding: 36px 30px 30px;
+
             box-shadow: var(--shadow);
+
             backdrop-filter: blur(20px);
-            animation: loginIn .7s cubic-bezier(.2,.8,.2,1);
+            -webkit-backdrop-filter: blur(20px);
+
+            animation: loginAppear .65s ease;
         }
 
-        @keyframes loginIn {
+        @keyframes loginAppear {
             from {
                 opacity: 0;
-                transform: translateY(30px) scale(.97);
+                transform: translateY(25px) scale(.98);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -247,83 +264,182 @@
         .login-brand {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 45px;
+            align-items: center;
+            margin-bottom: 38px;
         }
 
-        .login-brand-name {
-            font-size: 15px;
-            font-weight: 900;
+        .brand-mark {
+            width: 48px;
+            height: 48px;
+            border-radius: 15px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: var(--accent);
+            color: #000;
+
+            font-size: 25px;
+
+            box-shadow: 0 10px 30px rgba(216,255,62,.12);
+        }
+
+        .brand-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 600;
+
             text-transform: uppercase;
-            letter-spacing: -.03em;
+            letter-spacing: .1em;
         }
 
-        .login-brand-mark {
-            width: 42px;
-            height: 42px;
-            background: var(--green);
-            color: var(--black);
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--success);
             border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font-size: 21px;
-            transform: rotate(-8deg);
-        }
-
-        .login-icon {
-            display: none;
+            box-shadow: 0 0 12px rgba(140,255,91,.7);
         }
 
         .login-title {
-            font-size: clamp(48px, 11vw, 82px);
+            font-size: clamp(36px, 9vw, 52px);
+            line-height: .95;
+            letter-spacing: -.065em;
             font-weight: 900;
-            line-height: .82;
-            letter-spacing: -.085em;
-            text-transform: uppercase;
-            margin-bottom: 22px;
+            max-width: 370px;
         }
 
         .login-title span {
-            color: var(--green);
-            display: block;
+            color: var(--accent);
         }
 
         .login-sub {
-            color: var(--gray);
+            color: var(--muted);
             font-size: 14px;
-            margin-bottom: 38px;
-            max-width: 300px;
+            line-height: 1.6;
+            margin-top: 17px;
+            max-width: 320px;
+            margin-bottom: 34px;
         }
 
-        .input-group,
-        .form-group {
-            margin-bottom: 18px;
+        .truck-hero {
+            position: relative;
+            height: 105px;
+            margin-bottom: 30px;
+            overflow: hidden;
+
+            border-radius: 20px;
+            border: 1px solid var(--line);
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,255,255,.04),
+                    rgba(255,255,255,.015)
+                );
+        }
+
+        .truck-road {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 17px;
+            height: 1px;
+            background: rgba(255,255,255,.14);
+        }
+
+        .truck-road::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 8px;
+            height: 1px;
+
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(216,255,62,.5) 0 35px,
+                transparent 35px 70px
+            );
+
+            animation: roadMove 1.5s linear infinite;
+        }
+
+        @keyframes roadMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(-70px); }
+        }
+
+        .hero-truck {
+            position: absolute;
+            bottom: 19px;
+            left: 50%;
+            transform: translateX(-50%);
+
+            font-size: 54px;
+
+            filter:
+                drop-shadow(0 8px 15px rgba(0,0,0,.6))
+                drop-shadow(0 0 18px rgba(216,255,62,.08));
+
+            animation: truckDrive 3s ease-in-out infinite;
+        }
+
+        @keyframes truckDrive {
+            0%,100% {
+                transform: translateX(-50%);
+            }
+
+            50% {
+                transform: translateX(-47%);
+            }
+        }
+
+        .input-group {
+            margin-bottom: 17px;
         }
 
         .input-group label,
         .form-group label {
             display: block;
-            color: var(--gray);
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: .13em;
-            text-transform: uppercase;
+
             margin-bottom: 8px;
+
+            color: #a6a6a6;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: .14em;
         }
 
         .input-group input,
         .form-group input,
         .select-field {
             width: 100%;
-            height: 56px;
-            padding: 0 17px;
-            background: #111;
-            color: var(--white);
-            border: 1px solid #292929;
-            border-radius: 15px;
+
+            padding: 15px 16px;
+
+            color: var(--text);
+            background: rgba(255,255,255,.045);
+
+            border: 1px solid var(--line);
+            border-radius: 12px;
+
             outline: none;
-            font-size: 15px;
-            transition: .2s ease;
+
+            font-size: 14px;
+
+            transition:
+                border-color .2s ease,
+                background .2s ease,
+                box-shadow .2s ease;
         }
 
         .input-group input::placeholder,
@@ -334,345 +450,299 @@
         .input-group input:focus,
         .form-group input:focus,
         .select-field:focus {
-            border-color: var(--green);
-            box-shadow: 0 0 0 3px rgba(200,255,0,.08);
+            border-color: rgba(216,255,62,.55);
+
+            background: rgba(216,255,62,.035);
+
+            box-shadow:
+                0 0 0 3px rgba(216,255,62,.07);
         }
 
         .password-wrap {
             position: relative;
         }
 
+        .password-wrap input {
+            padding-right: 48px;
+        }
+
         .toggle-eye {
             position: absolute;
-            right: 17px;
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--gray);
+
+            color: var(--muted);
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
+
+            opacity: .7;
         }
 
         .remember-row {
             display: flex;
             align-items: center;
             gap: 9px;
-            color: var(--gray);
+
+            margin: 17px 0 22px;
+
+            color: var(--muted);
             font-size: 12px;
-            margin: 20px 0 24px;
         }
 
         .remember-row input {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--green);
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent);
         }
 
         .login-btn,
         .btn-primary {
             width: 100%;
-            min-height: 56px;
+
+            padding: 15px 20px;
+
             border: 0;
-            border-radius: 100px;
-            background: var(--green);
-            color: var(--black);
-            font-weight: 900;
-            font-size: 14px;
-            letter-spacing: -.01em;
-            transition: transform .2s ease, background .2s ease;
+            border-radius: 12px;
+
+            background: var(--accent);
+            color: #080808;
+
+            font-size: 13px;
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition:
+                transform .15s ease,
+                background .2s ease,
+                box-shadow .2s ease;
         }
 
         .login-btn:hover,
         .btn-primary:hover {
-            background: #d8ff4b;
-            transform: translateY(-2px);
+            background: var(--accent-hover);
+            box-shadow: 0 10px 35px rgba(216,255,62,.10);
         }
 
         .login-btn:active,
         .btn-primary:active {
-            transform: scale(.98);
+            transform: scale(.985);
         }
 
         .error-msg {
-            color: var(--red);
-            font-size: 13px;
-            margin-top: 15px;
-            text-align: center;
             display: none;
+
+            margin-top: 15px;
+            padding: 11px 13px;
+
+            border: 1px solid rgba(255,77,95,.22);
+            border-radius: 10px;
+
+            background: rgba(255,77,95,.07);
+            color: #ff7885;
+
+            font-size: 12px;
+            text-align: center;
         }
 
         /* =========================================================
-           DRIVER APP
+           APP
         ========================================================= */
 
         .app-screen {
             display: none;
             min-height: 100vh;
-            padding-bottom: 120px;
-            background:
-                radial-gradient(circle at 85% 0%, rgba(200,255,0,.08), transparent 25%),
-                var(--black);
+            padding-bottom: 110px;
         }
 
         .top-bar {
-            min-height: 78px;
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 10;
-            background: rgba(5,5,5,.75);
+            z-index: 20;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            padding: 16px 20px;
+
+            background: rgba(5,5,5,.80);
             border-bottom: 1px solid var(--line);
+
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
 
         .top-bar h2 {
-            font-size: 16px;
-            font-weight: 900;
+            font-size: 17px;
+            font-weight: 800;
             letter-spacing: -.04em;
-            text-transform: uppercase;
+        }
+
+        .top-bar h2::before {
+            content: "●";
+            color: var(--accent);
+            font-size: 8px;
+            vertical-align: middle;
+            margin-right: 8px;
         }
 
         .info-chip {
-            border: 1px solid #2a2a2a;
-            background: #111;
+            padding: 7px 11px;
+
+            background: rgba(216,255,62,.07);
+            border: 1px solid rgba(216,255,62,.15);
             border-radius: 100px;
-            padding: 8px 14px;
-            color: var(--gray);
-            font-size: 11px;
+
+            color: var(--accent);
+
+            font-size: 10px;
             font-weight: 700;
         }
 
         .content {
             width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 35px 20px;
-        }
+            max-width: 620px;
 
-        .content::before {
-            content: "DRIVE";
-            display: block;
-            font-size: clamp(70px, 18vw, 150px);
-            line-height: .72;
-            font-weight: 900;
-            letter-spacing: -.1em;
-            color: var(--white);
-            margin: 20px 0 55px;
+            margin: 0 auto;
+            padding: 22px 18px;
         }
 
         .card {
-            background: #101010;
-            border: 1px solid #242424;
-            border-radius: var(--radius-lg);
-            padding: 26px;
-            margin-bottom: 20px;
-            box-shadow: 0 20px 70px rgba(0,0,0,.2);
+            position: relative;
+
+            padding: 22px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.055),
+                    rgba(255,255,255,.018)
+                );
+
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+
+            box-shadow: 0 20px 50px rgba(0,0,0,.18);
+
+            margin-bottom: 16px;
+        }
+
+        .card::before {
+            content: "";
+
+            position: absolute;
+            top: 0;
+            left: 22px;
+            right: 22px;
+
+            height: 1px;
+
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(216,255,62,.25),
+                transparent
+            );
         }
 
         .card h3 {
-            color: var(--white);
-            font-size: 25px;
-            line-height: 1;
-            letter-spacing: -.05em;
-            font-weight: 900;
-            margin-bottom: 22px;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -.04em;
+
+            margin-bottom: 19px;
         }
 
-        .card p {
-            color: var(--gray);
+        .card h3::before {
+            content: "—";
+            color: var(--accent);
+            margin-right: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
         }
 
         .btn-secondary {
             width: 100%;
-            min-height: 48px;
-            border-radius: 100px;
-            border: 1px solid #333;
-            background: transparent;
-            color: var(--white);
-            font-size: 13px;
-            font-weight: 700;
-            transition: .2s ease;
+
+            padding: 12px 16px;
+
+            background: rgba(255,255,255,.04);
+            color: var(--text);
+
+            border: 1px solid var(--line);
+            border-radius: 11px;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background .2s ease,
+                border-color .2s ease;
         }
 
         .btn-secondary:hover {
-            background: #1b1b1b;
-            border-color: #555;
+            background: rgba(255,255,255,.08);
+            border-color: var(--line-strong);
         }
 
         .result-box {
-            margin-top: 18px;
+            margin-top: 17px;
+        }
+
+        .result-box h4 {
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: var(--accent);
         }
 
         .list-item {
-            background: #171717;
-            border: 1px solid #292929;
-            border-radius: 15px;
-            padding: 16px;
-            margin-bottom: 10px;
-            color: var(--gray);
-            font-size: 13px;
+            padding: 14px;
+
+            margin-bottom: 8px;
+
+            background: rgba(255,255,255,.035);
+            border: 1px solid var(--line);
+            border-radius: 11px;
+
+            font-size: 12px;
+            color: #bdbdbd;
         }
 
         .list-item b {
-            color: var(--white);
+            color: var(--text);
         }
 
-        /* =========================================================
-           TRUCK HERO
-        ========================================================= */
-
-        .truck-hero {
-            position: relative;
-            width: 100%;
-            height: 270px;
-            overflow: hidden;
-            border-radius: 28px;
-            background: #080808;
-            border: 1px solid #1f1f1f;
-            margin-bottom: 20px;
+        .loading {
+            color: var(--muted);
+            font-size: 12px;
         }
 
-        .truck-hero::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 48px;
-            height: 1px;
-            background: #333;
-            box-shadow: 0 16px 0 #191919;
+        .success {
+            padding: 12px;
+            border-radius: 10px;
+
+            color: var(--success);
+            background: rgba(140,255,91,.06);
+            border: 1px solid rgba(140,255,91,.14);
+
+            font-size: 12px;
         }
 
-        .truck-hero::after {
-            content: "";
-            position: absolute;
-            width: 220px;
-            height: 220px;
-            right: -80px;
-            top: -100px;
-            border-radius: 50%;
-            background: var(--green);
-            opacity: .09;
-            filter: blur(40px);
-        }
+        .error {
+            padding: 12px;
+            border-radius: 10px;
 
-        .truck-art {
-            position: absolute;
-            left: 50%;
-            bottom: 55px;
-            transform: translateX(-50%);
-            width: min(88%, 560px);
-            height: 125px;
-        }
+            color: #ff7480;
+            background: rgba(255,77,95,.06);
+            border: 1px solid rgba(255,77,95,.14);
 
-        .truck-cab {
-            position: absolute;
-            left: 16%;
-            bottom: 20px;
-            width: 150px;
-            height: 86px;
-            background: var(--green);
-            border-radius: 12px 20px 5px 8px;
-            transform: skewX(-5deg);
-        }
-
-        .truck-cab::before {
-            content: "";
-            position: absolute;
-            right: 12px;
-            top: 11px;
-            width: 53px;
-            height: 31px;
-            border-radius: 4px;
-            background: #111;
-            border: 2px solid #222;
-        }
-
-        .truck-cab::after {
-            content: "";
-            position: absolute;
-            left: -10px;
-            bottom: 12px;
-            width: 12px;
-            height: 24px;
-            background: #e9ff9d;
-            border-radius: 3px;
-        }
-
-        .truck-trailer {
-            position: absolute;
-            left: 42%;
-            bottom: 20px;
-            width: 42%;
-            height: 88px;
-            background: #e9e9e4;
-            border-radius: 5px 7px 7px 3px;
-        }
-
-        .truck-trailer::before {
-            content: "MY TRUCK";
-            position: absolute;
-            left: 20px;
-            top: 27px;
-            color: #111;
-            font-weight: 900;
-            font-size: 16px;
-            letter-spacing: -.06em;
-        }
-
-        .truck-trailer::after {
-            content: "";
-            position: absolute;
-            left: 20px;
-            top: 53px;
-            width: 75px;
-            height: 4px;
-            background: var(--green);
-        }
-
-        .wheel {
-            position: absolute;
-            bottom: 0;
-            width: 42px;
-            height: 42px;
-            background: #080808;
-            border: 8px solid #242424;
-            border-radius: 50%;
-            box-shadow: inset 0 0 0 5px #080808;
-        }
-
-        .wheel.one {
-            left: 20%;
-        }
-
-        .wheel.two {
-            left: 42%;
-        }
-
-        .wheel.three {
-            right: 17%;
-        }
-
-        .hero-label {
-            position: absolute;
-            left: 22px;
-            top: 20px;
-            color: var(--gray);
-            font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .15em;
-        }
-
-        .hero-number {
-            position: absolute;
-            right: 20px;
-            top: 17px;
-            color: var(--green);
-            font-size: 10px;
-            font-weight: 900;
+            font-size: 12px;
         }
 
         /* =========================================================
@@ -682,46 +752,67 @@
         .bottom-nav {
             position: fixed;
             z-index: 100;
+
+            bottom: 14px;
             left: 50%;
-            bottom: 17px;
+
             transform: translateX(-50%);
+
             width: calc(100% - 28px);
-            max-width: 450px;
-            padding: 7px;
+            max-width: 430px;
+
             display: flex;
-            background: rgba(17,17,17,.88);
-            border: 1px solid #303030;
-            border-radius: 100px;
-            box-shadow: 0 20px 70px rgba(0,0,0,.5);
-            backdrop-filter: blur(20px);
+
+            padding: 6px;
+
+            background: rgba(18,18,18,.84);
+            border: 1px solid var(--line-strong);
+            border-radius: 22px;
+
+            box-shadow: 0 20px 50px rgba(0,0,0,.45);
+
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
         }
 
         .nav-item {
             flex: 1;
-            min-height: 50px;
+
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border-radius: 100px;
-            color: #777;
+
+            gap: 4px;
+
+            padding: 9px 5px;
+
+            border-radius: 17px;
+
+            color: var(--muted);
+
+            cursor: pointer;
             text-decoration: none;
-            transition: .2s ease;
+
+            transition:
+                background .2s ease,
+                color .2s ease;
         }
 
         .nav-item.active {
-            background: var(--green);
-            color: var(--black);
+            color: #080808;
+            background: var(--accent);
         }
 
         .nav-icon-box {
             font-size: 18px;
+            line-height: 1;
         }
 
         .nav-label {
-            font-size: 11px;
-            font-weight: 900;
+            font-size: 9px;
+            font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: .08em;
         }
 
         /* =========================================================
@@ -731,166 +822,179 @@
         .admin-screen {
             display: none;
             min-height: 100vh;
-            background: var(--black);
+            background: var(--bg);
         }
 
         .admin-topbar {
-            height: 76px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 24px;
-            background: rgba(5,5,5,.9);
+
+            padding: 16px 22px;
+
+            background: rgba(5,5,5,.85);
             border-bottom: 1px solid var(--line);
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            backdrop-filter: blur(18px);
+
+            backdrop-filter: blur(20px);
         }
 
         .admin-topbar h2 {
-            font-size: 18px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -.05em;
+            font-size: 17px;
+            font-weight: 800;
         }
 
         .admin-logout-btn {
-            border: 1px solid #333;
-            background: transparent;
-            color: var(--gray);
-            padding: 9px 16px;
-            border-radius: 100px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
+            padding: 8px 13px;
 
-        .admin-logout-btn:hover {
-            color: var(--white);
-            border-color: #555;
+            background: transparent;
+            color: var(--muted);
+
+            border: 1px solid var(--line);
+            border-radius: 9px;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            cursor: pointer;
         }
 
         .admin-layout {
             display: flex;
-            min-height: calc(100vh - 76px);
+            min-height: calc(100vh - 58px);
         }
 
         .admin-nav {
-            width: 255px;
+            width: 245px;
             flex-shrink: 0;
-            background: #090909;
+
+            padding: 15px 9px;
+
+            background: #080808;
             border-right: 1px solid var(--line);
-            padding: 15px 10px;
+
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .admin-nav-item {
             display: flex;
             align-items: center;
-            padding: 13px 15px;
-            border-radius: 13px;
-            color: #777;
-            font-size: 12px;
-            font-weight: 700;
+
+            padding: 11px 13px;
+
+            border-radius: 9px;
+
+            color: var(--muted);
+
             cursor: pointer;
-            transition: .2s ease;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            transition:
+                background .15s ease,
+                color .15s ease;
         }
 
         .admin-nav-item:hover {
-            background: #151515;
-            color: var(--white);
+            background: rgba(255,255,255,.04);
+            color: var(--text);
         }
 
         .admin-nav-item.active {
-            background: var(--green);
-            color: var(--black);
+            background: var(--accent);
+            color: #050505;
         }
 
         .admin-nav-icon {
-            margin-right: 10px;
-            font-size: 15px;
+            width: 23px;
+            font-size: 14px;
         }
 
         .admin-content {
-            flex: 1;
+            flex-grow: 1;
             width: 100%;
             max-width: 1100px;
-            padding: 30px;
-        }
 
-        .admin-content::before {
-            content: "CONTROL";
-            display: block;
-            font-size: clamp(60px, 10vw, 130px);
-            line-height: .75;
-            font-weight: 900;
-            letter-spacing: -.1em;
-            margin-bottom: 50px;
+            padding: 26px;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+
+            margin-bottom: 18px;
         }
 
         .stat-card {
-            min-height: 150px;
-            background: #101010;
-            border: 1px solid #252525;
-            border-radius: 25px;
-            padding: 22px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            padding: 19px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.055),
+                    rgba(255,255,255,.02)
+                );
+
+            border: 1px solid var(--line);
+            border-radius: 15px;
         }
 
         .stat-card .stat-value {
-            font-size: 48px;
-            line-height: 1;
+            color: var(--accent);
+
+            font-size: 30px;
             font-weight: 900;
-            letter-spacing: -.07em;
-            color: var(--green);
+            letter-spacing: -.05em;
         }
 
         .stat-card .stat-label {
-            color: var(--gray);
+            margin-top: 4px;
+
+            color: var(--muted);
+
             font-size: 10px;
-            font-weight: 800;
+            font-weight: 700;
+
             text-transform: uppercase;
             letter-spacing: .1em;
         }
 
+        /* =========================================================
+           TABLES
+        ========================================================= */
+
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
-            background: #101010;
-            border-radius: 18px;
-            overflow: hidden;
+            margin-top: 10px;
+            font-size: 12px;
         }
 
         th,
         td {
-            padding: 13px;
+            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #252525;
+            border-bottom: 1px solid var(--line);
         }
 
         th {
-            color: var(--gray);
-            background: #171717;
+            color: var(--muted);
+            background: rgba(255,255,255,.025);
+
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: .08em;
         }
 
         td {
-            color: var(--white);
+            color: #ccc;
         }
 
         /* =========================================================
@@ -901,51 +1005,63 @@
             position: fixed;
             inset: 0;
             z-index: 1000;
+
             display: flex;
             align-items: center;
             justify-content: center;
+
             padding: 20px;
-            background: rgba(0,0,0,.75);
+
+            background: rgba(0,0,0,.72);
+
             backdrop-filter: blur(10px);
         }
 
         .modal-content {
-            position: relative;
             width: 100%;
-            max-width: 500px;
-            padding: 28px;
+            max-width: 440px;
+
+            position: relative;
+
+            padding: 25px;
+
             background: #111;
-            border: 1px solid #333;
-            border-radius: 28px;
+            border: 1px solid var(--line-strong);
+            border-radius: 22px;
+
             box-shadow: var(--shadow);
-            animation: modalIn .25s ease;
+
+            animation: modalIn .2s ease;
         }
 
         @keyframes modalIn {
             from {
                 opacity: 0;
-                transform: scale(.96) translateY(10px);
+                transform: scale(.96);
             }
+
             to {
                 opacity: 1;
-                transform: scale(1) translateY(0);
+                transform: scale(1);
             }
         }
 
         .modal-close {
             position: absolute;
-            right: 20px;
             top: 16px;
-            color: #777;
-            font-size: 28px;
+            right: 18px;
+
+            color: var(--muted);
+
+            font-size: 22px;
             cursor: pointer;
         }
 
         .modal-title {
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: -.05em;
-            margin-bottom: 25px;
+            font-size: 17px;
+            font-weight: 800;
+
+            margin-bottom: 20px;
         }
 
         /* =========================================================
@@ -953,101 +1069,57 @@
         ========================================================= */
 
         @media (max-width: 768px) {
-            .login-box {
-                padding: 30px 22px;
-                border-radius: 27px;
-            }
-
-            .login-title {
-                font-size: 56px;
-            }
-
-            .content {
-                padding: 22px 14px 30px;
-            }
-
-            .content::before {
-                margin: 12px 0 38px;
-            }
-
-            .card {
-                padding: 21px;
-                border-radius: 24px;
-            }
-
-            .truck-hero {
-                height: 230px;
-            }
-
-            .truck-art {
-                transform: translateX(-50%) scale(.8);
-                transform-origin: center bottom;
-                width: 125%;
-            }
-
             .admin-layout {
                 flex-direction: column;
             }
 
             .admin-nav {
                 width: 100%;
+
                 flex-direction: row;
+
                 overflow-x: auto;
-                border-right: none;
+
+                border-right: 0;
                 border-bottom: 1px solid var(--line);
+
                 padding: 8px;
             }
 
             .admin-nav-item {
-                white-space: nowrap;
                 flex-shrink: 0;
+                padding: 9px 12px;
             }
 
             .admin-content {
-                padding: 20px 14px 100px;
-            }
-
-            .admin-content::before {
-                font-size: 70px;
-                margin-bottom: 35px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-card {
-                min-height: 115px;
-            }
-
-            .stat-card .stat-value {
-                font-size: 40px;
+                padding: 16px;
             }
         }
 
-        @media (max-width: 420px) {
+        @media (max-width: 430px) {
             .login-wrap {
-                padding: 12px;
+                padding: 15px;
             }
 
             .login-box {
-                padding: 26px 18px;
+                padding: 28px 20px 22px;
+                border-radius: 25px;
             }
 
             .login-title {
-                font-size: 48px;
+                font-size: 39px;
             }
 
             .truck-hero {
-                height: 210px;
+                height: 90px;
             }
 
-            .card h3 {
-                font-size: 22px;
+            .content {
+                padding: 17px 13px;
             }
 
-            .nav-label {
-                font-size: 9px;
+            .card {
+                padding: 18px;
             }
         }
     </style>
@@ -1061,7 +1133,8 @@
 
 <div id="splash">
     <div class="splash-logo">🚛</div>
-    <h1 class="splash-title">MY TRUCK <span>SAFETY</span></h1>
+    <h1 class="splash-title">My Truck Safety</h1>
+    <div class="splash-subtitle">Fleet Safety System</div>
     <div class="splash-spinner"></div>
 </div>
 
@@ -1075,20 +1148,27 @@
     <div class="login-box">
 
         <div class="login-brand">
-            <div class="login-brand-name">MY TRUCK<br>SAFETY</div>
-            <div class="login-brand-mark">↗</div>
+            <div class="brand-mark">🚛</div>
+
+            <div class="brand-status">
+                <span class="status-dot"></span>
+                System online
+            </div>
         </div>
 
-        <div class="login-icon">🚛</div>
-
         <h1 class="login-title">
-            DRIVE
-            <span>SAFE.</span>
+            Drive<br>
+            <span>safer.</span>
         </h1>
 
         <p class="login-sub">
-            Fleet safety, fuel and driver operations — all in one place.
+            Fleet safety, vehicle monitoring and driver tools — all in one place.
         </p>
+
+        <div class="truck-hero">
+            <div class="hero-truck">🚛</div>
+            <div class="truck-road"></div>
+        </div>
 
         <div class="input-group">
             <label>Truck Number</label>
@@ -1110,22 +1190,39 @@
                     placeholder="Enter password"
                     autocomplete="current-password"
                 >
-                <span class="toggle-eye" onclick="togglePass()">👁</span>
+
+                <span
+                    class="toggle-eye"
+                    onclick="togglePass()"
+                >👁️</span>
             </div>
         </div>
 
         <div class="remember-row">
-            <input type="checkbox" id="rememberMe">
-            <label for="rememberMe">Remember login details</label>
+            <input
+                type="checkbox"
+                id="rememberMe"
+            >
+
+            <label for="rememberMe">
+                Remember login details
+            </label>
         </div>
 
-        <button class="login-btn" onclick="login()">
-            ENTER FLEET →
+        <button
+            class="login-btn"
+            onclick="login()"
+        >
+            Sign In →
         </button>
 
-        <div id="loginError" class="error-msg"></div>
+        <div
+            id="loginError"
+            class="error-msg"
+        ></div>
 
     </div>
+
 </div>
 
 
@@ -1136,52 +1233,57 @@
 <div id="appScreen" class="app-screen">
 
     <div class="top-bar">
+
         <h2>My Truck Safety</h2>
-        <div class="info-chip" id="truckInfo">Truck: -</div>
+
+        <div
+            class="info-chip"
+            id="truckInfo"
+        >
+            Truck: -
+        </div>
+
     </div>
+
 
     <div class="content">
 
-        <div class="truck-hero">
-            <div class="hero-label">FLEET / ACTIVE VEHICLE</div>
-            <div class="hero-number">01 / 01</div>
-
-            <div class="truck-art">
-
-                <div class="truck-cab"></div>
-
-                <div class="truck-trailer"></div>
-
-                <div class="wheel one"></div>
-                <div class="wheel two"></div>
-                <div class="wheel three"></div>
-
-            </div>
-        </div>
-
-
         <!-- FUEL -->
 
-        <div id="fuel" class="tab-content">
+        <div
+            id="fuel"
+            class="tab-content"
+        >
 
             <div class="card">
 
-                <h3>Find fuel.<br>Keep moving.</h3>
+                <h3>Find Fuel</h3>
 
                 <div class="form-group">
-                    <label>Destination</label>
+
+                    <label>
+                        Destination
+                    </label>
+
                     <input
                         type="text"
                         id="fuelDest"
                         placeholder="Where are you heading?"
                     >
+
                 </div>
 
-                <button class="btn-primary" onclick="searchFuel()">
-                    FIND FUEL STOPS →
+                <button
+                    class="btn-primary"
+                    onclick="searchFuel()"
+                >
+                    🔍 Find Fuel Stops
                 </button>
 
-                <div id="fuelResult" class="result-box hidden"></div>
+                <div
+                    id="fuelResult"
+                    class="result-box hidden"
+                ></div>
 
             </div>
 
@@ -1190,13 +1292,20 @@
 
         <!-- PTI -->
 
-        <div id="pti" class="tab-content hidden">
+        <div
+            id="pti"
+            class="tab-content hidden"
+        >
 
             <div class="card">
 
-                <h3>Pre-trip<br>inspection.</h3>
+                <h3>Pre-Trip Inspection</h3>
 
-                <p id="ptiStatus" class="loading">
+                <p
+                    id="ptiStatus"
+                    class="loading"
+                    style="margin-bottom:16px;"
+                >
                     Not started
                 </p>
 
@@ -1205,14 +1314,22 @@
                     onclick="startPTI()"
                     id="startPtiBtn"
                 >
-                    START PTI →
+                    📸 Start PTI
                 </button>
 
-                <div id="ptiPhotoSection" class="hidden">
+                <div
+                    id="ptiPhotoSection"
+                    class="hidden"
+                >
 
                     <p
                         id="ptiStepPrompt"
-                        style="margin-top:18px;font-weight:700;font-size:14px;"
+                        style="
+                            margin-top:15px;
+                            font-weight:600;
+                            font-size:13px;
+                            color:var(--text);
+                        "
                     ></p>
 
                     <input
@@ -1220,13 +1337,10 @@
                         id="ptiPhotoInput"
                         accept="image/*"
                         style="
-                            margin-top:14px;
+                            margin-top:12px;
                             width:100%;
-                            color:#aaa;
-                            background:#171717;
-                            border:1px solid #292929;
-                            border-radius:14px;
-                            padding:12px;
+                            color:var(--muted);
+                            font-size:12px;
                         "
                     >
 
@@ -1234,32 +1348,37 @@
                         class="form-group"
                         style="margin-top:12px;"
                     >
+
                         <input
                             type="text"
                             id="ptiComment"
                             placeholder="Optional comment / issue"
                         >
+
                     </div>
 
                     <button
                         class="btn-primary"
                         onclick="uploadPTIPhoto()"
                     >
-                        UPLOAD PHOTO →
+                        📤 Upload Photo
                     </button>
 
                     <button
                         class="btn-secondary"
                         onclick="submitPTI()"
                         id="submitPtiBtn"
-                        style="margin-top:9px;"
+                        style="margin-top:8px;"
                     >
-                        SUBMIT PTI
+                        ✅ Submit PTI
                     </button>
 
                 </div>
 
-                <div id="ptiResult" class="result-box hidden"></div>
+                <div
+                    id="ptiResult"
+                    class="result-box hidden"
+                ></div>
 
             </div>
 
@@ -1299,9 +1418,13 @@
      ADMIN PANEL
 ========================================================= -->
 
-<div id="adminScreen" class="admin-screen">
+<div
+    id="adminScreen"
+    class="admin-screen"
+>
 
     <div class="admin-topbar">
+
         <h2>Admin Console</h2>
 
         <button
@@ -1310,6 +1433,7 @@
         >
             Sign Out
         </button>
+
     </div>
 
 
@@ -1423,29 +1547,59 @@
 
             <!-- OVERVIEW -->
 
-            <div id="overview" class="admin-section">
+            <div
+                id="overview"
+                class="admin-section"
+            >
 
                 <div class="stats-grid">
 
                     <div class="stat-card">
-                        <div class="stat-value" id="totalDrivers">0</div>
-                        <div class="stat-label">Drivers</div>
+                        <div
+                            class="stat-value"
+                            id="totalDrivers"
+                        >
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Drivers
+                        </div>
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-value" id="totalPTIs">0</div>
-                        <div class="stat-label">PTIs</div>
+                        <div
+                            class="stat-value"
+                            id="totalPTIs"
+                        >
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            PTIs
+                        </div>
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-value" id="totalFuelStops">0</div>
-                        <div class="stat-label">Fuel Stops</div>
+                        <div
+                            class="stat-value"
+                            id="totalFuelStops"
+                        >
+                            0
+                        </div>
+
+                        <div class="stat-label">
+                            Fuel Stops
+                        </div>
                     </div>
 
                 </div>
 
-                <button class="btn-primary" onclick="loadOverview()">
-                    REFRESH STATS
+                <button
+                    class="btn-primary"
+                    onclick="loadOverview()"
+                >
+                    Refresh Stats
                 </button>
 
             </div>
@@ -1453,7 +1607,10 @@
 
             <!-- ASSIGN -->
 
-            <div id="assign" class="admin-section hidden">
+            <div
+                id="assign"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1463,7 +1620,7 @@
                         class="btn-primary"
                         onclick="loadSamsaraVehicles()"
                     >
-                        SYNC FLEET VEHICLES
+                        Sync Fleet Vehicles
                     </button>
 
                     <div
@@ -1478,7 +1635,10 @@
 
             <!-- REGISTER -->
 
-            <div id="register" class="admin-section hidden">
+            <div
+                id="register"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1518,7 +1678,7 @@
                         class="btn-primary"
                         onclick="registerDriver()"
                     >
-                        REGISTER
+                        Register
                     </button>
 
                     <div
@@ -1533,7 +1693,10 @@
 
             <!-- TRUCKS -->
 
-            <div id="trucks" class="admin-section hidden">
+            <div
+                id="trucks"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1543,7 +1706,7 @@
                         class="btn-primary"
                         onclick="loadTrucksFuel()"
                     >
-                        LOAD TRUCKS
+                        Load Trucks
                     </button>
 
                     <div
@@ -1558,7 +1721,10 @@
 
             <!-- FAULTS -->
 
-            <div id="faults" class="admin-section hidden">
+            <div
+                id="faults"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1568,7 +1734,7 @@
                         class="btn-primary"
                         onclick="loadFaultCodes()"
                     >
-                        LOAD FAULT CODES
+                        Load Fault Codes
                     </button>
 
                     <div
@@ -1583,7 +1749,10 @@
 
             <!-- HARSH -->
 
-            <div id="harsh" class="admin-section hidden">
+            <div
+                id="harsh"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1593,7 +1762,7 @@
                         class="btn-primary"
                         onclick="loadHarshEvents()"
                     >
-                        LOAD HARSH EVENTS
+                        Load Harsh Events
                     </button>
 
                     <div
@@ -1608,7 +1777,10 @@
 
             <!-- MAINTENANCE -->
 
-            <div id="maintenance" class="admin-section hidden">
+            <div
+                id="maintenance"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1618,7 +1790,7 @@
                         class="btn-primary"
                         onclick="loadMaintenanceAlerts()"
                     >
-                        LOAD MAINTENANCE
+                        Load Maintenance
                     </button>
 
                     <div
@@ -1633,7 +1805,10 @@
 
             <!-- DRIVERS -->
 
-            <div id="drivers" class="admin-section hidden">
+            <div
+                id="drivers"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1643,7 +1818,7 @@
                         class="btn-primary"
                         onclick="loadDriversList()"
                     >
-                        LOAD DRIVERS
+                        Load Drivers
                     </button>
 
                     <div
@@ -1658,7 +1833,10 @@
 
             <!-- PTI LIST -->
 
-            <div id="pti" class="admin-section hidden">
+            <div
+                id="pti"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1668,7 +1846,7 @@
                         class="btn-primary"
                         onclick="loadPTIList()"
                     >
-                        LOAD PTIs
+                        Load PTIs
                     </button>
 
                     <div
@@ -1683,7 +1861,10 @@
 
             <!-- FUEL LOG -->
 
-            <div id="fuel" class="admin-section hidden">
+            <div
+                id="fuel"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
@@ -1693,7 +1874,7 @@
                         class="btn-primary"
                         onclick="loadFuelLog()"
                     >
-                        LOAD FUEL LOG
+                        Load Fuel Log
                     </button>
 
                     <div
@@ -1708,25 +1889,30 @@
 
             <!-- DETAILS -->
 
-            <div id="details" class="admin-section hidden">
+            <div
+                id="details"
+                class="admin-section hidden"
+            >
 
                 <div class="card">
 
                     <h3>Driver Details</h3>
 
                     <div class="form-group">
+
                         <input
                             type="text"
                             id="searchTruck"
                             placeholder="Enter Truck #"
                         >
+
                     </div>
 
                     <button
                         class="btn-primary"
                         onclick="loadDriverDetails()"
                     >
-                        SEARCH
+                        Search
                     </button>
 
                     <div
@@ -1749,7 +1935,10 @@
      ASSIGN DRIVER MODAL
 ========================================================= -->
 
-<div id="assignModal" class="modal-overlay hidden">
+<div
+    id="assignModal"
+    class="modal-overlay hidden"
+>
 
     <div class="modal-content">
 
@@ -1761,12 +1950,14 @@
         </span>
 
         <h3 class="modal-title">
-            Assign Driver
+            Assign Driver to Vehicle
         </h3>
 
         <div class="form-group">
 
-            <label>Telegram Group</label>
+            <label>
+                Telegram Group
+            </label>
 
             <select
                 id="assignGroupSelect"
@@ -1776,7 +1967,7 @@
             <button
                 class="btn-secondary"
                 onclick="loadGroupsIntoModal()"
-                style="margin-top:7px;"
+                style="margin-top:6px;"
             >
                 ↻ Refresh Groups
             </button>
@@ -1785,7 +1976,9 @@
 
         <div class="form-group">
 
-            <label>Or Enter Group ID</label>
+            <label>
+                Or Enter Group ID Manually
+            </label>
 
             <input
                 type="number"
@@ -1797,7 +1990,9 @@
 
         <div class="form-group">
 
-            <label>Driver Login</label>
+            <label>
+                Driver Login (Truck Number)
+            </label>
 
             <input
                 type="text"
@@ -1809,7 +2004,9 @@
 
         <div class="form-group">
 
-            <label>Driver Password</label>
+            <label>
+                Driver Password
+            </label>
 
             <input
                 type="text"
@@ -1823,17 +2020,13 @@
             class="btn-primary"
             onclick="confirmAssign()"
         >
-            ASSIGN DRIVER →
+            Assign Driver
         </button>
 
     </div>
 
 </div>
 
-
-<!-- =========================================================
-     JAVASCRIPT
-========================================================= -->
 
 <script>
 
@@ -1859,7 +2052,7 @@
 
 
     /* =========================================================
-       ADMIN AUTH
+       ADMIN TOKEN
     ========================================================= */
 
     let adminToken =
@@ -1875,7 +2068,10 @@
 
         const resp = await fetch(url, options);
 
-        if (resp.status === 401 || resp.status === 403) {
+        if (
+            resp.status === 401 ||
+            resp.status === 403
+        ) {
 
             adminToken = '';
 
@@ -1891,14 +2087,17 @@
 
 
     /* =========================================================
-       STATE
+       GLOBAL STATE
     ========================================================= */
 
     let currentVehicleId = null;
 
     let ptiStep = 0;
+
     let ptiTotalSteps = 6;
+
     let ptiTruckNumber = '';
+
     let ptiTrailerNumber = '';
 
 
@@ -1924,6 +2123,10 @@
     };
 
 
+    /* =========================================================
+       PASSWORD
+    ========================================================= */
+
     function togglePass() {
 
         const p =
@@ -1943,46 +2146,62 @@
     async function login() {
 
         const truck =
-            document.getElementById('loginTruck').value.trim();
+            document.getElementById('loginTruck')
+                .value
+                .trim();
 
         const pass =
-            document.getElementById('loginPass').value.trim();
+            document.getElementById('loginPass')
+                .value
+                .trim();
 
         const remember =
-            document.getElementById('rememberMe').checked;
+            document.getElementById('rememberMe')
+                .checked;
 
         const errEl =
             document.getElementById('loginError');
 
         errEl.style.display = 'none';
 
+
         if (!truck || !pass) {
 
-            errEl.textContent = 'Fill all fields';
+            errEl.textContent =
+                "Fill all fields";
 
-            errEl.style.display = 'block';
+            errEl.style.display =
+                'block';
 
             return;
         }
 
+
         try {
 
-            /* ADMIN LOGIN */
+            /*
+             * Admin authentication is server-side.
+             * No admin credentials are shipped in the browser.
+             */
 
             const adminResponse =
                 await fetch(
                     '/api/admin/login',
                     {
                         method: 'POST',
+
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type':
+                                'application/json'
                         },
+
                         body: JSON.stringify({
                             username: truck,
                             password: pass
                         })
                     }
                 );
+
 
             if (adminResponse.ok) {
 
@@ -2017,17 +2236,17 @@
             }
 
 
-            /* DRIVER LOGIN */
-
             const response =
                 await fetch(
                     '/api/login',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
                             truck_number: truck,
                             password: pass,
@@ -2036,15 +2255,22 @@
                     }
                 );
 
+
             const data =
                 await response.json();
 
-            if (!response.ok || data.error) {
+
+            if (
+                !response.ok ||
+                data.error
+            ) {
 
                 errEl.textContent =
-                    data.error || 'Login failed';
+                    data.error ||
+                    "Login failed";
 
-                errEl.style.display = 'block';
+                errEl.style.display =
+                    'block';
 
                 return;
             }
@@ -2095,9 +2321,10 @@
         } catch (err) {
 
             errEl.textContent =
-                'Network error';
+                "Network error";
 
-            errEl.style.display = 'block';
+            errEl.style.display =
+                'block';
         }
     }
 
@@ -2123,23 +2350,28 @@
             );
         }
 
+
         adminToken = '';
 
         sessionStorage.removeItem(
             'adminToken'
         );
 
+
         document.getElementById(
             'appScreen'
         ).style.display = 'none';
+
 
         document.getElementById(
             'adminScreen'
         ).style.display = 'none';
 
+
         document.getElementById(
             'loginScreen'
         ).style.display = 'flex';
+
 
         document.getElementById(
             'loginPass'
@@ -2153,27 +2385,40 @@
 
     function showTab(tabId) {
 
-        document
-            .querySelectorAll('.nav-item')
-            .forEach(item =>
-                item.classList.remove('active')
+        document.querySelectorAll(
+            '.nav-item'
+        ).forEach(item => {
+
+            item.classList.remove(
+                'active'
             );
 
-        document
-            .querySelectorAll('.tab-content')
-            .forEach(c =>
-                c.classList.add('hidden')
+        });
+
+
+        document.querySelectorAll(
+            '.tab-content'
+        ).forEach(c => {
+
+            c.classList.add(
+                'hidden'
             );
 
-        document
-            .getElementById(tabId)
-            .classList.remove('hidden');
+        });
 
-        document
-            .querySelector(
-                `.nav-item[data-tab="${tabId}"]`
-            )
-            .classList.add('active');
+
+        document.getElementById(
+            tabId
+        ).classList.remove(
+            'hidden'
+        );
+
+
+        document.querySelector(
+            `.nav-item[data-tab="${tabId}"]`
+        ).classList.add(
+            'active'
+        );
     }
 
 
@@ -2183,29 +2428,46 @@
 
     function openAdminPage(page) {
 
-        document
-            .querySelectorAll('.admin-nav-item')
-            .forEach(i =>
-                i.classList.remove('active')
+        document.querySelectorAll(
+            '.admin-nav-item'
+        ).forEach(i => {
+
+            i.classList.remove(
+                'active'
             );
 
-        document
-            .querySelectorAll('.admin-section')
-            .forEach(s =>
-                s.classList.add('hidden')
+        });
+
+
+        document.querySelectorAll(
+            '.admin-section'
+        ).forEach(s => {
+
+            s.classList.add(
+                'hidden'
             );
 
-        document
-            .getElementById(page)
-            .classList.remove('hidden');
+        });
+
+
+        document.getElementById(
+            page
+        ).classList.remove(
+            'hidden'
+        );
+
 
         const nav =
             document.querySelector(
                 `.admin-nav-item[data-anav="${page}"]`
             );
 
-        if (nav)
-            nav.classList.add('active');
+
+        if (nav) {
+            nav.classList.add(
+                'active'
+            );
+        }
 
 
         if (page === 'overview')
@@ -2253,18 +2515,22 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             document.getElementById(
                 'totalDrivers'
             ).textContent =
                 data.points.length;
 
+
             document.getElementById(
                 'totalPTIs'
             ).textContent =
                 data.pti.length;
+
 
             document.getElementById(
                 'totalFuelStops'
@@ -2286,10 +2552,14 @@
                 'samsaraVehicles'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Fetching...</div>';
+
 
         try {
 
@@ -2301,8 +2571,10 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (
                 data.vehicles &&
@@ -2310,7 +2582,8 @@
             ) {
 
                 let html =
-                    '<h4 style="margin-bottom:12px;">Samsara Fleet Records</h4>';
+                    '<h4>Samsara Fleet Records</h4>';
+
 
                 data.vehicles.forEach(v => {
 
@@ -2319,6 +2592,7 @@
                             <b>${v.name || 'Unassigned'}</b>
                             (${v.id})
                             <br>
+
                             <button
                                 class="btn-secondary"
                                 style="margin-top:8px;"
@@ -2330,7 +2604,9 @@
                     `;
                 });
 
-                resDiv.innerHTML = html;
+
+                resDiv.innerHTML =
+                    html;
 
             } else {
 
@@ -2357,10 +2633,14 @@
                 'faultCodesResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -2372,8 +2652,10 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (
                 data.fault_codes &&
@@ -2381,7 +2663,8 @@
             ) {
 
                 let html =
-                    '<h4 style="margin-bottom:12px;">Fault Codes</h4>';
+                    '<h4>Fault Codes</h4>';
+
 
                 data.fault_codes.forEach(f => {
 
@@ -2398,7 +2681,9 @@
                     `;
                 });
 
-                resDiv.innerHTML = html;
+
+                resDiv.innerHTML =
+                    html;
 
             } else {
 
@@ -2425,10 +2710,14 @@
                 'harshEventsResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -2440,8 +2729,10 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (
                 data.harsh_events &&
@@ -2449,7 +2740,8 @@
             ) {
 
                 let html =
-                    '<h4 style="margin-bottom:12px;">Harsh Events</h4>';
+                    '<h4>Harsh Events</h4>';
+
 
                 data.harsh_events.forEach(e => {
 
@@ -2464,18 +2756,16 @@
                             <br>
                             ${
                                 e.video_url
-                                ? `<a
-                                    href="${e.video_url}"
-                                    target="_blank"
-                                    style="color:var(--green);"
-                                  >View Video</a>`
+                                ? `<a href="${e.video_url}" target="_blank" style="color:var(--accent);">View Video</a>`
                                 : ''
                             }
                         </div>
                     `;
                 });
 
-                resDiv.innerHTML = html;
+
+                resDiv.innerHTML =
+                    html;
 
             } else {
 
@@ -2502,10 +2792,14 @@
                 'maintenanceResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -2517,8 +2811,10 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (
                 data.maintenance_alerts &&
@@ -2526,7 +2822,8 @@
             ) {
 
                 let html =
-                    '<h4 style="margin-bottom:12px;">Maintenance Alerts</h4>';
+                    '<h4>Maintenance Alerts</h4>';
+
 
                 data.maintenance_alerts.forEach(m => {
 
@@ -2542,7 +2839,9 @@
                     `;
                 });
 
-                resDiv.innerHTML = html;
+
+                resDiv.innerHTML =
+                    html;
 
             } else {
 
@@ -2569,6 +2868,7 @@
                 'assignGroupSelect'
             );
 
+
         try {
 
             const resp =
@@ -2579,10 +2879,13 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
 
+
             select.innerHTML = '';
+
 
             if (
                 data.groups &&
@@ -2596,13 +2899,18 @@
                             'option'
                         );
 
+
                     option.value =
                         g.chat_id;
+
 
                     option.textContent =
                         `${g.title} (${g.chat_id})`;
 
-                    select.appendChild(option);
+
+                    select.appendChild(
+                        option
+                    );
                 });
 
             } else {
@@ -2628,40 +2936,55 @@
         vehicleName
     ) {
 
-        currentVehicleId = vehicleId;
+        currentVehicleId =
+            vehicleId;
 
-        document
-            .getElementById('assignModal')
-            .classList.remove('hidden');
 
-        document
-            .getElementById(
-                'assignGroupIdManual'
-            ).value = '';
+        document.getElementById(
+            'assignModal'
+        ).classList.remove(
+            'hidden'
+        );
+
+
+        document.getElementById(
+            'assignGroupIdManual'
+        ).value = '';
+
 
         await loadGroupsIntoModal();
+
 
         const firstWord =
             (vehicleName || '')
                 .split(' ')[0];
 
-        document
-            .getElementById('assignTruck')
-            .value = firstWord;
 
-        document
-            .getElementById('assignPassword')
-            .value = '';
+        document.getElementById(
+            'assignTruck'
+        ).value =
+            firstWord;
+
+
+        document.getElementById(
+            'assignPassword'
+        ).value = '';
     }
 
 
     function closeAssignModal() {
 
-        document
-            .getElementById('assignModal')
-            .classList.add('hidden');
+        document.getElementById(
+            'assignModal'
+        ).classList.add(
+            'hidden'
+        );
     }
 
+
+    /* =========================================================
+       CONFIRM ASSIGN
+    ========================================================= */
 
     async function confirmAssign() {
 
@@ -2670,25 +2993,30 @@
                 'assignGroupSelect'
             ).value;
 
+
         const manualGroupId =
             document.getElementById(
                 'assignGroupIdManual'
             ).value.trim();
+
 
         const truckNumber =
             document.getElementById(
                 'assignTruck'
             ).value.trim();
 
+
         const password =
             document.getElementById(
                 'assignPassword'
             ).value.trim();
 
+
         const groupId =
             manualGroupId
                 ? Number(manualGroupId)
                 : Number(groupSelect);
+
 
         if (
             !groupId ||
@@ -2703,6 +3031,7 @@
             return;
         }
 
+
         try {
 
             const resp =
@@ -2710,25 +3039,32 @@
                     '/api/admin/assign-driver',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
                             vehicle_id:
                                 currentVehicleId,
+
                             truck_number:
                                 truckNumber,
+
                             group_id:
                                 groupId,
+
                             password:
                                 password
                         })
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (data.success) {
 
@@ -2749,7 +3085,9 @@
 
         } catch (e) {
 
-            alert('Network error');
+            alert(
+                'Network error'
+            );
         }
     }
 
@@ -2761,34 +3099,40 @@
     async function registerDriver() {
 
         const truck =
-            document
-                .getElementById('regTruck')
-                .value.trim();
+            document.getElementById(
+                'regTruck'
+            ).value.trim();
+
 
         const groupId =
-            document
-                .getElementById('regGroupId')
-                .value.trim();
+            document.getElementById(
+                'regGroupId'
+            ).value.trim();
+
 
         const driverId =
-            document
-                .getElementById('regDriverId')
-                .value.trim();
+            document.getElementById(
+                'regDriverId'
+            ).value.trim();
+
 
         const vehicleId =
-            document
-                .getElementById('regVehicleId')
-                .value.trim();
+            document.getElementById(
+                'regVehicleId'
+            ).value.trim();
+
 
         const password =
-            document
-                .getElementById('regPassword')
-                .value.trim();
+            document.getElementById(
+                'regPassword'
+            ).value.trim();
+
 
         const license =
-            document
-                .getElementById('regLicense')
-                .value.trim();
+            document.getElementById(
+                'regLicense'
+            ).value.trim();
+
 
         if (
             !truck ||
@@ -2797,20 +3141,27 @@
             !password
         ) {
 
-            alert('Fill all required');
+            alert(
+                'Fill all required'
+            );
 
             return;
         }
+
 
         const resDiv =
             document.getElementById(
                 'registerResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Registering...</div>';
+
 
         try {
 
@@ -2819,56 +3170,69 @@
                     '/api/admin/register-driver',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
                             truck_number:
                                 truck,
+
                             group_id:
                                 Number(groupId),
+
                             samsara_driver_id:
                                 driverId,
+
                             vehicle_id:
                                 vehicleId,
+
                             password:
                                 password,
+
                             truck_license:
                                 license
                         })
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (data.success) {
 
                 resDiv.innerHTML =
-                    `<div class="success">
-                        ✅ ${data.message}
-                    </div>`;
+                    `<div class="success">✅ ${data.message}</div>`;
+
 
                 document.getElementById(
                     'regTruck'
                 ).value = '';
 
+
                 document.getElementById(
                     'regGroupId'
                 ).value = '';
+
 
                 document.getElementById(
                     'regDriverId'
                 ).value = '';
 
+
                 document.getElementById(
                     'regVehicleId'
                 ).value = '';
 
+
                 document.getElementById(
                     'regPassword'
                 ).value = '';
+
 
                 document.getElementById(
                     'regLicense'
@@ -2877,9 +3241,7 @@
             } else {
 
                 resDiv.innerHTML =
-                    `<div class="error">
-                        ❌ ${data.error}
-                    </div>`;
+                    `<div class="error">❌ ${data.error}</div>`;
             }
 
         } catch (e) {
@@ -2901,10 +3263,14 @@
                 'trucksFuelResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -2916,8 +3282,10 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (
                 data.trucks &&
@@ -2927,12 +3295,14 @@
                 let html =
                     '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
 
+
                 data.trucks.forEach(t => {
 
                     const fuel =
                         t.fuel_level !== null
                             ? t.fuel_level + '%'
                             : 'N/A';
+
 
                     html += `
                         <tr>
@@ -2943,9 +3313,13 @@
                     `;
                 });
 
-                html += '</table>';
 
-                resDiv.innerHTML = html;
+                html +=
+                    '</table>';
+
+
+                resDiv.innerHTML =
+                    html;
 
             } else {
 
@@ -2972,10 +3346,14 @@
                 'driversListResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -2987,11 +3365,14 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
 
+
             let html =
-                '<h4 style="margin-bottom:12px;">Driver Roster</h4>';
+                '<h4>Driver Roster</h4>';
+
 
             data.points.forEach(p => {
 
@@ -3003,7 +3384,9 @@
                 `;
             });
 
-            resDiv.innerHTML = html;
+
+            resDiv.innerHTML =
+                html;
 
         } catch (e) {
 
@@ -3024,10 +3407,14 @@
                 'ptiListResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -3039,11 +3426,14 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
 
+
             let html =
-                '<h4 style="margin-bottom:12px;">PTI Counts</h4>';
+                '<h4>PTI Counts</h4>';
+
 
             data.pti.forEach(p => {
 
@@ -3055,7 +3445,9 @@
                 `;
             });
 
-            resDiv.innerHTML = html;
+
+            resDiv.innerHTML =
+                html;
 
         } catch (e) {
 
@@ -3076,10 +3468,14 @@
                 'fuelLogResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Loading...</div>';
+
 
         try {
 
@@ -3091,11 +3487,14 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
 
+
             let html =
-                '<h4 style="margin-bottom:12px;">Fuel Usage</h4>';
+                '<h4>Fuel Usage</h4>';
+
 
             data.fuel_usage.forEach(f => {
 
@@ -3110,7 +3509,9 @@
                 `;
             });
 
-            resDiv.innerHTML = html;
+
+            resDiv.innerHTML =
+                html;
 
         } catch (e) {
 
@@ -3127,57 +3528,64 @@
     async function loadDriverDetails() {
 
         const truck =
-            document
-                .getElementById('searchTruck')
-                .value.trim();
+            document.getElementById(
+                'searchTruck'
+            ).value.trim();
+
 
         const resDiv =
             document.getElementById(
                 'detailsResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Searching...</div>';
+
 
         try {
 
             const resp =
                 await adminFetch(
-                    '/api/driver-details/' + truck,
+                    '/api/driver-details/' +
+                    truck,
                     {
                         method: 'GET'
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (data.error) {
 
                 resDiv.innerHTML =
-                    `<div class="error">
-                        ${data.error}
-                    </div>`;
+                    `<div class="error">${data.error}</div>`;
 
             } else {
 
                 resDiv.innerHTML = `
-                    <h4 style="margin-bottom:12px;">
-                        Driver ${truck}
-                    </h4>
+                    <h4>Driver ${truck}</h4>
 
                     <div class="list-item">
-                        Points: ${data.points}
+                        Points:
+                        ${data.points}
                     </div>
 
                     <div class="list-item">
-                        PTIs: ${data.pti_count}
+                        PTIs:
+                        ${data.pti_count}
                     </div>
 
                     <div class="list-item">
-                        Vehicle: ${data.vehicle_id}
+                        Vehicle:
+                        ${data.vehicle_id}
                     </div>
                 `;
             }
@@ -3191,25 +3599,30 @@
 
 
     /* =========================================================
-       DRIVER — FUEL SEARCH
+       DRIVER: SEARCH FUEL
     ========================================================= */
 
     async function searchFuel() {
 
         const dest =
-            document
-                .getElementById('fuelDest')
-                .value.trim();
+            document.getElementById(
+                'fuelDest'
+            ).value.trim();
+
 
         const resDiv =
             document.getElementById(
                 'fuelResult'
             );
 
-        resDiv.classList.remove('hidden');
+
+        resDiv.classList.remove(
+            'hidden'
+        );
 
         resDiv.innerHTML =
             '<div class="loading">Searching...</div>';
+
 
         try {
 
@@ -3218,10 +3631,12 @@
                     '/api/fuel-search',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
                             destination: dest,
                             init_data: initData
@@ -3229,21 +3644,23 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (!resp.ok) {
 
                 resDiv.innerHTML =
-                    `<div class="error">
-                        ${data.error}
-                    </div>`;
+                    `<div class="error">${data.error}</div>`;
 
                 return;
             }
 
+
             let html =
-                '<h4 style="margin-bottom:12px;">Recommended Stations</h4>';
+                '<h4>Recommended Stations</h4>';
+
 
             data.stations.forEach(s => {
 
@@ -3258,7 +3675,7 @@
 
                         <span
                             style="
-                                color:var(--green);
+                                color:var(--accent);
                                 font-weight:800;
                             "
                         >
@@ -3271,10 +3688,12 @@
 
                         ${
                             s.miles_ahead != null
-                                ? s.miles_ahead.toFixed(0)
-                                    + ' mi ahead'
-                                : (s.distance_from_truck || '')
-                                    + ' mi'
+                            ? s.miles_ahead.toFixed(0) +
+                              ' mi ahead'
+                            : (
+                                s.distance_from_truck ||
+                                ''
+                              ) + ' mi'
                         }
 
                         <br>
@@ -3287,21 +3706,25 @@
 
                         ${
                             s.detour_miles_est != null
-                                ? `<small>
-                                    ↪ ~${s.detour_miles_est.toFixed(1)}
+                            ? `
+                                <small>
+                                    ↪️ ~${s.detour_miles_est.toFixed(1)}
                                     mi detour
-                                   </small><br>`
-                                : ''
+                                </small>
+                                <br>
+                            `
+                            : ''
                         }
 
                         <small>
                             ${s.recommendation_reason || ''}
                         </small>
 
-                        <br><br>
+                        <br>
 
                         <button
                             class="btn-secondary"
+                            style="margin-top:9px;"
                             onclick="useStation(
                                 '${s.name || ''}',
                                 '${s.address || ''}',
@@ -3310,14 +3733,16 @@
                                 ${s.price || 0}
                             )"
                         >
-                            I USED THIS
+                            I used this
                         </button>
 
                     </div>
                 `;
             });
 
-            resDiv.innerHTML = html;
+
+            resDiv.innerHTML =
+                html;
 
         } catch (e) {
 
@@ -3328,7 +3753,7 @@
 
 
     /* =========================================================
-       USE STATION
+       DRIVER: USE STATION
     ========================================================= */
 
     async function useStation(
@@ -3342,6 +3767,7 @@
         if (!confirm('Confirm?'))
             return;
 
+
         try {
 
             const resp =
@@ -3349,23 +3775,38 @@
                     '/api/use-station',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
-                            station_name: name,
-                            station_address: address,
-                            station_lat: lat,
-                            station_lng: lng,
-                            price: price,
-                            init_data: initData
+                            station_name:
+                                name,
+
+                            station_address:
+                                address,
+
+                            station_lat:
+                                lat,
+
+                            station_lng:
+                                lng,
+
+                            price:
+                                price,
+
+                            init_data:
+                                initData
                         })
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             alert(
                 data.message ||
@@ -3374,34 +3815,40 @@
 
         } catch (e) {
 
-            alert('Error');
+            alert(
+                'Error'
+            );
         }
     }
 
 
     /* =========================================================
-       PTI — START
+       PTI START
     ========================================================= */
 
     async function startPTI() {
 
         const truckNumber =
-            localStorage.getItem('remTruck') ||
-            document
-                .getElementById('loginTruck')
-                .value.trim();
+            localStorage.getItem(
+                'remTruck'
+            ) ||
+            document.getElementById(
+                'loginTruck'
+            ).value.trim();
+
 
         ptiTruckNumber =
             truckNumber;
 
         ptiStep = 0;
-
         ptiTrailerNumber = '';
+
 
         document.getElementById(
             'ptiStatus'
         ).textContent =
             'Starting...';
+
 
         try {
 
@@ -3410,36 +3857,48 @@
                     '/api/pti/start',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
                             truck_number:
                                 truckNumber,
+
                             init_data:
                                 initData
                         })
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (data.success) {
 
                 document.getElementById(
                     'startPtiBtn'
-                ).classList.add('hidden');
+                ).classList.add(
+                    'hidden'
+                );
+
 
                 document.getElementById(
                     'ptiPhotoSection'
-                ).classList.remove('hidden');
+                ).classList.remove(
+                    'hidden'
+                );
+
 
                 document.getElementById(
                     'ptiStepPrompt'
                 ).textContent =
                     `Step 1: ${data.first_step[0]}`;
+
 
                 document.getElementById(
                     'ptiStatus'
@@ -3455,13 +3914,15 @@
 
         } catch (e) {
 
-            alert('Network error');
+            alert(
+                'Network error'
+            );
         }
     }
 
 
     /* =========================================================
-       PTI — PHOTO
+       PTI PHOTO
     ========================================================= */
 
     async function uploadPTIPhoto() {
@@ -3471,40 +3932,50 @@
                 'ptiPhotoInput'
             );
 
+
         if (!fileInput.files.length) {
 
-            alert('Select a photo');
+            alert(
+                'Select a photo'
+            );
 
             return;
         }
 
+
         const comment =
-            document
-                .getElementById('ptiComment')
-                .value.trim();
+            document.getElementById(
+                'ptiComment'
+            ).value.trim();
+
 
         const formData =
             new FormData();
+
 
         formData.append(
             'photo',
             fileInput.files[0]
         );
 
+
         formData.append(
             'step_index',
             ptiStep.toString()
         );
+
 
         formData.append(
             'comment',
             comment
         );
 
+
         formData.append(
             'init_data',
             initData
         );
+
 
         try {
 
@@ -3517,8 +3988,10 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
+
 
             if (data.error) {
 
@@ -3529,6 +4002,7 @@
                 return;
             }
 
+
             if (data.complete) {
 
                 document.getElementById(
@@ -3536,20 +4010,25 @@
                 ).textContent =
                     'All photos collected! Press Submit.';
 
+
                 document.getElementById(
                     'submitPtiBtn'
-                ).classList.remove('hidden');
+                ).classList.remove(
+                    'hidden'
+                );
 
             } else {
 
                 ptiStep =
                     data.next_step;
 
+
                 document.getElementById(
                     'ptiStepPrompt'
                 ).textContent =
                     `Step ${ptiStep + 1}: ${data.step_info[0]}`;
             }
+
 
             fileInput.value = '';
 
@@ -3559,13 +4038,15 @@
 
         } catch (e) {
 
-            alert('Network error');
+            alert(
+                'Network error'
+            );
         }
     }
 
 
     /* =========================================================
-       PTI — SUBMIT
+       PTI SUBMIT
     ========================================================= */
 
     async function submitPTI() {
@@ -3577,10 +4058,12 @@
                     '/api/pti/submit',
                     {
                         method: 'POST',
+
                         headers: {
                             'Content-Type':
                                 'application/json'
                         },
+
                         body: JSON.stringify({
                             init_data:
                                 initData
@@ -3588,38 +4071,39 @@
                     }
                 );
 
+
             const data =
                 await resp.json();
 
+
             if (data.success) {
 
-                document
-                    .getElementById(
-                        'ptiResult'
-                    )
-                    .classList
-                    .remove('hidden');
+                document.getElementById(
+                    'ptiResult'
+                ).classList.remove(
+                    'hidden'
+                );
+
 
                 document.getElementById(
                     'ptiResult'
                 ).innerHTML =
-                    `<div class="success">
-                        ✅ ${data.message}
-                    </div>`;
+                    `<div class="success">✅ ${data.message}</div>`;
 
-                document
-                    .getElementById(
-                        'startPtiBtn'
-                    )
-                    .classList
-                    .remove('hidden');
 
-                document
-                    .getElementById(
-                        'ptiPhotoSection'
-                    )
-                    .classList
-                    .add('hidden');
+                document.getElementById(
+                    'startPtiBtn'
+                ).classList.remove(
+                    'hidden'
+                );
+
+
+                document.getElementById(
+                    'ptiPhotoSection'
+                ).classList.add(
+                    'hidden'
+                );
+
 
                 document.getElementById(
                     'ptiStatus'
@@ -3635,7 +4119,9 @@
 
         } catch (e) {
 
-            alert('Network error');
+            alert(
+                'Network error'
+            );
         }
     }
 
@@ -3643,4 +4129,3 @@
 
 </body>
 </html>
-```
