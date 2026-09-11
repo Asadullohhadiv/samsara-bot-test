@@ -1,5 +1,8 @@
 import os
 import re
+import hashlib
+import hmac
+import secrets
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import config
@@ -296,7 +299,7 @@ def register_driver_admin(truck_number, chat_id, samsara_driver_id, vehicle_id, 
             c.execute('''INSERT INTO driver_credentials (truck_number, password)
                          VALUES (%s, %s)
                          ON CONFLICT (truck_number) DO UPDATE SET password = EXCLUDED.password''',
-                      (truck_number, password))
+                      (truck_number, _hash_password(password)))
     return True
 
 def get_driver_by_truck(truck_number):
@@ -422,19 +425,43 @@ def get_mini_app_user(telegram_user_id):
 
 # ==================== DRIVER CREDENTIALS ====================
 
+def _hash_password(password):
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 210_000)
+    return "pbkdf2_sha256$210000$%s$%s" % (salt.hex(), digest.hex())
+
+def _verify_password(password, stored):
+    if not stored:
+        return False
+    # Backward compatibility for existing plaintext rows: successful login will
+    # be upgraded to PBKDF2 by verify_driver_login.
+    if not stored.startswith("pbkdf2_sha256$"):
+        return hmac.compare_digest(stored, password)
+    try:
+        _, iterations, salt_hex, digest_hex = stored.split("$", 3)
+        digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt_hex), int(iterations))
+        return hmac.compare_digest(digest.hex(), digest_hex)
+    except (ValueError, TypeError):
+        return False
+
 def set_driver_credentials(truck_number, password):
     with get_connection() as conn:
         with conn.cursor() as c:
             c.execute('''INSERT INTO driver_credentials (truck_number, password)
                          VALUES (%s, %s)
                          ON CONFLICT (truck_number) DO UPDATE SET password = EXCLUDED.password''',
-                      (truck_number, password))
+                      (truck_number, _hash_password(password)))
 
 def verify_driver_login(truck_number, password):
     with get_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as c:
-            c.execute("SELECT 1 FROM driver_credentials WHERE truck_number = %s AND password = %s", (truck_number, password))
-            return c.fetchone() is not None
+            c.execute("SELECT password FROM driver_credentials WHERE truck_number = %s", (truck_number,))
+            row = c.fetchone()
+            if not row or not _verify_password(password, row["password"]):
+                return False
+            if row["password"] and not row["password"].startswith("pbkdf2_sha256$"):
+                c.execute("UPDATE driver_credentials SET password = %s WHERE truck_number = %s", (_hash_password(password), truck_number))
+            return True
 
 # ==================== POINTS ====================
 
