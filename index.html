@@ -308,8 +308,18 @@
     tg.ready(); tg.expand();
     const initData = tg.initData;
 
-    const ADMIN_TRUCK = "1234";
-    const ADMIN_PASS = "Mytrucksafetypassword3223";
+    let adminToken = sessionStorage.getItem('adminToken') || '';
+
+    async function adminFetch(url, options = {}) {
+        options.headers = { ...(options.headers || {}), 'Authorization': 'Bearer ' + adminToken };
+        const resp = await fetch(url, options);
+        if (resp.status === 401 || resp.status === 403) {
+            adminToken = ''; sessionStorage.removeItem('adminToken');
+            document.getElementById('adminScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+        return resp;
+    }
 
     let currentVehicleId = null;
     let ptiStep = 0;
@@ -334,13 +344,20 @@
         const errEl = document.getElementById('loginError');
         errEl.style.display = 'none';
         if (!truck || !pass) { errEl.textContent = "Fill all fields"; errEl.style.display = 'block'; return; }
-        if (truck === ADMIN_TRUCK && pass === ADMIN_PASS) {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('adminScreen').style.display = 'block';
-            loadOverview();
-            return;
-        }
         try {
+            // Admin authentication is server-side; no admin credentials are shipped in the browser.
+            const adminResponse = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: truck, password: pass }) });
+            if (adminResponse.ok) {
+                const adminData = await adminResponse.json();
+                if (adminData.success && adminData.token) {
+                    adminToken = adminData.token;
+                    sessionStorage.setItem('adminToken', adminToken);
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminScreen').style.display = 'block';
+                    loadOverview();
+                    return;
+                }
+            }
             const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, password: pass, init_data: initData }) });
             const data = await response.json();
             if (!response.ok || data.error) { errEl.textContent = data.error || "Login failed"; errEl.style.display = 'block'; return; }
@@ -354,6 +371,7 @@
 
     function logout() {
         if (!document.getElementById('rememberMe').checked) { localStorage.removeItem('remTruck'); localStorage.removeItem('remPass'); }
+        adminToken = ''; sessionStorage.removeItem('adminToken');
         document.getElementById('appScreen').style.display = 'none';
         document.getElementById('adminScreen').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
@@ -385,14 +403,14 @@
     }
 
     async function loadOverview() {
-        try { const resp = await fetch('/api/admin-summary', { method: 'GET' }); const data = await resp.json(); document.getElementById('totalDrivers').textContent = data.points.length; document.getElementById('totalPTIs').textContent = data.pti.length; document.getElementById('totalFuelStops').textContent = data.fuel_usage.length; } catch (e) {}
+        try { const resp = await adminFetch('/api/admin-summary', { method: 'GET' }); const data = await resp.json(); document.getElementById('totalDrivers').textContent = data.points.length; document.getElementById('totalPTIs').textContent = data.pti.length; document.getElementById('totalFuelStops').textContent = data.fuel_usage.length; } catch (e) {}
     }
 
     async function loadSamsaraVehicles() {
         const resDiv = document.getElementById('samsaraVehicles');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Fetching...</div>';
         try {
-            const resp = await fetch('/api/samsara-vehicles', { method: 'GET' });
+            const resp = await adminFetch('/api/samsara-vehicles', { method: 'GET' });
             const data = await resp.json();
             if (data.vehicles && data.vehicles.length) {
                 let html = '<h4>Samsara Fleet Records</h4>';
@@ -408,7 +426,7 @@
         const resDiv = document.getElementById('faultCodesResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/fault-codes', { method: 'GET' });
+            const resp = await adminFetch('/api/fault-codes', { method: 'GET' });
             const data = await resp.json();
             if (data.fault_codes && data.fault_codes.length) {
                 let html = '<h4>Fault Codes</h4>';
@@ -424,7 +442,7 @@
         const resDiv = document.getElementById('harshEventsResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/harsh-events', { method: 'GET' });
+            const resp = await adminFetch('/api/harsh-events', { method: 'GET' });
             const data = await resp.json();
             if (data.harsh_events && data.harsh_events.length) {
                 let html = '<h4>Harsh Events</h4>';
@@ -440,7 +458,7 @@
         const resDiv = document.getElementById('maintenanceResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/maintenance-alerts', { method: 'GET' });
+            const resp = await adminFetch('/api/maintenance-alerts', { method: 'GET' });
             const data = await resp.json();
             if (data.maintenance_alerts && data.maintenance_alerts.length) {
                 let html = '<h4>Maintenance Alerts</h4>';
@@ -455,7 +473,7 @@
     async function loadGroupsIntoModal() {
         const select = document.getElementById('assignGroupSelect');
         try {
-            const resp = await fetch('/api/bot-groups', { method: 'GET' });
+            const resp = await adminFetch('/api/bot-groups', { method: 'GET' });
             const data = await resp.json();
             select.innerHTML = '';
             if (data.groups && data.groups.length > 0) {
@@ -489,7 +507,7 @@
         const groupId = manualGroupId ? Number(manualGroupId) : Number(groupSelect);
         if (!groupId || !truckNumber || !password) { alert('Please fill all fields'); return; }
         try {
-            const resp = await fetch('/api/admin/assign-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicle_id: currentVehicleId, truck_number: truckNumber, group_id: groupId, password: password }) });
+            const resp = await adminFetch('/api/admin/assign-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicle_id: currentVehicleId, truck_number: truckNumber, group_id: groupId, password: password }) });
             const data = await resp.json();
             if (data.success) { alert('✅ ' + data.message); closeAssignModal(); loadSamsaraVehicles(); } else { alert('❌ ' + data.error); }
         } catch (e) { alert('Network error'); }
@@ -506,7 +524,7 @@
         const resDiv = document.getElementById('registerResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Registering...</div>';
         try {
-            const resp = await fetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: Number(groupId), samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, truck_license: license }) });
+            const resp = await adminFetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: Number(groupId), samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, truck_license: license }) });
             const data = await resp.json();
             if (data.success) { resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; document.getElementById('regTruck').value=''; document.getElementById('regGroupId').value=''; document.getElementById('regDriverId').value=''; document.getElementById('regVehicleId').value=''; document.getElementById('regPassword').value=''; document.getElementById('regLicense').value=''; }
             else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
@@ -517,7 +535,7 @@
         const resDiv = document.getElementById('trucksFuelResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin/trucks-with-fuel', { method: 'GET' });
+            const resp = await adminFetch('/api/admin/trucks-with-fuel', { method: 'GET' });
             const data = await resp.json();
             if (data.trucks && data.trucks.length) {
                 let html = '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
@@ -532,7 +550,7 @@
         const resDiv = document.getElementById('driversListResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const resp = await adminFetch('/api/admin-summary', { method: 'GET' });
             const data = await resp.json();
             let html = '<h4>Driver Roster</h4>';
             data.points.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`; });
@@ -544,7 +562,7 @@
         const resDiv = document.getElementById('ptiListResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const resp = await adminFetch('/api/admin-summary', { method: 'GET' });
             const data = await resp.json();
             let html = '<h4>PTI Counts</h4>';
             data.pti.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.count}</div>`; });
@@ -556,7 +574,7 @@
         const resDiv = document.getElementById('fuelLogResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-            const resp = await fetch('/api/admin-summary', { method: 'GET' });
+            const resp = await adminFetch('/api/admin-summary', { method: 'GET' });
             const data = await resp.json();
             let html = '<h4>Fuel Usage</h4>';
             data.fuel_usage.forEach(f => { html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`; });
@@ -569,7 +587,7 @@
         const resDiv = document.getElementById('detailsResult');
         resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
         try {
-            const resp = await fetch('/api/driver-details/' + truck, { method: 'GET' });
+            const resp = await adminFetch('/api/driver-details/' + truck, { method: 'GET' });
             const data = await resp.json();
             if (data.error) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; }
             else { resDiv.innerHTML = `<h4>Driver ${truck}</h4><div class="list-item">Points: ${data.points}</div><div class="list-item">PTIs: ${data.pti_count}</div><div class="list-item">Vehicle: ${data.vehicle_id}</div>`; }
@@ -587,7 +605,7 @@
             if (!resp.ok) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; return; }
             let html = '<h4>Stations</h4>';
             data.stations.forEach(s => {
-                html += `<div class="list-item"><b>${s.name}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.distance_from_truck} mi<br><small>${s.address}</small><br><button class="btn-secondary" onclick="useStation('${s.name}','${s.address}',${s.lat},${s.lng},${s.price})">I used this</button></div>`;
+                html += `<div class="list-item"><b>${s.name || s.brand || 'Truck stop'}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.miles_ahead != null ? s.miles_ahead.toFixed(0) + ' mi ahead' : (s.distance_from_truck || '') + ' mi'}<br><small>${s.address || ''}</small><br>${s.detour_miles_est != null ? `<small>↪️ ~${s.detour_miles_est.toFixed(1)} mi detour</small><br>` : ''}<small>${s.recommendation_reason || ''}</small><br><button class="btn-secondary" onclick="useStation('${s.name || ''}','${s.address || ''}',${s.lat},${s.lng},${s.price || 0})">I used this</button></div>`;
             });
             resDiv.innerHTML = html;
         } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
