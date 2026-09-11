@@ -3,6 +3,8 @@ import json
 import hmac
 import hashlib
 import base64
+from urllib.parse import parse_qsl
+import time
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -65,25 +67,52 @@ PTI_STEPS = [
 ]
 
 # Helper functions
+def _parse_init_data(init_data: str):
+    return dict(parse_qsl(init_data or "", keep_blank_values=True))
+
 def verify_init_data(init_data: str) -> bool:
-    if not init_data:
+    if not init_data or not config.TELEGRAM_TOKEN:
         return False
-    params = dict(p.split('=') for p in init_data.split('&') if '=' in p)
-    if 'hash' not in params:
+    params = _parse_init_data(init_data)
+    received_hash = params.pop("hash", None)
+    if not received_hash:
         return False
-    hash_value = params.pop('hash')
-    data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(params.items()))
-    secret_key = hashlib.sha256(config.TELEGRAM_TOKEN.encode()).digest()
+    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
+    secret_key = hmac.new(b"WebAppData", config.TELEGRAM_TOKEN.encode(), hashlib.sha256).digest()
     computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-    return computed_hash == hash_value
+    return hmac.compare_digest(computed_hash, received_hash)
 
 def get_user_from_init_data(init_data: str):
     try:
-        params = dict(p.split('=') for p in init_data.split('&') if '=' in p)
-        user_json = params.get('user', '{}')
-        return json.loads(user_json)
-    except:
+        params = _parse_init_data(init_data)
+        return json.loads(params.get("user", "{}"))
+    except Exception:
         return None
+
+def create_admin_token(username: str):
+    if not config.ADMIN_API_SECRET:
+        return None
+    exp = int(time.time()) + 8 * 60 * 60
+    payload = f"{username}:{exp}"
+    sig = hmac.new(config.ADMIN_API_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}:{sig}"
+
+def verify_admin_request(request: Request):
+    if not config.ADMIN_API_SECRET:
+        raise HTTPException(status_code=503, detail="Admin authentication is not configured")
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Admin authentication required")
+    token = header[7:]
+    try:
+        username, exp, sig = token.rsplit(":", 2)
+        payload = f"{username}:{exp}"
+        expected = hmac.new(config.ADMIN_API_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        if int(exp) < int(time.time()) or username != config.ADMIN_USERNAME or not hmac.compare_digest(sig, expected):
+            raise HTTPException(status_code=401, detail="Invalid admin token")
+        return username
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid admin token")
 
 def send_telegram_message(chat_id, text):
     try:
@@ -117,6 +146,10 @@ def upload_photo_to_telegram(photo_bytes):
         return None
 
 # Routes
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "my-truck-safety"}
+
 @app.get("/", response_class=HTMLResponse)
 async def mini_app_page():
     with open("index.html", "r", encoding="utf-8") as f:
@@ -141,7 +174,9 @@ class LoginRequest(BaseModel):
 
 @app.post("/api/login")
 async def login_api(req: LoginRequest):
-    if not verify_driver_login(req.truck_number, req.password):
+    if not verify_init_data(req.init_data):
+        raise HTTPException(status_code=403, detail="Invalid Telegram session")
+    if not verify_driver_login(req.truck_number.strip(), req.password):
         return {"error": "Invalid truck number or password"}
     user = get_user_from_init_data(req.init_data)
     if user and user.get("id"):
@@ -152,9 +187,22 @@ async def login_api(req: LoginRequest):
         save_mini_app_user(pseudo_id, "", req.truck_number)
     return {"success": True, "truck_number": req.truck_number}
 
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/admin/login")
+async def admin_login_api(req: AdminLoginRequest):
+    if not config.ADMIN_USERNAME or not config.ADMIN_PASSWORD or not config.ADMIN_API_SECRET:
+        raise HTTPException(status_code=503, detail="Admin authentication is not configured")
+    if not hmac.compare_digest(req.username, config.ADMIN_USERNAME) or not hmac.compare_digest(req.password, config.ADMIN_PASSWORD):
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+    return {"success": True, "token": create_admin_token(req.username)}
+
 # ---- Bot Groups ----
 @app.get("/api/bot-groups")
-async def bot_groups_api():
+async def bot_groups_api(request: Request):
+    verify_admin_request(request)
     try:
         groups = get_all_bot_groups()
         return {"groups": [{"chat_id": g[0], "title": g[1]} for g in groups]}
@@ -163,7 +211,8 @@ async def bot_groups_api():
 
 # ---- Samsara Vehicles ----
 @app.get("/api/samsara-vehicles")
-async def samsara_vehicles_api():
+async def samsara_vehicles_api(request: Request):
+    verify_admin_request(request)
     try:
         vehicles = get_all_vehicles()
         result = []
@@ -187,7 +236,8 @@ class AssignDriverRequest(BaseModel):
     truck_license: str = ""
 
 @app.post("/api/admin/assign-driver")
-async def admin_assign_driver_api(req: AssignDriverRequest):
+async def admin_assign_driver_api(req: AssignDriverRequest, request: Request):
+    verify_admin_request(request)
     if not req.vehicle_id or not req.truck_number or not req.group_id or not req.password:
         return {"error": "All required fields must be filled"}
     try:
@@ -218,7 +268,8 @@ class AdminRegisterDriverRequest(BaseModel):
     truck_license: str = ""
 
 @app.post("/api/admin/register-driver")
-async def admin_register_driver_api(req: AdminRegisterDriverRequest):
+async def admin_register_driver_api(req: AdminRegisterDriverRequest, request: Request):
+    verify_admin_request(request)
     if not req.truck_number or not req.group_id or not req.samsara_driver_id or not req.password:
         return {"error": "All required fields must be filled"}
     try:
@@ -240,7 +291,8 @@ async def admin_register_driver_api(req: AdminRegisterDriverRequest):
 
 # ---- Admin: Trucks with fuel ----
 @app.get("/api/admin/trucks-with-fuel")
-async def admin_trucks_with_fuel():
+async def admin_trucks_with_fuel(request: Request):
+    verify_admin_request(request)
     try:
         drivers = get_all_drivers()
         result = []
@@ -265,7 +317,8 @@ async def admin_trucks_with_fuel():
 
 # ---- Fault Codes (corrected endpoint) ----
 @app.get("/api/fault-codes")
-async def fault_codes_api(vehicle_id: Optional[str] = None):
+async def fault_codes_api(request: Request, vehicle_id: Optional[str] = None):
+    verify_admin_request(request)
     try:
         raw_faults = get_fault_codes(vehicle_id=vehicle_id, limit=50)
         fault_list = []
@@ -282,7 +335,8 @@ async def fault_codes_api(vehicle_id: Optional[str] = None):
 
 # ---- Harsh Events (corrected endpoint) ----
 @app.get("/api/harsh-events")
-async def harsh_events_api(vehicle_id: Optional[str] = None):
+async def harsh_events_api(request: Request, vehicle_id: Optional[str] = None):
+    verify_admin_request(request)
     try:
         raw_events = get_harsh_events(vehicle_id=vehicle_id, limit=20)
         event_list = []
@@ -296,7 +350,8 @@ async def harsh_events_api(vehicle_id: Optional[str] = None):
 
 # ---- Maintenance Alerts (corrected endpoint) ----
 @app.get("/api/maintenance-alerts")
-async def maintenance_alerts_api(vehicle_id: Optional[str] = None):
+async def maintenance_alerts_api(request: Request, vehicle_id: Optional[str] = None):
+    verify_admin_request(request)
     try:
         raw_alerts = get_maintenance_alerts(vehicle_id=vehicle_id, limit=20)
         alert_list = []
@@ -388,6 +443,8 @@ class PTIStartRequest(BaseModel):
 
 @app.post("/api/pti/start")
 async def pti_start(req: PTIStartRequest):
+    if not verify_init_data(req.init_data):
+        raise HTTPException(status_code=403, detail="Invalid Telegram session")
     user = get_user_from_init_data(req.init_data)
     if not user:
         return {"error": "No user"}
@@ -410,6 +467,8 @@ class PTIPhotoRequest(BaseModel):
 
 @app.post("/api/pti/photo")
 async def pti_photo(req: PTIPhotoRequest, photo: UploadFile = File(...)):
+    if not verify_init_data(req.init_data):
+        raise HTTPException(status_code=403, detail="Invalid Telegram session")
     user = get_user_from_init_data(req.init_data)
     if not user:
         return {"error": "No user"}
@@ -442,6 +501,8 @@ class PTISubmitRequest(BaseModel):
 
 @app.post("/api/pti/submit")
 async def pti_submit(req: PTISubmitRequest):
+    if not verify_init_data(req.init_data):
+        raise HTTPException(status_code=403, detail="Invalid Telegram session")
     user = get_user_from_init_data(req.init_data)
     if not user:
         return {"error": "No user"}
@@ -527,7 +588,8 @@ async def history_api(req: PointsRequest):
 
 # ---- Admin Summary ----
 @app.get("/api/admin-summary")
-async def admin_summary_api():
+async def admin_summary_api(request: Request):
+    verify_admin_request(request)
     points = get_all_points_summary()
     pti = get_all_pti_summary()
     fuel = get_all_fuel_usage()
@@ -545,7 +607,8 @@ async def admin_summary_api():
 
 # ---- Driver Details ----
 @app.get("/api/driver-details/{truck_number}")
-async def driver_details_api(truck_number: str):
+async def driver_details_api(truck_number: str, request: Request):
+    verify_admin_request(request)
     driver = get_driver_by_truck(truck_number)
     if not driver:
         return {"error": "Driver not found"}
