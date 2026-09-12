@@ -3,4129 +3,1356 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>My Truck Safety</title>
-
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
-            --bg-soft: #0a0a0a;
-            --surface: #101010;
-            --surface-2: #151515;
-            --surface-3: #1b1b1b;
-
-            --line: rgba(255,255,255,0.10);
-            --line-strong: rgba(255,255,255,0.16);
-
-            --text: #f5f5f5;
-            --muted: #929292;
-            --muted-2: #666;
-
-            --accent: #d8ff3e;
-            --accent-hover: #c5eb2f;
-            --accent-dark: #111;
-
-            --danger: #ff4d5f;
-            --success: #8cff5b;
-            --warning: #ffc857;
-
-            --radius-sm: 10px;
-            --radius-md: 18px;
+            --bg: #f4f6f9;
+            --surface: #ffffff;
+            --outline: #e5e7eb;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-light: #eff6ff;
+            --danger: #ef4444;
+            --success: #10b981;
+            --radius-sm: 8px;
+            --radius-md: 16px;
             --radius-lg: 28px;
-            --radius-xl: 36px;
-
-            --shadow: 0 20px 70px rgba(0,0,0,.45);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+            --shadow-lg: 0 12px 30px rgba(0,0,0,0.08);
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text-main); min-height: 100vh; line-height: 1.5; overflow-x: hidden; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html {
-            background: var(--bg);
-        }
-
-        body {
-            background:
-                radial-gradient(circle at 50% -10%, rgba(216,255,62,.08), transparent 30%),
-                var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            line-height: 1.5;
-            overflow-x: hidden;
-        }
-
-        button,
-        input,
-        select {
-            font-family: inherit;
-        }
-
-        button {
-            -webkit-appearance: none;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* =========================================================
-           GLOBAL BACKGROUND
-        ========================================================= */
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: -1;
-            opacity: .28;
-            background-image:
-                linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-            background-size: 48px 48px;
-            mask-image: linear-gradient(to bottom, black, transparent 75%);
-        }
-
-        /* =========================================================
-           SPLASH
-        ========================================================= */
-
+        /* Splash Screen */
         #splash {
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(circle at center, rgba(216,255,62,.10), transparent 32%),
-                #050505;
-            z-index: 9999;
-
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-
-            transition:
-                opacity .7s ease,
-                visibility .7s ease;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 0.6s ease;
         }
+        #splash.hidden { opacity: 0; pointer-events: none; }
+        .splash-logo { font-size: 64px; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
+        .splash-title { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.02em; margin-bottom: 24px; }
+        .splash-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        #splash.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
+        /* Cards */
+        .card { background: var(--surface); border-radius: var(--radius-md); padding: 24px; margin-bottom: 20px; border: 1px solid var(--outline); box-shadow: var(--shadow-sm); transition: box-shadow 0.2s ease; }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card h3 { font-size: 17px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
 
-        .splash-logo {
-            width: 100px;
-            height: 100px;
-            border-radius: 30px;
+        /* Buttons */
+        .btn-primary { width: 100%; padding: 14px 20px; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { width: 100%; padding: 12px 16px; background: var(--surface); color: var(--text-main); border: 1px solid var(--outline); border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+        .btn-secondary:hover { background: var(--bg); border-color: #cbd5e1; }
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Hidden */
+        .hidden { display: none !important; }
 
-            font-size: 54px;
+        /* Login */
+        .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: radial-gradient(circle at top, #f8fafc 0%, #eff6ff 100%); }
+        .login-box { width: 100%; max-width: 400px; background: var(--surface); border-radius: var(--radius-lg); padding: 40px 32px; border: 1px solid var(--outline); box-shadow: var(--shadow-lg); animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .login-icon { text-align: center; font-size: 48px; margin-bottom: 12px; }
+        .login-title { text-align: center; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main); }
+        .login-sub { text-align: center; font-size: 14px; color: var(--text-sub); margin-bottom: 28px; }
+        .input-group, .form-group { margin-bottom: 18px; }
+        .input-group label, .form-group label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-sub); margin-bottom: 8px; }
+        .input-group input, .form-group input, .select-field { width: 100%; padding: 14px 16px; border: 1px solid var(--outline); border-radius: var(--radius-sm); font-size: 15px; background: var(--surface); color: var(--text-main); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .input-group input:focus, .form-group input:focus, .select-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .password-wrap { position: relative; }
+        .toggle-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; font-size: 15px; }
+        .remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-sub); }
+        .remember-row input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+        .login-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .login-btn:hover { background: var(--primary-hover); }
+        .error-msg { color: var(--danger); font-size: 13px; text-align: center; margin-top: 14px; display: none; }
 
-            background: var(--accent);
-            color: #000;
+        /* Fleet Command visual system — inspired by Linear's precision UI language */
+        body { background: #080a0d; color: #eef2f7; }
+        .login-wrap { min-height: 100vh; padding: 24px; background:
+            radial-gradient(circle at 15% 10%, rgba(70, 122, 255, .16), transparent 34%),
+            radial-gradient(circle at 85% 90%, rgba(24, 210, 154, .10), transparent 30%), #080a0d; }
+        .login-box { position: relative; overflow: hidden; max-width: 430px; padding: 36px; background: rgba(16, 19, 24, .94); border: 1px solid #272d36; border-radius: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+        .login-box::before { content: ''; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, #5b8cff, #7c9cff, #31d6a0); }
+        .login-icon { width: 58px; height: 58px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 16px; font-size: 0; background: linear-gradient(145deg,#1d2633,#11161e); border: 1px solid #303846; box-shadow: inset 0 1px rgba(255,255,255,.05); }
+        .login-icon::after { content: 'MTS'; font-size: 16px; font-weight: 800; letter-spacing: .12em; color: #fff; }
+        .login-title { color: #f8fafc; font-size: 29px; letter-spacing: -.04em; }
+        .login-sub { color: #8f9aaa; margin-bottom: 30px; }
+        .input-group label { color: #7f8998; }
+        .input-group input, .form-group input, .select-field { background: #0d1116; color: #f5f7fa; border-color: #2a313b; }
+        .input-group input::placeholder, .form-group input::placeholder { color: #596372; }
+        .input-group input:focus, .form-group input:focus, .select-field:focus { border-color: #5b8cff; box-shadow: 0 0 0 3px rgba(91,140,255,.13); }
+        .remember-row { color: #7f8998; }
+        .login-btn, .btn-primary { background: linear-gradient(135deg,#5b8cff,#4777e8); box-shadow: 0 8px 24px rgba(71,119,232,.22); }
+        .login-btn:hover, .btn-primary:hover { background: linear-gradient(135deg,#6b98ff,#5280ed); }
+        .login-hint { margin-top: 16px; padding: 11px 12px; border: 1px solid #252c35; border-radius: 12px; color: #737e8d; font-size: 11px; line-height: 1.5; text-align: left; background: rgba(255,255,255,.02); }
 
-            box-shadow:
-                0 0 0 1px rgba(216,255,62,.4),
-                0 0 80px rgba(216,255,62,.15);
+        .app-screen, .admin-screen { background: #080a0d; }
+        .top-bar, .admin-topbar { background: rgba(10,13,17,.88); border-color: #232a33; backdrop-filter: blur(18px); }
+        .top-bar h2, .admin-topbar h2 { color: #f7f9fc; }
+        .top-bar .info-chip { background: #11161d; border-color: #2a313b; color: #aab3c0; }
+        .content, .admin-content { color: #e7ebf0; }
+        .card, .stat-card { background: #101419; border-color: #252c35; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+        .card:hover { box-shadow: 0 14px 36px rgba(0,0,0,.24); }
+        .card h3, .stat-card .stat-value { color: #f2f5f8; }
+        .stat-card .stat-label, .text-muted { color: #7e8998; }
+        .btn-secondary, .admin-logout-btn { background: #11161d; color: #d8dee7; border-color: #2b323d; }
+        .btn-secondary:hover, .admin-logout-btn:hover { background: #171d25; }
+        .bottom-nav { background: rgba(15,19,24,.9); border-color: #2a313b; box-shadow: 0 18px 50px rgba(0,0,0,.45); }
+        .nav-item { color: #727d8c; }
+        .nav-item.active { color: #8eacff; background: rgba(91,140,255,.12); }
+        .admin-nav { background: #0c1015; border-color: #242b34; }
+        .admin-nav-item { color: #7f8998; }
+        .admin-nav-item:hover { background: #141920; color: #e4e8ee; }
+        .admin-nav-item.active { background: rgba(91,140,255,.12); color: #9bb3ff; }
+        th { background: #151a21; color: #8994a3; }
+        th, td { border-color: #272e38; }
 
-            animation: splashFloat 3s ease-in-out infinite;
-        }
+        .driver-hero { max-width:680px; margin:0 auto; padding:24px 18px 6px; display:flex; justify-content:space-between; align-items:center; }
+        .eyebrow { color:#687384; font-size:9px; font-weight:800; letter-spacing:.16em; margin-bottom:5px; }
+        .hero-title { font-size:26px; font-weight:750; letter-spacing:-.045em; color:#f5f7fb; }
+        .hero-status { margin-top:6px; color:#8b96a5; font-size:11px; display:flex; gap:7px; align-items:center; }
+        .status-dot { width:7px; height:7px; border-radius:50%; background:#32d39b; box-shadow:0 0 10px rgba(50,211,155,.6); }
+        .hero-mark { width:44px; height:44px; border-radius:13px; display:grid; place-items:center; font-size:11px; font-weight:800; letter-spacing:.12em; color:#dfe6ff; border:1px solid #303947; background:linear-gradient(145deg,#18202c,#0d1219); }
 
-        .splash-title {
-            margin-top: 24px;
-            font-size: 25px;
-            font-weight: 800;
-            letter-spacing: -.04em;
-        }
+        /* Driver App */
+        .app-screen { display: none; min-height: 100vh; padding-bottom: 100px; }
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--outline); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+        .top-bar h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+        .top-bar .info-chip { background: var(--bg); border: 1px solid var(--outline); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--text-sub); }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
+        .result-box { margin-top: 16px; }
 
-        .splash-subtitle {
-            margin-top: 7px;
-            color: var(--muted);
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: .16em;
-        }
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 420px; background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.4); border-radius: 32px; box-shadow: var(--shadow-lg); display: flex; justify-content: space-around; align-items: center; padding: 6px; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 24px; cursor: pointer; color: var(--text-sub); transition: background 0.2s, color 0.2s; text-decoration: none; }
+        .nav-item.active { color: var(--primary); background: var(--primary-light); }
+        .nav-icon-box { font-size: 20px; }
+        .nav-label { font-size: 11px; font-weight: 600; }
 
-        .splash-spinner {
-            width: 34px;
-            height: 34px;
-            margin-top: 30px;
+        /* Admin */
+        .admin-screen { display: none; min-height: 100vh; background: var(--bg); }
+        .admin-topbar { background: var(--surface); border-bottom: 1px solid var(--outline); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-topbar h2 { font-size: 18px; font-weight: 700; }
+        .admin-logout-btn { background: transparent; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--outline); color: var(--text-sub); }
+        .admin-logout-btn:hover { background: var(--bg); color: var(--text-main); }
+        .admin-layout { display: flex; min-height: calc(100vh - 57px); }
+        .admin-nav { width: 240px; background: var(--surface); border-right: 1px solid var(--outline); padding: 16px 8px; display: flex; flex-direction: column; gap: 4px; }
+        .admin-nav-item { display: flex; align-items: center; padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.15s, color 0.15s; color: var(--text-sub); font-size: 13px; font-weight: 500; }
+        .admin-nav-item:hover { background: var(--bg); color: var(--text-main); }
+        .admin-nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+        .admin-nav-icon { font-size: 16px; margin-right: 10px; }
+        .admin-content { flex-grow: 1; padding: 28px; max-width: 900px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--outline); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
+        .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text-main); }
+        .stat-card .stat-label { font-size: 12px; font-weight: 500; color: var(--text-sub); margin-top: 4px; }
 
-            border: 2px solid rgba(255,255,255,.12);
-            border-top-color: var(--accent);
-            border-radius: 50%;
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--outline); }
+        th { font-weight: 600; color: var(--text-sub); background: var(--bg); }
 
-            animation: spin 1s linear infinite;
-        }
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: var(--surface); border-radius: var(--radius-md); padding: 24px; width: 90%; max-width: 420px; border: 1px solid var(--outline); box-shadow: var(--shadow-lg); position: relative; animation: scaleIn 0.2s ease; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-close { position: absolute; top: 16px; right: 16px; font-size: 18px; cursor: pointer; color: var(--text-sub); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes splashFloat {
-            0%,100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-8px);
-            }
-        }
+        @media (max-width: 768px) { .admin-layout { flex-direction: column; } .admin-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--outline); flex-direction: row; overflow-x: auto; padding: 8px; } .admin-nav-item { flex-shrink: 0; padding: 10px 14px; } .admin-content { padding: 16px; } }
 
         /* =========================================================
-           LOGIN
-        ========================================================= */
-
-        .login-wrap {
-            min-height: 100vh;
-            padding: 24px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-wrap::before {
-            content: "";
-            position: absolute;
-            width: 520px;
-            height: 520px;
-            border-radius: 50%;
-
-            background: radial-gradient(
-                circle,
-                rgba(216,255,62,.10),
-                transparent 68%
-            );
-
-            top: -250px;
-            left: 50%;
-            transform: translateX(-50%);
-
-            pointer-events: none;
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 430px;
-
-            position: relative;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    rgba(255,255,255,.07),
-                    rgba(255,255,255,.025)
-                );
-
-            border: 1px solid var(--line);
-            border-radius: var(--radius-xl);
-
-            padding: 36px 30px 30px;
-
-            box-shadow: var(--shadow);
-
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-
-            animation: loginAppear .65s ease;
-        }
-
-        @keyframes loginAppear {
-            from {
-                opacity: 0;
-                transform: translateY(25px) scale(.98);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .login-brand {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 38px;
-        }
-
-        .brand-mark {
-            width: 48px;
-            height: 48px;
-            border-radius: 15px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            background: var(--accent);
-            color: #000;
-
-            font-size: 25px;
-
-            box-shadow: 0 10px 30px rgba(216,255,62,.12);
-        }
-
-        .brand-status {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-
-            color: var(--muted);
-            font-size: 11px;
-            font-weight: 600;
-
-            text-transform: uppercase;
-            letter-spacing: .1em;
-        }
-
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 12px rgba(140,255,91,.7);
-        }
-
-        .login-title {
-            font-size: clamp(36px, 9vw, 52px);
-            line-height: .95;
-            letter-spacing: -.065em;
-            font-weight: 900;
-            max-width: 370px;
-        }
-
-        .login-title span {
-            color: var(--accent);
-        }
-
-        .login-sub {
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.6;
-            margin-top: 17px;
-            max-width: 320px;
-            margin-bottom: 34px;
-        }
-
-        .truck-hero {
-            position: relative;
-            height: 105px;
-            margin-bottom: 30px;
-            overflow: hidden;
-
-            border-radius: 20px;
-            border: 1px solid var(--line);
-
-            background:
-                linear-gradient(
-                    180deg,
-                    rgba(255,255,255,.04),
-                    rgba(255,255,255,.015)
-                );
-        }
-
-        .truck-road {
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 17px;
-            height: 1px;
-            background: rgba(255,255,255,.14);
-        }
-
-        .truck-road::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 8px;
-            height: 1px;
-
-            background: repeating-linear-gradient(
-                90deg,
-                rgba(216,255,62,.5) 0 35px,
-                transparent 35px 70px
-            );
-
-            animation: roadMove 1.5s linear infinite;
-        }
-
-        @keyframes roadMove {
-            from { transform: translateX(0); }
-            to { transform: translateX(-70px); }
-        }
-
-        .hero-truck {
-            position: absolute;
-            bottom: 19px;
-            left: 50%;
-            transform: translateX(-50%);
-
-            font-size: 54px;
-
-            filter:
-                drop-shadow(0 8px 15px rgba(0,0,0,.6))
-                drop-shadow(0 0 18px rgba(216,255,62,.08));
-
-            animation: truckDrive 3s ease-in-out infinite;
-        }
-
-        @keyframes truckDrive {
-            0%,100% {
-                transform: translateX(-50%);
-            }
-
-            50% {
-                transform: translateX(-47%);
-            }
-        }
-
-        .input-group {
-            margin-bottom: 17px;
-        }
-
-        .input-group label,
-        .form-group label {
-            display: block;
-
-            margin-bottom: 8px;
-
-            color: #a6a6a6;
-
-            font-size: 10px;
-            font-weight: 700;
-
-            text-transform: uppercase;
-            letter-spacing: .14em;
-        }
-
-        .input-group input,
-        .form-group input,
-        .select-field {
-            width: 100%;
-
-            padding: 15px 16px;
-
-            color: var(--text);
-            background: rgba(255,255,255,.045);
-
-            border: 1px solid var(--line);
-            border-radius: 12px;
-
-            outline: none;
-
-            font-size: 14px;
-
-            transition:
-                border-color .2s ease,
-                background .2s ease,
-                box-shadow .2s ease;
-        }
-
-        .input-group input::placeholder,
-        .form-group input::placeholder {
-            color: #555;
-        }
-
-        .input-group input:focus,
-        .form-group input:focus,
-        .select-field:focus {
-            border-color: rgba(216,255,62,.55);
-
-            background: rgba(216,255,62,.035);
-
-            box-shadow:
-                0 0 0 3px rgba(216,255,62,.07);
-        }
-
-        .password-wrap {
-            position: relative;
-        }
-
-        .password-wrap input {
-            padding-right: 48px;
-        }
-
-        .toggle-eye {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-
-            color: var(--muted);
-            cursor: pointer;
-            font-size: 15px;
-
-            opacity: .7;
-        }
-
-        .remember-row {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-
-            margin: 17px 0 22px;
-
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .remember-row input {
-            width: 15px;
-            height: 15px;
-            accent-color: var(--accent);
-        }
-
-        .login-btn,
-        .btn-primary {
-            width: 100%;
-
-            padding: 15px 20px;
-
-            border: 0;
-            border-radius: 12px;
-
-            background: var(--accent);
-            color: #080808;
-
-            font-size: 13px;
-            font-weight: 800;
-
-            cursor: pointer;
-
-            transition:
-                transform .15s ease,
-                background .2s ease,
-                box-shadow .2s ease;
-        }
-
-        .login-btn:hover,
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            box-shadow: 0 10px 35px rgba(216,255,62,.10);
-        }
-
-        .login-btn:active,
-        .btn-primary:active {
-            transform: scale(.985);
-        }
-
-        .error-msg {
-            display: none;
-
-            margin-top: 15px;
-            padding: 11px 13px;
-
-            border: 1px solid rgba(255,77,95,.22);
-            border-radius: 10px;
-
-            background: rgba(255,77,95,.07);
-            color: #ff7885;
-
-            font-size: 12px;
-            text-align: center;
-        }
-
-        /* =========================================================
-           APP
-        ========================================================= */
-
-        .app-screen {
-            display: none;
-            min-height: 100vh;
-            padding-bottom: 110px;
-        }
-
-        .top-bar {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            padding: 16px 20px;
-
-            background: rgba(5,5,5,.80);
-            border-bottom: 1px solid var(--line);
-
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .top-bar h2 {
-            font-size: 17px;
-            font-weight: 800;
-            letter-spacing: -.04em;
-        }
-
-        .top-bar h2::before {
-            content: "●";
-            color: var(--accent);
-            font-size: 8px;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-
-        .info-chip {
-            padding: 7px 11px;
-
-            background: rgba(216,255,62,.07);
-            border: 1px solid rgba(216,255,62,.15);
-            border-radius: 100px;
-
-            color: var(--accent);
-
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        .content {
-            width: 100%;
-            max-width: 620px;
-
-            margin: 0 auto;
-            padding: 22px 18px;
-        }
-
-        .card {
-            position: relative;
-
-            padding: 22px;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    rgba(255,255,255,.055),
-                    rgba(255,255,255,.018)
-                );
-
-            border: 1px solid var(--line);
-            border-radius: var(--radius-md);
-
-            box-shadow: 0 20px 50px rgba(0,0,0,.18);
-
-            margin-bottom: 16px;
-        }
-
-        .card::before {
-            content: "";
-
-            position: absolute;
-            top: 0;
-            left: 22px;
-            right: 22px;
-
-            height: 1px;
-
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(216,255,62,.25),
-                transparent
-            );
-        }
-
-        .card h3 {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -.04em;
-
-            margin-bottom: 19px;
-        }
-
-        .card h3::before {
-            content: "—";
-            color: var(--accent);
-            margin-right: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .btn-secondary {
-            width: 100%;
-
-            padding: 12px 16px;
-
-            background: rgba(255,255,255,.04);
-            color: var(--text);
-
-            border: 1px solid var(--line);
-            border-radius: 11px;
-
-            font-size: 12px;
-            font-weight: 600;
-
-            cursor: pointer;
-
-            transition:
-                background .2s ease,
-                border-color .2s ease;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255,255,255,.08);
-            border-color: var(--line-strong);
-        }
-
-        .result-box {
-            margin-top: 17px;
-        }
-
-        .result-box h4 {
-            font-size: 13px;
-            margin-bottom: 10px;
-            color: var(--accent);
-        }
-
-        .list-item {
-            padding: 14px;
-
-            margin-bottom: 8px;
-
-            background: rgba(255,255,255,.035);
-            border: 1px solid var(--line);
-            border-radius: 11px;
-
-            font-size: 12px;
-            color: #bdbdbd;
-        }
-
-        .list-item b {
-            color: var(--text);
-        }
-
-        .loading {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .success {
-            padding: 12px;
-            border-radius: 10px;
-
-            color: var(--success);
-            background: rgba(140,255,91,.06);
-            border: 1px solid rgba(140,255,91,.14);
-
-            font-size: 12px;
-        }
-
-        .error {
-            padding: 12px;
-            border-radius: 10px;
-
-            color: #ff7480;
-            background: rgba(255,77,95,.06);
-            border: 1px solid rgba(255,77,95,.14);
-
-            font-size: 12px;
-        }
-
-        /* =========================================================
-           BOTTOM NAV
-        ========================================================= */
-
-        .bottom-nav {
-            position: fixed;
-            z-index: 100;
-
-            bottom: 14px;
-            left: 50%;
-
-            transform: translateX(-50%);
-
-            width: calc(100% - 28px);
-            max-width: 430px;
-
-            display: flex;
-
-            padding: 6px;
-
-            background: rgba(18,18,18,.84);
-            border: 1px solid var(--line-strong);
-            border-radius: 22px;
-
-            box-shadow: 0 20px 50px rgba(0,0,0,.45);
-
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
-        }
-
-        .nav-item {
-            flex: 1;
-
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-
-            gap: 4px;
-
-            padding: 9px 5px;
-
-            border-radius: 17px;
-
-            color: var(--muted);
-
-            cursor: pointer;
-            text-decoration: none;
-
-            transition:
-                background .2s ease,
-                color .2s ease;
-        }
-
-        .nav-item.active {
-            color: #080808;
-            background: var(--accent);
-        }
-
-        .nav-icon-box {
-            font-size: 18px;
-            line-height: 1;
-        }
-
-        .nav-label {
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-        }
-
-        /* =========================================================
-           ADMIN
-        ========================================================= */
-
-        .admin-screen {
-            display: none;
-            min-height: 100vh;
-            background: var(--bg);
-        }
-
-        .admin-topbar {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            padding: 16px 22px;
-
-            background: rgba(5,5,5,.85);
-            border-bottom: 1px solid var(--line);
-
-            backdrop-filter: blur(20px);
-        }
-
-        .admin-topbar h2 {
-            font-size: 17px;
-            font-weight: 800;
-        }
-
-        .admin-logout-btn {
-            padding: 8px 13px;
-
-            background: transparent;
-            color: var(--muted);
-
-            border: 1px solid var(--line);
-            border-radius: 9px;
-
-            font-size: 10px;
-            font-weight: 700;
-
-            cursor: pointer;
-        }
-
-        .admin-layout {
-            display: flex;
-            min-height: calc(100vh - 58px);
-        }
-
-        .admin-nav {
-            width: 245px;
-            flex-shrink: 0;
-
-            padding: 15px 9px;
-
-            background: #080808;
-            border-right: 1px solid var(--line);
-
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .admin-nav-item {
-            display: flex;
-            align-items: center;
-
-            padding: 11px 13px;
-
-            border-radius: 9px;
-
-            color: var(--muted);
-
-            cursor: pointer;
-
-            font-size: 11px;
-            font-weight: 600;
-
-            transition:
-                background .15s ease,
-                color .15s ease;
-        }
-
-        .admin-nav-item:hover {
-            background: rgba(255,255,255,.04);
-            color: var(--text);
-        }
-
-        .admin-nav-item.active {
-            background: var(--accent);
-            color: #050505;
-        }
-
-        .admin-nav-icon {
-            width: 23px;
-            font-size: 14px;
-        }
-
-        .admin-content {
-            flex-grow: 1;
-            width: 100%;
-            max-width: 1100px;
-
-            padding: 26px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 12px;
-
-            margin-bottom: 18px;
-        }
-
-        .stat-card {
-            padding: 19px;
-
-            background:
-                linear-gradient(
-                    145deg,
-                    rgba(255,255,255,.055),
-                    rgba(255,255,255,.02)
-                );
-
-            border: 1px solid var(--line);
-            border-radius: 15px;
-        }
-
-        .stat-card .stat-value {
-            color: var(--accent);
-
-            font-size: 30px;
-            font-weight: 900;
-            letter-spacing: -.05em;
-        }
-
-        .stat-card .stat-label {
-            margin-top: 4px;
-
-            color: var(--muted);
-
-            font-size: 10px;
-            font-weight: 700;
-
-            text-transform: uppercase;
-            letter-spacing: .1em;
-        }
-
-        /* =========================================================
-           TABLES
-        ========================================================= */
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--line);
-        }
-
-        th {
-            color: var(--muted);
-            background: rgba(255,255,255,.025);
-
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-        }
-
-        td {
-            color: #ccc;
-        }
-
-        /* =========================================================
-           MODAL
-        ========================================================= */
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            padding: 20px;
-
-            background: rgba(0,0,0,.72);
-
-            backdrop-filter: blur(10px);
-        }
-
-        .modal-content {
-            width: 100%;
-            max-width: 440px;
-
-            position: relative;
-
-            padding: 25px;
-
-            background: #111;
-            border: 1px solid var(--line-strong);
-            border-radius: 22px;
-
-            box-shadow: var(--shadow);
-
-            animation: modalIn .2s ease;
-        }
-
-        @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: scale(.96);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 18px;
-
-            color: var(--muted);
-
-            font-size: 22px;
-            cursor: pointer;
-        }
-
-        .modal-title {
-            font-size: 17px;
-            font-weight: 800;
-
-            margin-bottom: 20px;
-        }
-
-        /* =========================================================
-           RESPONSIVE
-        ========================================================= */
-
-        @media (max-width: 768px) {
-            .admin-layout {
-                flex-direction: column;
-            }
-
-            .admin-nav {
-                width: 100%;
-
-                flex-direction: row;
-
-                overflow-x: auto;
-
-                border-right: 0;
-                border-bottom: 1px solid var(--line);
-
-                padding: 8px;
-            }
-
-            .admin-nav-item {
-                flex-shrink: 0;
-                padding: 9px 12px;
-            }
-
-            .admin-content {
-                padding: 16px;
-            }
-        }
-
-        @media (max-width: 430px) {
-            .login-wrap {
-                padding: 15px;
-            }
-
-            .login-box {
-                padding: 28px 20px 22px;
-                border-radius: 25px;
-            }
-
-            .login-title {
-                font-size: 39px;
-            }
-
-            .truck-hero {
-                height: 90px;
-            }
-
-            .content {
-                padding: 17px 13px;
-            }
-
-            .card {
-                padding: 18px;
-            }
+           MTS v2 Premium Fleet Command UI
+           ========================================================= */
+        :root {
+            --mts-bg: #07090d;
+            --mts-panel: #0d1117;
+            --mts-panel-2: #11161e;
+            --mts-border: rgba(255,255,255,.085);
+            --mts-text: #f5f7fb;
+            --mts-muted: #8993a3;
+            --mts-blue: #6d8cff;
+            --mts-green: #32d39b;
+            --mts-red: #ff6b6b;
+            --mts-radius: 18px;
+        }
+        html, body { background: var(--mts-bg) !important; }
+        body { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; letter-spacing: -.01em; }
+        button, input, select { font-family: inherit !important; }
+        .login-wrap { background:
+            radial-gradient(900px 500px at 50% -10%, rgba(109,140,255,.18), transparent 65%),
+            radial-gradient(700px 400px at 100% 100%, rgba(50,211,155,.08), transparent 65%),
+            #07090d !important; }
+        .login-box { max-width: 430px !important; border-radius: 24px !important; background: rgba(13,17,23,.92) !important; border: 1px solid var(--mts-border) !important; box-shadow: 0 40px 100px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.025) !important; }
+        .login-box::after { content:"SECURE DRIVER ACCESS"; display:block; text-align:center; margin-top:18px; color:#596474; font-size:9px; font-weight:700; letter-spacing:.16em; }
+        .login-title { font-size: 30px !important; font-weight: 750 !important; }
+        .login-sub { font-size: 13px !important; letter-spacing:.02em; }
+        .input-group input, .form-group input, .select-field { min-height:52px; border-radius:12px !important; background:#090d12 !important; border-color:#27303b !important; }
+        .login-btn, .btn-primary { min-height:50px; border-radius:12px !important; font-size:14px !important; font-weight:700 !important; }
+        .login-hint { border-radius:12px !important; }
+        .top-bar { padding: 14px 18px !important; background: rgba(7,9,13,.82) !important; border-bottom:1px solid var(--mts-border) !important; }
+        .top-bar h2 { font-size:16px !important; }
+        .top-bar .info-chip { border-radius:999px !important; }
+        .content { max-width:680px !important; padding:20px 16px 110px !important; }
+        .card { border-radius:var(--mts-radius) !important; background:linear-gradient(180deg,#10151c,#0c1016) !important; border-color:var(--mts-border) !important; padding:20px !important; }
+        .card h3 { font-size:16px !important; }
+        #driverFuel::before { content:"ON-ROUTE FUEL"; display:block; margin:2px 2px 14px; color:#687384; font-size:10px; font-weight:800; letter-spacing:.14em; }
+        #driverPti::before { content:"SAFETY CHECK"; display:block; margin:2px 2px 14px; color:#687384; font-size:10px; font-weight:800; letter-spacing:.14em; }
+        .bottom-nav { bottom:14px !important; background:rgba(12,16,22,.94) !important; border:1px solid #28313c !important; }
+        .nav-item { border-radius:20px !important; }
+        .nav-item.active { color:#b7c6ff !important; background:rgba(109,140,255,.14) !important; }
+        .admin-screen { background:#07090d !important; }
+        .admin-topbar { background:rgba(7,9,13,.9) !important; border-color:var(--mts-border) !important; }
+        .admin-layout { min-height:calc(100vh - 65px) !important; }
+        .admin-nav { background:#0a0e13 !important; border-color:var(--mts-border) !important; }
+        .admin-nav-item { border-radius:10px !important; }
+        .admin-content { max-width:none !important; padding:26px !important; }
+        .stat-card { border-radius:16px !important; background:linear-gradient(180deg,#10151c,#0d1117) !important; border-color:var(--mts-border) !important; }
+        .stat-card .stat-value { font-size:32px !important; }
+        .btn-secondary { border-radius:11px !important; }
+        .result-box { color:#dbe2eb; }
+        table { border:1px solid var(--mts-border); border-radius:14px; overflow:hidden; }
+        th { background:#151b23 !important; }
+        td { background:#0e1319; }
+        .modal-overlay { background:rgba(0,0,0,.68) !important; }
+        .modal-content { background:#10151c !important; border-color:var(--mts-border) !important; border-radius:18px !important; }
+        @media (max-width:768px) {
+            .admin-content { padding:18px 14px 28px !important; }
+            .admin-nav { border-bottom-color:var(--mts-border) !important; }
+            .stats-grid { grid-template-columns:repeat(3,1fr) !important; gap:8px !important; }
+            .stat-card { padding:14px 10px !important; }
+            .stat-card .stat-value { font-size:23px !important; }
+            .stat-card .stat-label { font-size:10px !important; }
         }
     </style>
-</head>
 
+    <style id="mts-superr-redesign">
+        /* =========================================================
+           MY TRUCK SAFETY — WARM NOTEBOOK REDESIGN
+           ========================================================= */
+        :root {
+            --color-cream-paper:#fdfbf9;
+            --color-charcoal:#171717;
+            --color-cocoa-ink:#2b1a07;
+            --color-true-black:#000000;
+            --color-dew-drop:#f7efe9;
+            --color-marker-orange:#ff6f1e;
+            --color-burnt-sienna:#ce500a;
+            --color-sky-sticker:#3b82f6;
+            --color-bubblegum-sticker:#ff66cf;
+            --color-sprout-sticker:#22c55e;
+            --color-shadow-mist:#bebcbb;
+            --paper-shadow:rgba(0,0,0,.06) 0 2px 20px 0;
+            --button-shadow:rgba(0,0,0,.25) 0 1px 2px 0;
+            --radius-card:12px;
+            --radius-input:8px;
+            --radius-button:20px;
+            --radius-footer:56px;
+            --page-max:1200px;
+        }
+
+        html, body {
+            background:var(--color-cream-paper) !important;
+            color:var(--color-charcoal) !important;
+        }
+        body {
+            font-family:'DM Sans', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            line-height:1.5 !important;
+            letter-spacing:normal !important;
+            -webkit-font-smoothing:antialiased;
+        }
+        h1,h2,h3,.login-title,.splash-title,.hero-title,.admin-topbar h2,.stat-value {
+            font-family:'Fraunces', Georgia, serif !important;
+            color:var(--color-cocoa-ink) !important;
+            letter-spacing:-.025em !important;
+        }
+        button,input,select { font-family:inherit !important; }
+        ::selection { background:#ffd5bd; color:var(--color-cocoa-ink); }
+
+        /* Splash */
+        #splash {
+            background:var(--color-cream-paper) !important;
+            color:var(--color-cocoa-ink) !important;
+            z-index:9999;
+        }
+        .splash-logo {
+            width:96px;height:96px;margin-bottom:20px;
+            display:grid;place-items:center;
+            border:1.5px solid var(--color-charcoal);
+            border-radius:26px;
+            background:var(--color-dew-drop);
+            box-shadow:var(--button-shadow);
+            padding:18px;
+            animation:float 3s ease-in-out infinite;
+        }
+        .splash-logo svg { width:100%; height:100%; display:block; }
+        .splash-title {
+            font-size:34px !important;
+            font-weight:600 !important;
+            margin-bottom:24px !important;
+        }
+        .splash-spinner {
+            width:30px;height:30px;
+            border:2px solid #ddd5d0 !important;
+            border-top-color:var(--color-marker-orange) !important;
+            border-radius:50%;
+        }
+
+        /* Shared surfaces */
+        .card,.stat-card {
+            background:var(--color-cream-paper) !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:var(--radius-card) !important;
+            box-shadow:var(--paper-shadow) !important;
+            color:var(--color-charcoal) !important;
+            padding:32px !important;
+        }
+        .card:hover { box-shadow:var(--paper-shadow) !important; transform:translateY(-1px); }
+        .card h3 {
+            color:var(--color-cocoa-ink) !important;
+            font-size:24px !important;
+            line-height:1.2 !important;
+            font-weight:600 !important;
+            margin-bottom:16px !important;
+        }
+        .text-muted,.stat-card .stat-label { color:#735f52 !important; }
+        .hidden { display:none !important; }
+
+        /* Buttons */
+        .btn-primary,.btn-secondary,.login-btn,.admin-logout-btn {
+            width:100%;
+            min-height:46px;
+            padding:10px 28px !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:var(--radius-button) !important;
+            font-size:16px !important;
+            font-weight:500 !important;
+            line-height:1.25;
+            cursor:pointer;
+            transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
+            box-shadow:var(--button-shadow) !important;
+        }
+        .btn-primary,.login-btn {
+            color:var(--color-charcoal) !important;
+            background:var(--color-cream-paper) !important;
+        }
+        .btn-secondary,.admin-logout-btn {
+            color:var(--color-charcoal) !important;
+            background:var(--color-dew-drop) !important;
+        }
+        .btn-primary:hover,.login-btn:hover,.btn-secondary:hover,.admin-logout-btn:hover {
+            background:#fff !important;
+            box-shadow:rgba(0,0,0,.18) 0 2px 5px 0 !important;
+            transform:translateY(-1px);
+        }
+        .btn-primary:active,.login-btn:active,.btn-secondary:active { transform:translateY(1px); }
+
+        /* Login */
+        .login-wrap {
+            min-height:100vh !important;
+            padding:28px 20px !important;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            position:relative;
+            overflow:hidden;
+            background:var(--color-cream-paper) !important;
+        }
+        .login-wrap::before {
+            content:'TRUCK SAFETY / DRIVER ACCESS';
+            position:absolute;top:22px;left:24px;
+            color:#806e62;font-size:11px;font-weight:600;letter-spacing:.12em;
+        }
+        .login-wrap::after {
+            content:'🚛';
+            position:absolute;right:6vw;bottom:5vh;
+            font-size:clamp(60px,10vw,130px);
+            opacity:.08;
+            transform:rotate(-6deg);
+            pointer-events:none;
+        }
+        .login-box {
+            width:100% !important;
+            max-width:560px !important;
+            padding:40px !important;
+            position:relative;
+            overflow:visible !important;
+            background:var(--color-cream-paper) !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:20px !important;
+            box-shadow:var(--paper-shadow) !important;
+            animation:fadeInUp .5s ease;
+        }
+        .login-box::before {
+            content:'DRIVER PORTAL';
+            position:absolute;top:-14px;left:24px;
+            padding:4px 11px;
+            background:var(--color-marker-orange);
+            color:var(--color-charcoal);
+            border:1.5px solid var(--color-charcoal);
+            border-radius:20px;
+            font:500 12px/1.2 'DM Sans',sans-serif;
+            transform:rotate(-2deg);
+        }
+        .login-box::after {
+            content:'✓';
+            position:absolute;right:-16px;top:34px;
+            width:36px;height:36px;display:grid;place-items:center;
+            background:var(--color-sprout-sticker);
+            border:2px solid var(--color-charcoal);
+            border-radius:50%;
+            font-size:18px;font-weight:800;
+            transform:rotate(9deg);
+        }
+        .login-icon {
+            width:104px !important;height:104px !important;
+            margin:6px 0 24px !important;
+            display:grid !important;place-items:center !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:26px !important;
+            background:var(--color-dew-drop) !important;
+            box-shadow:var(--button-shadow) !important;
+            position:relative;
+            transform:rotate(-3deg);
+            padding:20px;
+        }
+        .login-icon svg { width:100%; height:100%; display:block; }
+        .login-icon::before, .login-icon::after { content:none !important; }
+        .login-title {
+            text-align:left !important;
+            font-size:clamp(44px,7vw,68px) !important;
+            line-height:1.03 !important;
+            font-weight:600 !important;
+            max-width:480px;
+            margin-bottom:12px;
+        }
+        .login-sub {
+            text-align:left !important;
+            color:#735f52 !important;
+            font-size:18px !important;
+            margin-bottom:30px !important;
+        }
+        .input-group,.form-group { margin-bottom:16px !important; }
+        .input-group label,.form-group label {
+            color:var(--color-charcoal) !important;
+            display:block;
+            font-size:13px !important;
+            font-weight:600 !important;
+            text-transform:none !important;
+            letter-spacing:normal !important;
+            margin-bottom:7px !important;
+        }
+        .input-group input,.form-group input,.select-field {
+            width:100%;
+            min-height:50px;
+            padding:12px 14px !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:var(--radius-input) !important;
+            background:#fff !important;
+            color:var(--color-charcoal) !important;
+            font-size:16px !important;
+            outline:none;
+            box-shadow:none !important;
+        }
+        .input-group input:focus,.form-group input:focus,.select-field:focus {
+            border-color:var(--color-marker-orange) !important;
+            box-shadow:0 0 0 3px rgba(255,111,30,.14) !important;
+        }
+        .input-group input::placeholder,.form-group input::placeholder { color:#9b8d84 !important; }
+        .toggle-eye { right:14px !important; color:var(--color-charcoal); opacity:.65; }
+        .remember-row { color:#735f52 !important; font-size:14px !important; margin:8px 0 20px !important; }
+        .remember-row input[type=checkbox] { accent-color:var(--color-marker-orange); }
+        .login-btn { margin-top:2px; }
+        .error-msg { color:var(--color-burnt-sienna) !important; text-align:left !important; font-size:14px !important; }
+        .login-hint {
+            margin-top:20px !important;
+            padding:14px 16px !important;
+            border:1px dashed #a99a90 !important;
+            border-radius:8px !important;
+            color:#735f52 !important;
+            background:var(--color-dew-drop) !important;
+            font-size:13px !important;
+            line-height:1.55 !important;
+        }
+        .login-hint::before { content:'↳ '; color:var(--color-marker-orange); font-weight:700; }
+
+        /* Driver app */
+        .app-screen { background:var(--color-cream-paper) !important; color:var(--color-charcoal) !important; }
+        .top-bar {
+            max-width:var(--page-max);
+            margin:0 auto;
+            padding:18px 24px !important;
+            background:rgba(253,251,249,.96) !important;
+            border-bottom:1.5px solid var(--color-charcoal) !important;
+            position:sticky;top:0;z-index:10;
+            backdrop-filter:none !important;
+        }
+        .top-bar h2 { font-family:'DM Sans',sans-serif !important; font-size:15px !important; font-weight:700 !important; color:var(--color-charcoal) !important; letter-spacing:.02em !important; }
+        .top-bar .info-chip {
+            background:var(--color-dew-drop) !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            color:var(--color-charcoal) !important;
+            border-radius:20px !important;
+            padding:6px 14px !important;
+            font-size:13px !important;
+        }
+        .driver-hero {
+            max-width:var(--page-max);
+            margin:0 auto;
+            padding:52px 24px 38px !important;
+            display:grid !important;
+            grid-template-columns:minmax(0,1fr) minmax(260px,420px);
+            gap:48px;
+            align-items:center;
+            position:relative;
+        }
+        .driver-hero::before {
+            content:'ON THE ROAD';
+            position:absolute;left:24px;top:20px;
+            color:var(--color-marker-orange);
+            font:500 16px/1.2 'Fraunces',Georgia,serif;
+            transform:rotate(-2deg);
+        }
+        .driver-hero::after {
+            content:'SAFE • READY • MOVING';
+            position:absolute;right:36px;top:25px;
+            color:#806e62;font-size:10px;font-weight:700;letter-spacing:.12em;
+        }
+        .eyebrow { display:none; }
+        .hero-title {
+            font-size:clamp(48px,7vw,84px) !important;
+            line-height:1.04 !important;
+            font-weight:600 !important;
+            margin-bottom:12px;
+        }
+        .hero-status {
+            color:#735f52 !important;
+            font-size:16px !important;
+            gap:8px !important;
+        }
+        .status-dot {
+            width:9px !important;height:9px !important;
+            background:var(--color-sprout-sticker) !important;
+            box-shadow:none !important;
+            border:1.5px solid var(--color-charcoal);
+        }
+        .hero-mark {
+            min-height:230px;width:100% !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:20px !important;
+            background:var(--color-dew-drop) !important;
+            color:var(--color-charcoal) !important;
+            box-shadow:var(--paper-shadow) !important;
+            position:relative;
+            overflow:hidden;
+            transform:rotate(2deg);
+            padding:34px;
+            display:grid;
+            place-items:center;
+        }
+        .hero-mark svg {
+            width:70%;
+            max-width:200px;
+            height:auto;
+            display:block;
+            transform:rotate(-2deg);
+        }
+        .hero-mark::before { content:none !important; }
+        .hero-mark::after {
+            content:'MTS / DRIVER';
+            position:absolute;left:18px;bottom:14px;
+            font:600 11px/1 'DM Sans',sans-serif;
+            letter-spacing:.12em;
+            color:var(--color-charcoal);
+        }
+        .content {
+            max-width:var(--page-max) !important;
+            padding:0 24px 120px !important;
+            margin:0 auto !important;
+        }
+        #driverFuel,#driverPti { position:relative; }
+        #driverFuel::before,#driverPti::before {
+            display:block !important;
+            margin:0 0 12px !important;
+            color:var(--color-marker-orange) !important;
+            font:500 18px/1.2 'Fraunces',Georgia,serif !important;
+            letter-spacing:normal !important;
+        }
+        #driverFuel::before { content:'find a safe place to fuel'; }
+        #driverPti::before { content:'a quick safety check'; }
+        .content .card {
+            max-width:900px;
+            margin:0 0 28px;
+            position:relative;
+        }
+        .content .card::after {
+            content:'✦';
+            position:absolute;right:18px;top:-16px;
+            color:var(--color-sky-sticker);
+            font-size:28px;
+            transform:rotate(12deg);
+        }
+        .result-box { color:var(--color-charcoal) !important; }
+        .bottom-nav {
+            bottom:14px !important;
+            width:calc(100% - 28px) !important;
+            max-width:430px !important;
+            padding:6px !important;
+            background:rgba(253,251,249,.96) !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:20px !important;
+            box-shadow:var(--paper-shadow) !important;
+            backdrop-filter:none !important;
+        }
+        .nav-item { color:#735f52 !important; border-radius:16px !important; padding:8px 0 !important; }
+        .nav-item.active { color:var(--color-charcoal) !important; background:var(--color-dew-drop) !important; }
+        .nav-icon-box { font-size:19px !important; }
+        .nav-label { font-size:11px !important; font-weight:600 !important; }
+
+        /* Admin console */
+        .admin-screen { background:var(--color-cream-paper) !important; color:var(--color-charcoal) !important; }
+        .admin-topbar {
+            background:var(--color-cream-paper) !important;
+            border-bottom:1.5px solid var(--color-charcoal) !important;
+            padding:16px 24px !important;
+        }
+        .admin-topbar h2 { font-size:28px !important; font-weight:600 !important; }
+        .admin-logout-btn { width:auto !important; min-height:40px !important; padding:8px 18px !important; }
+        .admin-layout { min-height:calc(100vh - 70px); max-width:var(--page-max); margin:0 auto; }
+        .admin-nav {
+            width:250px !important;
+            background:var(--color-dew-drop) !important;
+            border-right:1.5px solid var(--color-charcoal) !important;
+            padding:18px 10px !important;
+            gap:5px !important;
+        }
+        .admin-nav-item {
+            color:#735f52 !important;
+            border-radius:20px !important;
+            padding:10px 13px !important;
+            font-size:13px !important;
+            font-weight:500 !important;
+        }
+        .admin-nav-item:hover { background:#fff !important; color:var(--color-charcoal) !important; }
+        .admin-nav-item.active {
+            background:var(--color-cream-paper) !important;
+            color:var(--color-charcoal) !important;
+            border:1.5px solid var(--color-charcoal);
+            font-weight:600 !important;
+        }
+        .admin-content { padding:32px !important; }
+        .stats-grid { gap:16px !important; margin-bottom:24px !important; }
+        .stat-card { padding:24px !important; }
+        .stat-card .stat-value { font-size:38px !important; font-weight:600 !important; }
+        .stat-card .stat-label { font-size:13px !important; margin-top:4px !important; }
+        .admin-section > .card { max-width:none; }
+
+        /* Tables */
+        table {
+            width:100%;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:12px !important;
+            overflow:hidden;
+            background:var(--color-cream-paper);
+        }
+        th,td { border-color:#cfc4bc !important; color:var(--color-charcoal) !important; }
+        th { background:var(--color-dew-drop) !important; font-weight:600 !important; }
+        td { background:var(--color-cream-paper) !important; }
+
+        /* Modal */
+        .modal-overlay { background:rgba(43,26,7,.30) !important; backdrop-filter:blur(2px) !important; }
+        .modal-content {
+            background:var(--color-cream-paper) !important;
+            border:1.5px solid var(--color-charcoal) !important;
+            border-radius:20px !important;
+            box-shadow:var(--paper-shadow) !important;
+            padding:32px !important;
+        }
+        .modal-title { color:var(--color-cocoa-ink) !important; font-family:'Fraunces',Georgia,serif !important; font-size:28px !important; }
+        .modal-close { color:var(--color-charcoal) !important; }
+
+        @media (max-width:900px) {
+            .driver-hero { grid-template-columns:1fr; gap:26px; }
+            .hero-mark { max-width:420px; min-height:190px; }
+            .admin-nav { width:220px !important; }
+        }
+        @media (max-width:768px) {
+            .login-wrap::before { top:14px;left:16px;font-size:9px; }
+            .login-box { padding:28px 22px !important; border-radius:16px !important; }
+            .login-title { font-size:48px !important; }
+            .login-box::after { right:-8px;top:28px; }
+            .driver-hero { padding:46px 16px 28px !important; gap:22px; }
+            .driver-hero::before { left:16px; }
+            .driver-hero::after { right:16px; font-size:8px; }
+            .hero-title { font-size:52px !important; }
+            .hero-mark { min-height:170px; padding:24px; }
+            .hero-mark svg { max-width:150px; }
+            .content { padding:0 14px 112px !important; }
+            .content .card { padding:22px !important; }
+            .card h3 { font-size:22px !important; }
+            .top-bar { padding:14px 16px !important; }
+            .admin-layout { flex-direction:column !important; }
+            .admin-nav {
+                width:100% !important;
+                border-right:none !important;
+                border-bottom:1.5px solid var(--color-charcoal) !important;
+                flex-direction:row !important;
+                overflow-x:auto;
+                padding:8px !important;
+            }
+            .admin-nav-item { flex-shrink:0; }
+            .admin-content { padding:18px 14px 28px !important; }
+            .stats-grid { grid-template-columns:repeat(3,1fr) !important; gap:8px !important; }
+            .stat-card { padding:16px 10px !important; }
+            .stat-card .stat-value { font-size:26px !important; }
+            .stat-card .stat-label { font-size:10px !important; }
+        }
+        @media (max-width:430px) {
+            .login-title { font-size:42px !important; }
+            .login-icon { width:84px !important;height:84px !important; padding:16px; }
+            .hero-title { font-size:44px !important; }
+            .hero-status { font-size:14px !important; }
+            .hero-mark { min-height:145px; padding:20px; }
+            .hero-mark svg { max-width:120px; }
+            .splash-logo { width:78px;height:78px; padding:14px; }
+        }
+    </style>
+
+</head>
 <body>
 
-<!-- =========================================================
-     SPLASH
-========================================================= -->
-
+<!-- SPLASH SCREEN -->
 <div id="splash">
-    <div class="splash-logo">🚛</div>
+    <div class="splash-logo">
+        <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="44" y="14" width="8" height="54" rx="3" fill="#171717"/>
+            <rect x="148" y="14" width="8" height="54" rx="3" fill="#171717"/>
+            <path d="M 60 68 Q 60 40 100 40 Q 140 40 140 68 Z" fill="#171717"/>
+            <rect x="70" y="62" width="60" height="28" rx="3" fill="#fdfbf9"/>
+            <path d="M 54 92 L 54 154 L 146 154 L 146 92 Z" fill="#171717"/>
+            <rect x="76" y="102" width="48" height="44" rx="10" fill="#fdfbf9"/>
+            <line x1="84" y1="113" x2="116" y2="113" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+            <line x1="84" y1="124" x2="116" y2="124" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+            <line x1="84" y1="135" x2="116" y2="135" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="64" cy="130" rx="7" ry="5" fill="#fdfbf9"/>
+            <ellipse cx="136" cy="130" rx="7" ry="5" fill="#fdfbf9"/>
+            <rect x="36" y="154" width="128" height="12" rx="3" fill="#171717"/>
+            <rect x="56" y="164" width="18" height="14" rx="4" fill="#171717"/>
+            <rect x="126" y="164" width="18" height="14" rx="4" fill="#171717"/>
+        </svg>
+    </div>
     <h1 class="splash-title">My Truck Safety</h1>
-    <div class="splash-subtitle">Fleet Safety System</div>
     <div class="splash-spinner"></div>
 </div>
 
-
-<!-- =========================================================
-     LOGIN
-========================================================= -->
-
+<!-- LOGIN -->
 <div id="loginScreen" class="login-wrap">
-
     <div class="login-box">
-
-        <div class="login-brand">
-            <div class="brand-mark">🚛</div>
-
-            <div class="brand-status">
-                <span class="status-dot"></span>
-                System online
-            </div>
+        <div class="login-icon">
+            <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="44" y="14" width="8" height="54" rx="3" fill="#171717"/>
+                <rect x="148" y="14" width="8" height="54" rx="3" fill="#171717"/>
+                <path d="M 60 68 Q 60 40 100 40 Q 140 40 140 68 Z" fill="#171717"/>
+                <rect x="70" y="62" width="60" height="28" rx="3" fill="#fdfbf9"/>
+                <path d="M 54 92 L 54 154 L 146 154 L 146 92 Z" fill="#171717"/>
+                <rect x="76" y="102" width="48" height="44" rx="10" fill="#fdfbf9"/>
+                <line x1="84" y1="113" x2="116" y2="113" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+                <line x1="84" y1="124" x2="116" y2="124" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+                <line x1="84" y1="135" x2="116" y2="135" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="64" cy="130" rx="7" ry="5" fill="#fdfbf9"/>
+                <ellipse cx="136" cy="130" rx="7" ry="5" fill="#fdfbf9"/>
+                <rect x="36" y="154" width="128" height="12" rx="3" fill="#171717"/>
+                <rect x="56" y="164" width="18" height="14" rx="4" fill="#171717"/>
+                <rect x="126" y="164" width="18" height="14" rx="4" fill="#171717"/>
+            </svg>
         </div>
-
-        <h1 class="login-title">
-            Drive<br>
-            <span>safer.</span>
-        </h1>
-
-        <p class="login-sub">
-            Fleet safety, vehicle monitoring and driver tools — all in one place.
-        </p>
-
-        <div class="truck-hero">
-            <div class="hero-truck">🚛</div>
-            <div class="truck-road"></div>
-        </div>
-
+        <h1 class="login-title">My Truck Safety</h1>
+        <p class="login-sub">Fleet Command · Driver Access</p>
         <div class="input-group">
-            <label>Truck Number</label>
-            <input
-                type="text"
-                id="loginTruck"
-                placeholder="e.g. 88817"
-                autocomplete="username"
-            >
+            <label>Truck number</label>
+            <input type="text" id="loginTruck" placeholder="Enter truck number" autocomplete="username">
         </div>
-
         <div class="input-group">
-            <label>Password</label>
-
+            <label>Access password</label>
             <div class="password-wrap">
-                <input
-                    type="password"
-                    id="loginPass"
-                    placeholder="Enter password"
-                    autocomplete="current-password"
-                >
-
-                <span
-                    class="toggle-eye"
-                    onclick="togglePass()"
-                >👁️</span>
+                <input type="password" id="loginPass" placeholder="Enter your password" autocomplete="current-password">
+                <span class="toggle-eye" onclick="togglePass()">👁️</span>
             </div>
         </div>
-
         <div class="remember-row">
-            <input
-                type="checkbox"
-                id="rememberMe"
-            >
-
-            <label for="rememberMe">
-                Remember login details
-            </label>
+            <input type="checkbox" id="rememberMe">
+            <label for="rememberMe">Remember login details</label>
         </div>
-
-        <button
-            class="login-btn"
-            onclick="login()"
-        >
-            Sign In →
-        </button>
-
-        <div
-            id="loginError"
-            class="error-msg"
-        ></div>
-
+        <button class="login-btn" onclick="login()" id="loginButton">Continue to Fleet</button>
+        <div id="loginError" class="error-msg"></div>
+        <div class="login-hint">Open this app from Telegram for the full driver experience. Browser login is also supported for testing and desktop access.</div>
     </div>
-
 </div>
 
-
-<!-- =========================================================
-     DRIVER APP
-========================================================= -->
-
+<!-- DRIVER APP (Fuel & PTI) -->
 <div id="appScreen" class="app-screen">
-
     <div class="top-bar">
-
         <h2>My Truck Safety</h2>
-
-        <div
-            class="info-chip"
-            id="truckInfo"
-        >
-            Truck: -
-        </div>
-
+        <div class="info-chip" id="truckInfo">Truck: -</div>
     </div>
-
-
+    <div class="driver-hero">
+        <div>
+            <div class="eyebrow">LIVE VEHICLE</div>
+            <div class="hero-title" id="driverHeroTruck">Truck —</div>
+            <div class="hero-status"><span class="status-dot"></span> Ready for dispatch</div>
+        </div>
+        <div class="hero-mark">
+            <svg viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="44" y="14" width="8" height="54" rx="3" fill="#171717"/>
+                <rect x="148" y="14" width="8" height="54" rx="3" fill="#171717"/>
+                <path d="M 60 68 Q 60 40 100 40 Q 140 40 140 68 Z" fill="#171717"/>
+                <rect x="70" y="62" width="60" height="28" rx="3" fill="#fdfbf9"/>
+                <path d="M 54 92 L 54 154 L 146 154 L 146 92 Z" fill="#171717"/>
+                <rect x="76" y="102" width="48" height="44" rx="10" fill="#fdfbf9"/>
+                <line x1="84" y1="113" x2="116" y2="113" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+                <line x1="84" y1="124" x2="116" y2="124" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+                <line x1="84" y1="135" x2="116" y2="135" stroke="#171717" stroke-width="3" stroke-linecap="round"/>
+                <ellipse cx="64" cy="130" rx="7" ry="5" fill="#fdfbf9"/>
+                <ellipse cx="136" cy="130" rx="7" ry="5" fill="#fdfbf9"/>
+                <rect x="36" y="154" width="128" height="12" rx="3" fill="#171717"/>
+                <rect x="56" y="164" width="18" height="14" rx="4" fill="#171717"/>
+                <rect x="126" y="164" width="18" height="14" rx="4" fill="#171717"/>
+            </svg>
+        </div>
+    </div>
     <div class="content">
-
-        <!-- FUEL -->
-
-        <div
-            id="fuel"
-            class="tab-content"
-        >
-
+        <div id="driverFuel" class="tab-content">
             <div class="card">
-
-                <h3>Find Fuel</h3>
-
+                <h3>Search Fuel Stations</h3>
                 <div class="form-group">
-
-                    <label>
-                        Destination
-                    </label>
-
-                    <input
-                        type="text"
-                        id="fuelDest"
-                        placeholder="Where are you heading?"
-                    >
-
+                    <input type="text" id="fuelDest" placeholder="Destination (optional)">
                 </div>
-
-                <button
-                    class="btn-primary"
-                    onclick="searchFuel()"
-                >
-                    🔍 Find Fuel Stops
-                </button>
-
-                <div
-                    id="fuelResult"
-                    class="result-box hidden"
-                ></div>
-
+                <button class="btn-primary" onclick="searchFuel()">🔍 Find Fuel Stops</button>
+                <div id="fuelResult" class="result-box hidden"></div>
             </div>
-
         </div>
-
-
-        <!-- PTI -->
-
-        <div
-            id="pti"
-            class="tab-content hidden"
-        >
-
+        <div id="driverPti" class="tab-content hidden">
             <div class="card">
-
-                <h3>Pre-Trip Inspection</h3>
-
-                <p
-                    id="ptiStatus"
-                    class="loading"
-                    style="margin-bottom:16px;"
-                >
-                    Not started
-                </p>
-
-                <button
-                    class="btn-primary"
-                    onclick="startPTI()"
-                    id="startPtiBtn"
-                >
-                    📸 Start PTI
-                </button>
-
-                <div
-                    id="ptiPhotoSection"
-                    class="hidden"
-                >
-
-                    <p
-                        id="ptiStepPrompt"
-                        style="
-                            margin-top:15px;
-                            font-weight:600;
-                            font-size:13px;
-                            color:var(--text);
-                        "
-                    ></p>
-
-                    <input
-                        type="file"
-                        id="ptiPhotoInput"
-                        accept="image/*"
-                        style="
-                            margin-top:12px;
-                            width:100%;
-                            color:var(--muted);
-                            font-size:12px;
-                        "
-                    >
-
-                    <div
-                        class="form-group"
-                        style="margin-top:12px;"
-                    >
-
-                        <input
-                            type="text"
-                            id="ptiComment"
-                            placeholder="Optional comment / issue"
-                        >
-
+                <h3>Submit PTI</h3>
+                <p id="ptiStatus" class="loading">Not started</p>
+                <button class="btn-primary" onclick="startPTI()" id="startPtiBtn">📸 Start PTI</button>
+                <div id="ptiPhotoSection" class="hidden">
+                    <p id="ptiStepPrompt" style="margin-top:12px; font-weight:500; font-size:14px;"></p>
+                    <input type="file" id="ptiPhotoInput" accept="image/*" style="margin-top:10px; width:100%;">
+                    <div class="form-group" style="margin-top:10px;">
+                        <input type="text" id="ptiComment" placeholder="Optional comment (issue)">
                     </div>
-
-                    <button
-                        class="btn-primary"
-                        onclick="uploadPTIPhoto()"
-                    >
-                        📤 Upload Photo
-                    </button>
-
-                    <button
-                        class="btn-secondary"
-                        onclick="submitPTI()"
-                        id="submitPtiBtn"
-                        style="margin-top:8px;"
-                    >
-                        ✅ Submit PTI
-                    </button>
-
+                    <button class="btn-primary" onclick="uploadPTIPhoto()">📤 Upload Photo</button>
+                    <button class="btn-secondary" onclick="submitPTI()" id="submitPtiBtn" style="margin-top:8px;">✅ Submit PTI</button>
                 </div>
-
-                <div
-                    id="ptiResult"
-                    class="result-box hidden"
-                ></div>
-
+                <div id="ptiResult" class="result-box hidden"></div>
             </div>
-
         </div>
-
     </div>
-
-
-    <!-- BOTTOM NAV -->
-
     <div class="bottom-nav">
-
-        <a
-            class="nav-item active"
-            data-tab="fuel"
-            onclick="showTab('fuel')"
-        >
+        <a class="nav-item active" data-tab="driverFuel" onclick="showTab('driverFuel')">
             <div class="nav-icon-box">⛽</div>
             <span class="nav-label">Fuel</span>
         </a>
-
-        <a
-            class="nav-item"
-            data-tab="pti"
-            onclick="showTab('pti')"
-        >
+        <a class="nav-item" data-tab="driverPti" onclick="showTab('driverPti')">
             <div class="nav-icon-box">📋</div>
             <span class="nav-label">PTI</span>
         </a>
-
     </div>
-
 </div>
 
-
-<!-- =========================================================
-     ADMIN PANEL
-========================================================= -->
-
-<div
-    id="adminScreen"
-    class="admin-screen"
->
-
+<!-- ADMIN PANEL -->
+<div id="adminScreen" class="admin-screen">
     <div class="admin-topbar">
-
         <h2>Admin Console</h2>
-
-        <button
-            class="admin-logout-btn"
-            onclick="logout()"
-        >
-            Sign Out
-        </button>
-
+        <button class="admin-logout-btn" onclick="logout()">Sign Out</button>
     </div>
-
-
     <div class="admin-layout">
-
         <div class="admin-nav">
-
-            <div
-                class="admin-nav-item active"
-                data-anav="overview"
-                onclick="openAdminPage('overview')"
-            >
-                <span class="admin-nav-icon">📊</span>
-                Overview
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="assign"
-                onclick="openAdminPage('assign')"
-            >
-                <span class="admin-nav-icon">🚛</span>
-                Assign Trucks
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="register"
-                onclick="openAdminPage('register')"
-            >
-                <span class="admin-nav-icon">➕</span>
-                Register Driver
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="trucks"
-                onclick="openAdminPage('trucks')"
-            >
-                <span class="admin-nav-icon">⚡</span>
-                Trucks & Fuel
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="faults"
-                onclick="openAdminPage('faults')"
-            >
-                <span class="admin-nav-icon">⚠️</span>
-                Fault Codes
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="harsh"
-                onclick="openAdminPage('harsh')"
-            >
-                <span class="admin-nav-icon">📹</span>
-                Harsh Events
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="maintenance"
-                onclick="openAdminPage('maintenance')"
-            >
-                <span class="admin-nav-icon">🔧</span>
-                Maintenance
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="drivers"
-                onclick="openAdminPage('drivers')"
-            >
-                <span class="admin-nav-icon">👤</span>
-                Drivers
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="pti"
-                onclick="openAdminPage('pti')"
-            >
-                <span class="admin-nav-icon">📋</span>
-                PTI List
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="fuel"
-                onclick="openAdminPage('fuel')"
-            >
-                <span class="admin-nav-icon">⛽</span>
-                Fuel Log
-            </div>
-
-            <div
-                class="admin-nav-item"
-                data-anav="details"
-                onclick="openAdminPage('details')"
-            >
-                <span class="admin-nav-icon">🔍</span>
-                Details
-            </div>
-
+            <div class="admin-nav-item active" data-anav="overview" onclick="openAdminPage('overview')"><span class="admin-nav-icon">📊</span>Overview</div>
+            <div class="admin-nav-item" data-anav="assign" onclick="openAdminPage('assign')"><span class="admin-nav-icon">🚛</span>Assign Trucks</div>
+            <div class="admin-nav-item" data-anav="register" onclick="openAdminPage('register')"><span class="admin-nav-icon">➕</span>Register Driver</div>
+            <div class="admin-nav-item" data-anav="trucks" onclick="openAdminPage('trucks')"><span class="admin-nav-icon">⚡</span>Trucks & Fuel</div>
+            <div class="admin-nav-item" data-anav="faults" onclick="openAdminPage('faults')"><span class="admin-nav-icon">⚠️</span>Fault Codes</div>
+            <div class="admin-nav-item" data-anav="harsh" onclick="openAdminPage('harsh')"><span class="admin-nav-icon">📹</span>Harsh Events</div>
+            <div class="admin-nav-item" data-anav="maintenance" onclick="openAdminPage('maintenance')"><span class="admin-nav-icon">🔧</span>Maintenance</div>
+            <div class="admin-nav-item" data-anav="drivers" onclick="openAdminPage('drivers')"><span class="admin-nav-icon">👤</span>Drivers</div>
+            <div class="admin-nav-item" data-anav="pti" onclick="openAdminPage('pti')"><span class="admin-nav-icon">📋</span>PTI List</div>
+            <div class="admin-nav-item" data-anav="fuel" onclick="openAdminPage('fuel')"><span class="admin-nav-icon">⛽</span>Fuel Log</div>
+            <div class="admin-nav-item" data-anav="details" onclick="openAdminPage('details')"><span class="admin-nav-icon">🔍</span>Details</div>
         </div>
-
-
         <div class="admin-content">
-
-            <!-- OVERVIEW -->
-
-            <div
-                id="overview"
-                class="admin-section"
-            >
-
+            <div id="overview" class="admin-section">
                 <div class="stats-grid">
-
-                    <div class="stat-card">
-                        <div
-                            class="stat-value"
-                            id="totalDrivers"
-                        >
-                            0
-                        </div>
-
-                        <div class="stat-label">
-                            Drivers
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div
-                            class="stat-value"
-                            id="totalPTIs"
-                        >
-                            0
-                        </div>
-
-                        <div class="stat-label">
-                            PTIs
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div
-                            class="stat-value"
-                            id="totalFuelStops"
-                        >
-                            0
-                        </div>
-
-                        <div class="stat-label">
-                            Fuel Stops
-                        </div>
-                    </div>
-
+                    <div class="stat-card"><div class="stat-value" id="totalDrivers">0</div><div class="stat-label">Drivers</div></div>
+                    <div class="stat-card"><div class="stat-value" id="totalPTIs">0</div><div class="stat-label">PTIs</div></div>
+                    <div class="stat-card"><div class="stat-value" id="totalFuelStops">0</div><div class="stat-label">Fuel Stops</div></div>
                 </div>
-
-                <button
-                    class="btn-primary"
-                    onclick="loadOverview()"
-                >
-                    Refresh Stats
-                </button>
-
+                <button class="btn-primary" onclick="loadOverview()">Refresh Stats</button>
             </div>
-
-
-            <!-- ASSIGN -->
-
-            <div
-                id="assign"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Samsara Vehicles</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadSamsaraVehicles()"
-                    >
-                        Sync Fleet Vehicles
-                    </button>
-
-                    <div
-                        id="samsaraVehicles"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
+            <div id="assign" class="admin-section hidden">
+                <div class="card"><h3>Samsara Vehicles</h3><button class="btn-primary" onclick="loadSamsaraVehicles()">Sync Fleet Vehicles</button><div id="samsaraVehicles" class="result-box hidden"></div></div>
             </div>
-
-
-            <!-- REGISTER -->
-
-            <div
-                id="register"
-                class="admin-section hidden"
-            >
-
+            <div id="register" class="admin-section hidden">
                 <div class="card">
-
                     <h3>Register New Driver</h3>
-
-                    <div class="form-group">
-                        <label>Truck #</label>
-                        <input type="text" id="regTruck">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Group ID</label>
-                        <input type="number" id="regGroupId">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Samsara Driver ID</label>
-                        <input type="text" id="regDriverId">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Vehicle ID</label>
-                        <input type="text" id="regVehicleId">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="text" id="regPassword">
-                    </div>
-
-                    <div class="form-group">
-                        <label>License</label>
-                        <input type="text" id="regLicense">
-                    </div>
-
-                    <button
-                        class="btn-primary"
-                        onclick="registerDriver()"
-                    >
-                        Register
-                    </button>
-
-                    <div
-                        id="registerResult"
-                        class="result-box hidden"
-                    ></div>
-
+                    <div class="form-group"><label>Truck #</label><input type="text" id="regTruck"></div>
+                    <div class="form-group"><label>Group ID</label><input type="number" id="regGroupId"></div>
+                    <div class="form-group"><label>Samsara Driver ID</label><input type="text" id="regDriverId"></div>
+                    <div class="form-group"><label>Vehicle ID</label><input type="text" id="regVehicleId"></div>
+                    <div class="form-group"><label>Password</label><input type="text" id="regPassword"></div>
+                    <div class="form-group"><label>License</label><input type="text" id="regLicense"></div>
+                    <button class="btn-primary" onclick="registerDriver()">Register</button>
+                    <div id="registerResult" class="result-box hidden"></div>
                 </div>
-
             </div>
-
-
-            <!-- TRUCKS -->
-
-            <div
-                id="trucks"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Trucks & Fuel</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadTrucksFuel()"
-                    >
-                        Load Trucks
-                    </button>
-
-                    <div
-                        id="trucksFuelResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
+            <div id="trucks" class="admin-section hidden">
+                <div class="card"><h3>Trucks & Fuel</h3><button class="btn-primary" onclick="loadTrucksFuel()">Load Trucks</button><div id="trucksFuelResult" class="result-box hidden"></div></div>
             </div>
-
-
-            <!-- FAULTS -->
-
-            <div
-                id="faults"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Fault Codes from Samsara</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadFaultCodes()"
-                    >
-                        Load Fault Codes
-                    </button>
-
-                    <div
-                        id="faultCodesResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
+            <div id="faults" class="admin-section hidden">
+                <div class="card"><h3>Fault Codes from Samsara</h3><button class="btn-primary" onclick="loadFaultCodes()">Load Fault Codes</button><div id="faultCodesResult" class="result-box hidden"></div></div>
             </div>
-
-
-            <!-- HARSH -->
-
-            <div
-                id="harsh"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Harsh Events from Samsara</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadHarshEvents()"
-                    >
-                        Load Harsh Events
-                    </button>
-
-                    <div
-                        id="harshEventsResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
+            <div id="harsh" class="admin-section hidden">
+                <div class="card"><h3>Harsh Events from Samsara</h3><button class="btn-primary" onclick="loadHarshEvents()">Load Harsh Events</button><div id="harshEventsResult" class="result-box hidden"></div></div>
             </div>
-
-
-            <!-- MAINTENANCE -->
-
-            <div
-                id="maintenance"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Maintenance Alerts</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadMaintenanceAlerts()"
-                    >
-                        Load Maintenance
-                    </button>
-
-                    <div
-                        id="maintenanceResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
+            <div id="maintenance" class="admin-section hidden">
+                <div class="card"><h3>Maintenance Alerts</h3><button class="btn-primary" onclick="loadMaintenanceAlerts()">Load Maintenance</button><div id="maintenanceResult" class="result-box hidden"></div></div>
             </div>
-
-
-            <!-- DRIVERS -->
-
-            <div
-                id="drivers"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Drivers</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadDriversList()"
-                    >
-                        Load Drivers
-                    </button>
-
-                    <div
-                        id="driversListResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
-            </div>
-
-
-            <!-- PTI LIST -->
-
-            <div
-                id="pti"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>PTI Submissions</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadPTIList()"
-                    >
-                        Load PTIs
-                    </button>
-
-                    <div
-                        id="ptiListResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
-            </div>
-
-
-            <!-- FUEL LOG -->
-
-            <div
-                id="fuel"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Fuel Log</h3>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadFuelLog()"
-                    >
-                        Load Fuel Log
-                    </button>
-
-                    <div
-                        id="fuelLogResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
-            </div>
-
-
-            <!-- DETAILS -->
-
-            <div
-                id="details"
-                class="admin-section hidden"
-            >
-
-                <div class="card">
-
-                    <h3>Driver Details</h3>
-
-                    <div class="form-group">
-
-                        <input
-                            type="text"
-                            id="searchTruck"
-                            placeholder="Enter Truck #"
-                        >
-
-                    </div>
-
-                    <button
-                        class="btn-primary"
-                        onclick="loadDriverDetails()"
-                    >
-                        Search
-                    </button>
-
-                    <div
-                        id="detailsResult"
-                        class="result-box hidden"
-                    ></div>
-
-                </div>
-
-            </div>
-
+            <div id="drivers" class="admin-section hidden"><div class="card"><h3>Drivers</h3><button class="btn-primary" onclick="loadDriversList()">Load Drivers</button><div id="driversListResult" class="result-box hidden"></div></div></div>
+            <div id="pti" class="admin-section hidden"><div class="card"><h3>PTI Submissions</h3><button class="btn-primary" onclick="loadPTIList()">Load PTIs</button><div id="ptiListResult" class="result-box hidden"></div></div></div>
+            <div id="fuel" class="admin-section hidden"><div class="card"><h3>Fuel Log</h3><button class="btn-primary" onclick="loadFuelLog()">Load Fuel Log</button><div id="fuelLogResult" class="result-box hidden"></div></div></div>
+            <div id="details" class="admin-section hidden"><div class="card"><h3>Driver Details</h3><div class="form-group"><input type="text" id="searchTruck" placeholder="Enter Truck #"></div><button class="btn-primary" onclick="loadDriverDetails()">Search</button><div id="detailsResult" class="result-box hidden"></div></div></div>
         </div>
-
     </div>
-
 </div>
 
-
-<!-- =========================================================
-     ASSIGN DRIVER MODAL
-========================================================= -->
-
-<div
-    id="assignModal"
-    class="modal-overlay hidden"
->
-
+<!-- ASSIGN DRIVER MODAL -->
+<div id="assignModal" class="modal-overlay hidden">
     <div class="modal-content">
-
-        <span
-            class="modal-close"
-            onclick="closeAssignModal()"
-        >
-            ×
-        </span>
-
-        <h3 class="modal-title">
-            Assign Driver to Vehicle
-        </h3>
-
+        <span class="modal-close" onclick="closeAssignModal()">×</span>
+        <h3 class="modal-title">Assign Driver to Vehicle</h3>
         <div class="form-group">
-
-            <label>
-                Telegram Group
-            </label>
-
-            <select
-                id="assignGroupSelect"
-                class="select-field"
-            ></select>
-
-            <button
-                class="btn-secondary"
-                onclick="loadGroupsIntoModal()"
-                style="margin-top:6px;"
-            >
-                ↻ Refresh Groups
-            </button>
-
+            <label>Telegram Group</label>
+            <select id="assignGroupSelect" class="select-field"></select>
+            <button class="btn-secondary" onclick="loadGroupsIntoModal()" style="margin-top:6px;">↻ Refresh Groups</button>
         </div>
-
         <div class="form-group">
-
-            <label>
-                Or Enter Group ID Manually
-            </label>
-
-            <input
-                type="number"
-                id="assignGroupIdManual"
-                placeholder="e.g. -5218192108"
-            >
-
+            <label>Or Enter Group ID Manually</label>
+            <input type="number" id="assignGroupIdManual" placeholder="e.g., -5218192108">
         </div>
-
         <div class="form-group">
-
-            <label>
-                Driver Login (Truck Number)
-            </label>
-
-            <input
-                type="text"
-                id="assignTruck"
-                placeholder="e.g. 88817"
-            >
-
+            <label>Driver Login (Truck Number)</label>
+            <input type="text" id="assignTruck" placeholder="e.g., 88817">
         </div>
-
         <div class="form-group">
-
-            <label>
-                Driver Password
-            </label>
-
-            <input
-                type="text"
-                id="assignPassword"
-                placeholder="e.g. password123"
-            >
-
+            <label>Driver Password</label>
+            <input type="text" id="assignPassword" placeholder="e.g., password123">
         </div>
-
-        <button
-            class="btn-primary"
-            onclick="confirmAssign()"
-        >
-            Assign Driver
-        </button>
-
+        <button class="btn-primary" onclick="confirmAssign()">Assign Driver</button>
     </div>
-
 </div>
-
 
 <script>
-
-    /* =========================================================
-       SPLASH
-    ========================================================= */
-
-    setTimeout(() => {
-        document.getElementById('splash').classList.add('hidden');
-    }, 2000);
-
-
-    /* =========================================================
-       TELEGRAM
-    ========================================================= */
+    // Splash screen – hide after 2 seconds
+    setTimeout(() => { document.getElementById('splash').classList.add('hidden'); }, 2000);
 
     const tg = window.Telegram.WebApp;
+    tg.ready(); tg.expand();
+    const telegramInitData = tg.initData || '';
+    let authData = sessionStorage.getItem('driverToken') || telegramInitData || '';
+    let driverToken = sessionStorage.getItem('driverToken') || '';
 
-    tg.ready();
-    tg.expand();
+    function authHeaders(extra = {}) {
+        return { ...extra, ...(driverToken ? { 'Authorization': 'Bearer ' + driverToken } : {}) };
+    }
 
-    const initData = tg.initData;
-
-
-    /* =========================================================
-       ADMIN TOKEN
-    ========================================================= */
-
-    let adminToken =
-        sessionStorage.getItem('adminToken') || '';
-
+    let adminToken = sessionStorage.getItem('adminToken') || '';
 
     async function adminFetch(url, options = {}) {
-
-        options.headers = {
-            ...(options.headers || {}),
-            'Authorization': 'Bearer ' + adminToken
-        };
-
+        options.headers = { ...(options.headers || {}), 'Authorization': 'Bearer ' + adminToken };
         const resp = await fetch(url, options);
-
-        if (
-            resp.status === 401 ||
-            resp.status === 403
-        ) {
-
-            adminToken = '';
-
-            sessionStorage.removeItem('adminToken');
-
+        if (resp.status === 401 || resp.status === 403) {
+            adminToken = ''; driverToken = ''; sessionStorage.removeItem('adminToken'); sessionStorage.removeItem('driverToken'); authData = telegramInitData;
             document.getElementById('adminScreen').style.display = 'none';
-
             document.getElementById('loginScreen').style.display = 'flex';
         }
-
         return resp;
     }
 
-
-    /* =========================================================
-       GLOBAL STATE
-    ========================================================= */
-
     let currentVehicleId = null;
-
     let ptiStep = 0;
-
     let ptiTotalSteps = 6;
-
     let ptiTruckNumber = '';
-
     let ptiTrailerNumber = '';
 
-
-    /* =========================================================
-       REMEMBER LOGIN
-    ========================================================= */
-
     window.onload = function () {
-
-        if (
-            localStorage.getItem('remTruck') &&
-            localStorage.getItem('remPass')
-        ) {
-
-            document.getElementById('loginTruck').value =
-                localStorage.getItem('remTruck');
-
-            document.getElementById('loginPass').value =
-                localStorage.getItem('remPass');
-
+        if (localStorage.getItem('remTruck') && localStorage.getItem('remPass')) {
+            document.getElementById('loginTruck').value = localStorage.getItem('remTruck');
+            document.getElementById('loginPass').value = localStorage.getItem('remPass');
             document.getElementById('rememberMe').checked = true;
         }
     };
 
-
-    /* =========================================================
-       PASSWORD
-    ========================================================= */
-
-    function togglePass() {
-
-        const p =
-            document.getElementById('loginPass');
-
-        p.type =
-            p.type === 'password'
-                ? 'text'
-                : 'password';
-    }
-
-
-    /* =========================================================
-       LOGIN
-    ========================================================= */
+    function togglePass() { const p = document.getElementById('loginPass'); p.type = p.type === 'password' ? 'text' : 'password'; }
 
     async function login() {
-
-        const truck =
-            document.getElementById('loginTruck')
-                .value
-                .trim();
-
-        const pass =
-            document.getElementById('loginPass')
-                .value
-                .trim();
-
-        const remember =
-            document.getElementById('rememberMe')
-                .checked;
-
-        const errEl =
-            document.getElementById('loginError');
-
+        const truck = document.getElementById('loginTruck').value.trim();
+        const pass = document.getElementById('loginPass').value.trim();
+        const remember = document.getElementById('rememberMe').checked;
+        const errEl = document.getElementById('loginError');
         errEl.style.display = 'none';
-
-
-        if (!truck || !pass) {
-
-            errEl.textContent =
-                "Fill all fields";
-
-            errEl.style.display =
-                'block';
-
-            return;
-        }
-
-
+        if (!truck || !pass) { errEl.textContent = "Fill all fields"; errEl.style.display = 'block'; return; }
         try {
-
-            /*
-             * Admin authentication is server-side.
-             * No admin credentials are shipped in the browser.
-             */
-
-            const adminResponse =
-                await fetch(
-                    '/api/admin/login',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            username: truck,
-                            password: pass
-                        })
-                    }
-                );
-
-
+            const adminResponse = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: truck, password: pass }) });
             if (adminResponse.ok) {
-
-                const adminData =
-                    await adminResponse.json();
-
-                if (
-                    adminData.success &&
-                    adminData.token
-                ) {
-
-                    adminToken =
-                        adminData.token;
-
-                    sessionStorage.setItem(
-                        'adminToken',
-                        adminToken
-                    );
-
-                    document.getElementById(
-                        'loginScreen'
-                    ).style.display = 'none';
-
-                    document.getElementById(
-                        'adminScreen'
-                    ).style.display = 'block';
-
+                const adminData = await adminResponse.json();
+                if (adminData.success && adminData.token) {
+                    adminToken = adminData.token;
+                    sessionStorage.setItem('adminToken', adminToken);
+                    sessionStorage.removeItem('driverToken');
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminScreen').style.display = 'block';
                     loadOverview();
-
                     return;
                 }
             }
-
-
-            const response =
-                await fetch(
-                    '/api/login',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            truck_number: truck,
-                            password: pass,
-                            init_data: initData
-                        })
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (
-                !response.ok ||
-                data.error
-            ) {
-
-                errEl.textContent =
-                    data.error ||
-                    "Login failed";
-
-                errEl.style.display =
-                    'block';
-
-                return;
-            }
-
-
-            if (remember) {
-
-                localStorage.setItem(
-                    'remTruck',
-                    truck
-                );
-
-                localStorage.setItem(
-                    'remPass',
-                    pass
-                );
-
-            } else {
-
-                localStorage.removeItem(
-                    'remTruck'
-                );
-
-                localStorage.removeItem(
-                    'remPass'
-                );
-            }
-
-
-            document.getElementById(
-                'truckInfo'
-            ).textContent =
-                'Truck: ' + truck;
-
-
-            document.getElementById(
-                'loginScreen'
-            ).style.display = 'none';
-
-
-            document.getElementById(
-                'appScreen'
-            ).style.display = 'block';
-
-
-            showTab('fuel');
-
-        } catch (err) {
-
-            errEl.textContent =
-                "Network error";
-
-            errEl.style.display =
-                'block';
-        }
+            const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, password: pass, init_data: telegramInitData }) });
+            const data = await response.json();
+            if (!response.ok || data.error) { errEl.textContent = data.error || "Login failed"; errEl.style.display = 'block'; return; }
+            if (data.token) { driverToken = data.token; authData = data.token; sessionStorage.setItem('driverToken', data.token); }
+            if (remember) { localStorage.setItem('remTruck', truck); localStorage.setItem('remPass', pass); } else { localStorage.removeItem('remTruck'); localStorage.removeItem('remPass'); }
+            document.getElementById('truckInfo').textContent = 'Truck ' + truck;
+            const heroTruck = document.getElementById('driverHeroTruck');
+            if (heroTruck) heroTruck.textContent = 'Truck ' + truck;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'block';
+            showTab('driverFuel');
+        } catch (err) { errEl.textContent = "Network error"; errEl.style.display = 'block'; }
     }
-
-
-    /* =========================================================
-       LOGOUT
-    ========================================================= */
 
     function logout() {
-
-        if (
-            !document.getElementById(
-                'rememberMe'
-            ).checked
-        ) {
-
-            localStorage.removeItem(
-                'remTruck'
-            );
-
-            localStorage.removeItem(
-                'remPass'
-            );
-        }
-
-
-        adminToken = '';
-
-        sessionStorage.removeItem(
-            'adminToken'
-        );
-
-
-        document.getElementById(
-            'appScreen'
-        ).style.display = 'none';
-
-
-        document.getElementById(
-            'adminScreen'
-        ).style.display = 'none';
-
-
-        document.getElementById(
-            'loginScreen'
-        ).style.display = 'flex';
-
-
-        document.getElementById(
-            'loginPass'
-        ).value = '';
+        if (!document.getElementById('rememberMe').checked) { localStorage.removeItem('remTruck'); localStorage.removeItem('remPass'); }
+        adminToken = ''; driverToken = ''; sessionStorage.removeItem('adminToken'); sessionStorage.removeItem('driverToken'); authData = telegramInitData;
+        document.getElementById('appScreen').style.display = 'none';
+        document.getElementById('adminScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('loginPass').value = '';
     }
-
-
-    /* =========================================================
-       DRIVER TABS
-    ========================================================= */
 
     function showTab(tabId) {
-
-        document.querySelectorAll(
-            '.nav-item'
-        ).forEach(item => {
-
-            item.classList.remove(
-                'active'
-            );
-
-        });
-
-
-        document.querySelectorAll(
-            '.tab-content'
-        ).forEach(c => {
-
-            c.classList.add(
-                'hidden'
-            );
-
-        });
-
-
-        document.getElementById(
-            tabId
-        ).classList.remove(
-            'hidden'
-        );
-
-
-        document.querySelector(
-            `.nav-item[data-tab="${tabId}"]`
-        ).classList.add(
-            'active'
-        );
+        document.querySelectorAll('#appScreen .nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('#appScreen .tab-content').forEach(c => c.classList.add('hidden'));
+        const panel = document.getElementById(tabId);
+        const nav = document.querySelector(`#appScreen .nav-item[data-tab="${tabId}"]`);
+        if (panel) panel.classList.remove('hidden');
+        if (nav) nav.classList.add('active');
     }
-
-
-    /* =========================================================
-       ADMIN NAVIGATION
-    ========================================================= */
 
     function openAdminPage(page) {
-
-        document.querySelectorAll(
-            '.admin-nav-item'
-        ).forEach(i => {
-
-            i.classList.remove(
-                'active'
-            );
-
-        });
-
-
-        document.querySelectorAll(
-            '.admin-section'
-        ).forEach(s => {
-
-            s.classList.add(
-                'hidden'
-            );
-
-        });
-
-
-        document.getElementById(
-            page
-        ).classList.remove(
-            'hidden'
-        );
-
-
-        const nav =
-            document.querySelector(
-                `.admin-nav-item[data-anav="${page}"]`
-            );
-
-
-        if (nav) {
-            nav.classList.add(
-                'active'
-            );
-        }
-
-
-        if (page === 'overview')
-            loadOverview();
-
-        if (page === 'assign')
-            loadSamsaraVehicles();
-
-        if (page === 'trucks')
-            loadTrucksFuel();
-
-        if (page === 'faults')
-            loadFaultCodes();
-
-        if (page === 'harsh')
-            loadHarshEvents();
-
-        if (page === 'maintenance')
-            loadMaintenanceAlerts();
-
-        if (page === 'drivers')
-            loadDriversList();
-
-        if (page === 'pti')
-            loadPTIList();
-
-        if (page === 'fuel')
-            loadFuelLog();
+        document.querySelectorAll('.admin-nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(page).classList.remove('hidden');
+        const nav = document.querySelector(`.admin-nav-item[data-anav="${page}"]`);
+        if (nav) nav.classList.add('active');
+        if (page === 'overview') loadOverview();
+        if (page === 'assign') loadSamsaraVehicles();
+        if (page === 'trucks') loadTrucksFuel();
+        if (page === 'faults') loadFaultCodes();
+        if (page === 'harsh') loadHarshEvents();
+        if (page === 'maintenance') loadMaintenanceAlerts();
+        if (page === 'drivers') loadDriversList();
+        if (page === 'pti') loadPTIList();
+        if (page === 'fuel') loadFuelLog();
     }
-
-
-    /* =========================================================
-       ADMIN OVERVIEW
-    ========================================================= */
 
     async function loadOverview() {
-
-        try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin-summary',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            document.getElementById(
-                'totalDrivers'
-            ).textContent =
-                data.points.length;
-
-
-            document.getElementById(
-                'totalPTIs'
-            ).textContent =
-                data.pti.length;
-
-
-            document.getElementById(
-                'totalFuelStops'
-            ).textContent =
-                data.fuel_usage.length;
-
-        } catch (e) {}
+        try { const resp = await adminFetch('/api/admin-summary', { method: 'GET' }); const data = await resp.json(); document.getElementById('totalDrivers').textContent = data.points.length; document.getElementById('totalPTIs').textContent = data.pti.length; document.getElementById('totalFuelStops').textContent = data.fuel_usage.length; } catch (e) {}
     }
-
-
-    /* =========================================================
-       SAMSARA VEHICLES
-    ========================================================= */
 
     async function loadSamsaraVehicles() {
-
-        const resDiv =
-            document.getElementById(
-                'samsaraVehicles'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Fetching...</div>';
-
-
+        const resDiv = document.getElementById('samsaraVehicles');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Fetching...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/samsara-vehicles',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (
-                data.vehicles &&
-                data.vehicles.length
-            ) {
-
-                let html =
-                    '<h4>Samsara Fleet Records</h4>';
-
-
+            const resp = await adminFetch('/api/samsara-vehicles', { method: 'GET' });
+            const data = await resp.json();
+            if (data.vehicles && data.vehicles.length) {
+                let html = '<h4>Samsara Fleet Records</h4>';
                 data.vehicles.forEach(v => {
-
-                    html += `
-                        <div class="list-item">
-                            <b>${v.name || 'Unassigned'}</b>
-                            (${v.id})
-                            <br>
-
-                            <button
-                                class="btn-secondary"
-                                style="margin-top:8px;"
-                                onclick="openAssignModal('${v.id}', '${v.name}')"
-                            >
-                                Assign Driver
-                            </button>
-                        </div>
-                    `;
+                    html += `<div class="list-item"><b>${v.name || 'Unassigned'}</b> (${v.id})<br><button class="btn-secondary" style="margin-top:8px;" onclick="openAssignModal('${v.id}', '${v.name}')">Assign Driver</button></div>`;
                 });
-
-
-                resDiv.innerHTML =
-                    html;
-
-            } else {
-
-                resDiv.innerHTML =
-                    '<p>No vehicles found.</p>';
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error loading vehicles</div>';
-        }
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No vehicles found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading vehicles</div>'; }
     }
-
-
-    /* =========================================================
-       FAULT CODES
-    ========================================================= */
 
     async function loadFaultCodes() {
-
-        const resDiv =
-            document.getElementById(
-                'faultCodesResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('faultCodesResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/fault-codes',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (
-                data.fault_codes &&
-                data.fault_codes.length
-            ) {
-
-                let html =
-                    '<h4>Fault Codes</h4>';
-
-
+            const resp = await adminFetch('/api/fault-codes', { method: 'GET' });
+            const data = await resp.json();
+            if (data.fault_codes && data.fault_codes.length) {
+                let html = '<h4>Fault Codes</h4>';
                 data.fault_codes.forEach(f => {
-
-                    html += `
-                        <div class="list-item">
-                            <b>${f.code}</b>:
-                            ${f.description || ''}
-                            (Severity: ${f.severity})
-                            <br>
-                            Vehicle:
-                            ${f.vehicle_id}
-                            (${f.truck_number})
-                        </div>
-                    `;
+                    html += `<div class="list-item"><b>${f.code}</b>: ${f.description || ''} (Severity: ${f.severity})<br>Vehicle: ${f.vehicle_id} (${f.truck_number})</div>`;
                 });
-
-
-                resDiv.innerHTML =
-                    html;
-
-            } else {
-
-                resDiv.innerHTML =
-                    '<p>No fault codes found.</p>';
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error loading faults</div>';
-        }
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No fault codes found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading faults</div>'; }
     }
-
-
-    /* =========================================================
-       HARSH EVENTS
-    ========================================================= */
 
     async function loadHarshEvents() {
-
-        const resDiv =
-            document.getElementById(
-                'harshEventsResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('harshEventsResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/harsh-events',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (
-                data.harsh_events &&
-                data.harsh_events.length
-            ) {
-
-                let html =
-                    '<h4>Harsh Events</h4>';
-
-
+            const resp = await adminFetch('/api/harsh-events', { method: 'GET' });
+            const data = await resp.json();
+            if (data.harsh_events && data.harsh_events.length) {
+                let html = '<h4>Harsh Events</h4>';
                 data.harsh_events.forEach(e => {
-
-                    html += `
-                        <div class="list-item">
-                            <b>${e.event_type}</b>
-                            at ${e.location || 'Unknown'}
-                            <br>
-                            Vehicle:
-                            ${e.vehicle_id}
-                            (${e.truck_number})
-                            <br>
-                            ${
-                                e.video_url
-                                ? `<a href="${e.video_url}" target="_blank" style="color:var(--accent);">View Video</a>`
-                                : ''
-                            }
-                        </div>
-                    `;
+                    html += `<div class="list-item"><b>${e.event_type}</b> at ${e.location || 'Unknown'}<br>Vehicle: ${e.vehicle_id} (${e.truck_number})<br>${e.video_url ? `<a href="${e.video_url}" target="_blank">View Video</a>` : ''}</div>`;
                 });
-
-
-                resDiv.innerHTML =
-                    html;
-
-            } else {
-
-                resDiv.innerHTML =
-                    '<p>No harsh events found.</p>';
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error loading harsh events</div>';
-        }
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No harsh events found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading harsh events</div>'; }
     }
-
-
-    /* =========================================================
-       MAINTENANCE
-    ========================================================= */
 
     async function loadMaintenanceAlerts() {
-
-        const resDiv =
-            document.getElementById(
-                'maintenanceResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('maintenanceResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/maintenance-alerts',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (
-                data.maintenance_alerts &&
-                data.maintenance_alerts.length
-            ) {
-
-                let html =
-                    '<h4>Maintenance Alerts</h4>';
-
-
+            const resp = await adminFetch('/api/maintenance-alerts', { method: 'GET' });
+            const data = await resp.json();
+            if (data.maintenance_alerts && data.maintenance_alerts.length) {
+                let html = '<h4>Maintenance Alerts</h4>';
                 data.maintenance_alerts.forEach(m => {
-
-                    html += `
-                        <div class="list-item">
-                            <b>${m.maintenance_type}</b>
-                            due at ${m.due_mileage} miles
-                            <br>
-                            Vehicle:
-                            ${m.vehicle_id}
-                            (${m.truck_number})
-                        </div>
-                    `;
+                    html += `<div class="list-item"><b>${m.maintenance_type}</b> due at ${m.due_mileage} miles<br>Vehicle: ${m.vehicle_id} (${m.truck_number})</div>`;
                 });
-
-
-                resDiv.innerHTML =
-                    html;
-
-            } else {
-
-                resDiv.innerHTML =
-                    '<p>No maintenance alerts found.</p>';
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error loading maintenance</div>';
-        }
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No maintenance alerts found.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading maintenance</div>'; }
     }
-
-
-    /* =========================================================
-       GROUPS
-    ========================================================= */
 
     async function loadGroupsIntoModal() {
-
-        const select =
-            document.getElementById(
-                'assignGroupSelect'
-            );
-
-
+        const select = document.getElementById('assignGroupSelect');
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/bot-groups',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
+            const resp = await adminFetch('/api/bot-groups', { method: 'GET' });
+            const data = await resp.json();
             select.innerHTML = '';
-
-
-            if (
-                data.groups &&
-                data.groups.length > 0
-            ) {
-
+            if (data.groups && data.groups.length > 0) {
                 data.groups.forEach(g => {
-
-                    const option =
-                        document.createElement(
-                            'option'
-                        );
-
-
-                    option.value =
-                        g.chat_id;
-
-
-                    option.textContent =
-                        `${g.title} (${g.chat_id})`;
-
-
-                    select.appendChild(
-                        option
-                    );
+                    const option = document.createElement('option');
+                    option.value = g.chat_id;
+                    option.textContent = `${g.title} (${g.chat_id})`;
+                    select.appendChild(option);
                 });
-
-            } else {
-
-                select.innerHTML =
-                    '<option value="">No groups found – enter manually below</option>';
-            }
-
-        } catch (e) {
-
-            select.innerHTML =
-                '<option value="">Error loading groups</option>';
-        }
+            } else { select.innerHTML = '<option value="">No groups found – enter manually below</option>'; }
+        } catch (e) { select.innerHTML = '<option value="">Error loading groups</option>'; }
     }
 
-
-    /* =========================================================
-       ASSIGN MODAL
-    ========================================================= */
-
-    async function openAssignModal(
-        vehicleId,
-        vehicleName
-    ) {
-
-        currentVehicleId =
-            vehicleId;
-
-
-        document.getElementById(
-            'assignModal'
-        ).classList.remove(
-            'hidden'
-        );
-
-
-        document.getElementById(
-            'assignGroupIdManual'
-        ).value = '';
-
-
+    async function openAssignModal(vehicleId, vehicleName) {
+        currentVehicleId = vehicleId;
+        document.getElementById('assignModal').classList.remove('hidden');
+        document.getElementById('assignGroupIdManual').value = '';
         await loadGroupsIntoModal();
-
-
-        const firstWord =
-            (vehicleName || '')
-                .split(' ')[0];
-
-
-        document.getElementById(
-            'assignTruck'
-        ).value =
-            firstWord;
-
-
-        document.getElementById(
-            'assignPassword'
-        ).value = '';
+        const firstWord = (vehicleName || '').split(' ')[0];
+        document.getElementById('assignTruck').value = firstWord;
+        document.getElementById('assignPassword').value = '';
     }
 
-
-    function closeAssignModal() {
-
-        document.getElementById(
-            'assignModal'
-        ).classList.add(
-            'hidden'
-        );
-    }
-
-
-    /* =========================================================
-       CONFIRM ASSIGN
-    ========================================================= */
+    function closeAssignModal() { document.getElementById('assignModal').classList.add('hidden'); }
 
     async function confirmAssign() {
-
-        const groupSelect =
-            document.getElementById(
-                'assignGroupSelect'
-            ).value;
-
-
-        const manualGroupId =
-            document.getElementById(
-                'assignGroupIdManual'
-            ).value.trim();
-
-
-        const truckNumber =
-            document.getElementById(
-                'assignTruck'
-            ).value.trim();
-
-
-        const password =
-            document.getElementById(
-                'assignPassword'
-            ).value.trim();
-
-
-        const groupId =
-            manualGroupId
-                ? Number(manualGroupId)
-                : Number(groupSelect);
-
-
-        if (
-            !groupId ||
-            !truckNumber ||
-            !password
-        ) {
-
-            alert(
-                'Please fill all fields'
-            );
-
-            return;
-        }
-
-
+        const groupSelect = document.getElementById('assignGroupSelect').value;
+        const manualGroupId = document.getElementById('assignGroupIdManual').value.trim();
+        const truckNumber = document.getElementById('assignTruck').value.trim();
+        const password = document.getElementById('assignPassword').value.trim();
+        const groupId = manualGroupId ? Number(manualGroupId) : Number(groupSelect);
+        if (!groupId || !truckNumber || !password) { alert('Please fill all fields'); return; }
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin/assign-driver',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            vehicle_id:
-                                currentVehicleId,
-
-                            truck_number:
-                                truckNumber,
-
-                            group_id:
-                                groupId,
-
-                            password:
-                                password
-                        })
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (data.success) {
-
-                alert(
-                    '✅ ' + data.message
-                );
-
-                closeAssignModal();
-
-                loadSamsaraVehicles();
-
-            } else {
-
-                alert(
-                    '❌ ' + data.error
-                );
-            }
-
-        } catch (e) {
-
-            alert(
-                'Network error'
-            );
-        }
+            const resp = await adminFetch('/api/admin/assign-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vehicle_id: currentVehicleId, truck_number: truckNumber, group_id: groupId, password: password }) });
+            const data = await resp.json();
+            if (data.success) { alert('✅ ' + data.message); closeAssignModal(); loadSamsaraVehicles(); } else { alert('❌ ' + data.error); }
+        } catch (e) { alert('Network error'); }
     }
-
-
-    /* =========================================================
-       REGISTER DRIVER
-    ========================================================= */
 
     async function registerDriver() {
-
-        const truck =
-            document.getElementById(
-                'regTruck'
-            ).value.trim();
-
-
-        const groupId =
-            document.getElementById(
-                'regGroupId'
-            ).value.trim();
-
-
-        const driverId =
-            document.getElementById(
-                'regDriverId'
-            ).value.trim();
-
-
-        const vehicleId =
-            document.getElementById(
-                'regVehicleId'
-            ).value.trim();
-
-
-        const password =
-            document.getElementById(
-                'regPassword'
-            ).value.trim();
-
-
-        const license =
-            document.getElementById(
-                'regLicense'
-            ).value.trim();
-
-
-        if (
-            !truck ||
-            !groupId ||
-            !driverId ||
-            !password
-        ) {
-
-            alert(
-                'Fill all required'
-            );
-
-            return;
-        }
-
-
-        const resDiv =
-            document.getElementById(
-                'registerResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Registering...</div>';
-
-
+        const truck = document.getElementById('regTruck').value.trim();
+        const groupId = document.getElementById('regGroupId').value.trim();
+        const driverId = document.getElementById('regDriverId').value.trim();
+        const vehicleId = document.getElementById('regVehicleId').value.trim();
+        const password = document.getElementById('regPassword').value.trim();
+        const license = document.getElementById('regLicense').value.trim();
+        if (!truck || !groupId || !driverId || !password) { alert('Fill all required'); return; }
+        const resDiv = document.getElementById('registerResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Registering...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin/register-driver',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            truck_number:
-                                truck,
-
-                            group_id:
-                                Number(groupId),
-
-                            samsara_driver_id:
-                                driverId,
-
-                            vehicle_id:
-                                vehicleId,
-
-                            password:
-                                password,
-
-                            truck_license:
-                                license
-                        })
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (data.success) {
-
-                resDiv.innerHTML =
-                    `<div class="success">✅ ${data.message}</div>`;
-
-
-                document.getElementById(
-                    'regTruck'
-                ).value = '';
-
-
-                document.getElementById(
-                    'regGroupId'
-                ).value = '';
-
-
-                document.getElementById(
-                    'regDriverId'
-                ).value = '';
-
-
-                document.getElementById(
-                    'regVehicleId'
-                ).value = '';
-
-
-                document.getElementById(
-                    'regPassword'
-                ).value = '';
-
-
-                document.getElementById(
-                    'regLicense'
-                ).value = '';
-
-            } else {
-
-                resDiv.innerHTML =
-                    `<div class="error">❌ ${data.error}</div>`;
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Network error</div>';
-        }
+            const resp = await adminFetch('/api/admin/register-driver', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ truck_number: truck, group_id: Number(groupId), samsara_driver_id: driverId, vehicle_id: vehicleId, password: password, truck_license: license }) });
+            const data = await resp.json();
+            if (data.success) { resDiv.innerHTML = `<div class="success">✅ ${data.message}</div>`; document.getElementById('regTruck').value=''; document.getElementById('regGroupId').value=''; document.getElementById('regDriverId').value=''; document.getElementById('regVehicleId').value=''; document.getElementById('regPassword').value=''; document.getElementById('regLicense').value=''; }
+            else { resDiv.innerHTML = `<div class="error">❌ ${data.error}</div>`; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
-
-
-    /* =========================================================
-       TRUCKS + FUEL
-    ========================================================= */
 
     async function loadTrucksFuel() {
-
-        const resDiv =
-            document.getElementById(
-                'trucksFuelResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('trucksFuelResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin/trucks-with-fuel',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (
-                data.trucks &&
-                data.trucks.length
-            ) {
-
-                let html =
-                    '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
-
-
-                data.trucks.forEach(t => {
-
-                    const fuel =
-                        t.fuel_level !== null
-                            ? t.fuel_level + '%'
-                            : 'N/A';
-
-
-                    html += `
-                        <tr>
-                            <td>${t.truck_number}</td>
-                            <td>${fuel}</td>
-                            <td>${t.driver_id}</td>
-                        </tr>
-                    `;
-                });
-
-
-                html +=
-                    '</table>';
-
-
-                resDiv.innerHTML =
-                    html;
-
-            } else {
-
-                resDiv.innerHTML =
-                    '<p>No registered trucks.</p>';
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error loading trucks</div>';
-        }
+            const resp = await adminFetch('/api/admin/trucks-with-fuel', { method: 'GET' });
+            const data = await resp.json();
+            if (data.trucks && data.trucks.length) {
+                let html = '<table><tr><th>Truck</th><th>Fuel</th><th>Driver</th></tr>';
+                data.trucks.forEach(t => { const fuel = t.fuel_level !== null ? t.fuel_level + '%' : 'N/A'; html += `<tr><td>${t.truck_number}</td><td>${fuel}</td><td>${t.driver_id}</td></tr>`; });
+                html += '</table>';
+                resDiv.innerHTML = html;
+            } else { resDiv.innerHTML = '<p>No registered trucks.</p>'; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error loading trucks</div>'; }
     }
-
-
-    /* =========================================================
-       DRIVERS
-    ========================================================= */
 
     async function loadDriversList() {
-
-        const resDiv =
-            document.getElementById(
-                'driversListResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('driversListResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin-summary',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            let html =
-                '<h4>Driver Roster</h4>';
-
-
-            data.points.forEach(p => {
-
-                html += `
-                    <div class="list-item">
-                        ${p.driver_id}:
-                        ${p.balance} pts
-                    </div>
-                `;
-            });
-
-
-            resDiv.innerHTML =
-                html;
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error</div>';
-        }
+            const resp = await adminFetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4>Driver Roster</h4>';
+            data.points.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.balance} pts</div>`; });
+            resDiv.innerHTML = html;
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
-
-
-    /* =========================================================
-       PTI LIST
-    ========================================================= */
 
     async function loadPTIList() {
-
-        const resDiv =
-            document.getElementById(
-                'ptiListResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('ptiListResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin-summary',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            let html =
-                '<h4>PTI Counts</h4>';
-
-
-            data.pti.forEach(p => {
-
-                html += `
-                    <div class="list-item">
-                        ${p.driver_id}:
-                        ${p.count}
-                    </div>
-                `;
-            });
-
-
-            resDiv.innerHTML =
-                html;
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error</div>';
-        }
+            const resp = await adminFetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4>PTI Counts</h4>';
+            data.pti.forEach(p => { html += `<div class="list-item">${p.driver_id}: ${p.count}</div>`; });
+            resDiv.innerHTML = html;
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
-
-
-    /* =========================================================
-       FUEL LOG
-    ========================================================= */
 
     async function loadFuelLog() {
-
-        const resDiv =
-            document.getElementById(
-                'fuelLogResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Loading...</div>';
-
-
+        const resDiv = document.getElementById('fuelLogResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Loading...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/admin-summary',
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            let html =
-                '<h4>Fuel Usage</h4>';
-
-
-            data.fuel_usage.forEach(f => {
-
-                html += `
-                    <div class="list-item">
-                        ${f.driver_id}
-                        -
-                        ${f.station_name}
-                        -
-                        ${f.used_at}
-                    </div>
-                `;
-            });
-
-
-            resDiv.innerHTML =
-                html;
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error</div>';
-        }
+            const resp = await adminFetch('/api/admin-summary', { method: 'GET' });
+            const data = await resp.json();
+            let html = '<h4>Fuel Usage</h4>';
+            data.fuel_usage.forEach(f => { html += `<div class="list-item">${f.driver_id} - ${f.station_name} - ${f.used_at}</div>`; });
+            resDiv.innerHTML = html;
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
-
-
-    /* =========================================================
-       DRIVER DETAILS
-    ========================================================= */
 
     async function loadDriverDetails() {
-
-        const truck =
-            document.getElementById(
-                'searchTruck'
-            ).value.trim();
-
-
-        const resDiv =
-            document.getElementById(
-                'detailsResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Searching...</div>';
-
-
+        const truck = document.getElementById('searchTruck').value.trim();
+        const resDiv = document.getElementById('detailsResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
         try {
-
-            const resp =
-                await adminFetch(
-                    '/api/driver-details/' +
-                    truck,
-                    {
-                        method: 'GET'
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (data.error) {
-
-                resDiv.innerHTML =
-                    `<div class="error">${data.error}</div>`;
-
-            } else {
-
-                resDiv.innerHTML = `
-                    <h4>Driver ${truck}</h4>
-
-                    <div class="list-item">
-                        Points:
-                        ${data.points}
-                    </div>
-
-                    <div class="list-item">
-                        PTIs:
-                        ${data.pti_count}
-                    </div>
-
-                    <div class="list-item">
-                        Vehicle:
-                        ${data.vehicle_id}
-                    </div>
-                `;
-            }
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Error</div>';
-        }
+            const resp = await adminFetch('/api/driver-details/' + truck, { method: 'GET' });
+            const data = await resp.json();
+            if (data.error) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; }
+            else { resDiv.innerHTML = `<h4>Driver ${truck}</h4><div class="list-item">Points: ${data.points}</div><div class="list-item">PTIs: ${data.pti_count}</div><div class="list-item">Vehicle: ${data.vehicle_id}</div>`; }
+        } catch (e) { resDiv.innerHTML = '<div class="error">Error</div>'; }
     }
 
-
-    /* =========================================================
-       DRIVER: SEARCH FUEL
-    ========================================================= */
-
+    // ===== DRIVER FUNCTIONS =====
     async function searchFuel() {
-
-        const dest =
-            document.getElementById(
-                'fuelDest'
-            ).value.trim();
-
-
-        const resDiv =
-            document.getElementById(
-                'fuelResult'
-            );
-
-
-        resDiv.classList.remove(
-            'hidden'
-        );
-
-        resDiv.innerHTML =
-            '<div class="loading">Searching...</div>';
-
-
+        const dest = document.getElementById('fuelDest').value.trim();
+        const resDiv = document.getElementById('fuelResult');
+        resDiv.classList.remove('hidden'); resDiv.innerHTML = '<div class="loading">Searching...</div>';
         try {
-
-            const resp =
-                await fetch(
-                    '/api/fuel-search',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            destination: dest,
-                            init_data: initData
-                        })
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (!resp.ok) {
-
-                resDiv.innerHTML =
-                    `<div class="error">${data.error}</div>`;
-
-                return;
-            }
-
-
-            let html =
-                '<h4>Recommended Stations</h4>';
-
-
+            const resp = await fetch('/api/fuel-search', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ destination: dest, init_data: telegramInitData }) });
+            const data = await resp.json();
+            if (!resp.ok) { resDiv.innerHTML = `<div class="error">${data.error}</div>`; return; }
+            let html = '<h4>Stations</h4>';
             data.stations.forEach(s => {
-
-                html += `
-                    <div class="list-item">
-
-                        <b>
-                            ${s.name || s.brand || 'Truck stop'}
-                        </b>
-
-                        <br>
-
-                        <span
-                            style="
-                                color:var(--accent);
-                                font-weight:800;
-                            "
-                        >
-                            $${s.price
-                                ? s.price.toFixed(2)
-                                : 'N/A'}
-                        </span>
-
-                        |
-
-                        ${
-                            s.miles_ahead != null
-                            ? s.miles_ahead.toFixed(0) +
-                              ' mi ahead'
-                            : (
-                                s.distance_from_truck ||
-                                ''
-                              ) + ' mi'
-                        }
-
-                        <br>
-
-                        <small>
-                            ${s.address || ''}
-                        </small>
-
-                        <br>
-
-                        ${
-                            s.detour_miles_est != null
-                            ? `
-                                <small>
-                                    ↪️ ~${s.detour_miles_est.toFixed(1)}
-                                    mi detour
-                                </small>
-                                <br>
-                            `
-                            : ''
-                        }
-
-                        <small>
-                            ${s.recommendation_reason || ''}
-                        </small>
-
-                        <br>
-
-                        <button
-                            class="btn-secondary"
-                            style="margin-top:9px;"
-                            onclick="useStation(
-                                '${s.name || ''}',
-                                '${s.address || ''}',
-                                ${s.lat},
-                                ${s.lng},
-                                ${s.price || 0}
-                            )"
-                        >
-                            I used this
-                        </button>
-
-                    </div>
-                `;
+                html += `<div class="list-item"><b>${s.name || s.brand || 'Truck stop'}</b><br><span style="color:var(--success);font-weight:600;">$${s.price ? s.price.toFixed(2) : 'N/A'}</span> | ${s.miles_ahead != null ? s.miles_ahead.toFixed(0) + ' mi ahead' : (s.distance_from_truck || '') + ' mi'}<br><small>${s.address || ''}</small><br>${s.detour_miles_est != null ? `<small>↪️ ~${s.detour_miles_est.toFixed(1)} mi detour</small><br>` : ''}<small>${s.recommendation_reason || ''}</small><br><button class="btn-secondary" onclick="useStation('${s.name || ''}','${s.address || ''}',${s.lat},${s.lng},${s.price || 0})">I used this</button></div>`;
             });
-
-
-            resDiv.innerHTML =
-                html;
-
-        } catch (e) {
-
-            resDiv.innerHTML =
-                '<div class="error">Network error</div>';
-        }
+            resDiv.innerHTML = html;
+        } catch (e) { resDiv.innerHTML = '<div class="error">Network error</div>'; }
     }
 
-
-    /* =========================================================
-       DRIVER: USE STATION
-    ========================================================= */
-
-    async function useStation(
-        name,
-        address,
-        lat,
-        lng,
-        price
-    ) {
-
-        if (!confirm('Confirm?'))
-            return;
-
-
+    async function useStation(name, address, lat, lng, price) {
+        if (!confirm('Confirm?')) return;
         try {
-
-            const resp =
-                await fetch(
-                    '/api/use-station',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            station_name:
-                                name,
-
-                            station_address:
-                                address,
-
-                            station_lat:
-                                lat,
-
-                            station_lng:
-                                lng,
-
-                            price:
-                                price,
-
-                            init_data:
-                                initData
-                        })
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            alert(
-                data.message ||
-                'Recorded!'
-            );
-
-        } catch (e) {
-
-            alert(
-                'Error'
-            );
-        }
+            const resp = await fetch('/api/use-station', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ station_name: name, station_address: address, station_lat: lat, station_lng: lng, price: price, init_data: telegramInitData }) });
+            const data = await resp.json();
+            alert(data.message || 'Recorded!');
+        } catch (e) { alert('Error'); }
     }
 
-
-    /* =========================================================
-       PTI START
-    ========================================================= */
-
+    // ===== PTI FLOW =====
     async function startPTI() {
-
-        const truckNumber =
-            localStorage.getItem(
-                'remTruck'
-            ) ||
-            document.getElementById(
-                'loginTruck'
-            ).value.trim();
-
-
-        ptiTruckNumber =
-            truckNumber;
-
+        const truckNumber = localStorage.getItem('remTruck') || document.getElementById('loginTruck').value.trim();
+        ptiTruckNumber = truckNumber;
         ptiStep = 0;
         ptiTrailerNumber = '';
-
-
-        document.getElementById(
-            'ptiStatus'
-        ).textContent =
-            'Starting...';
-
-
+        document.getElementById('ptiStatus').textContent = 'Starting...';
         try {
-
-            const resp =
-                await fetch(
-                    '/api/pti/start',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            truck_number:
-                                truckNumber,
-
-                            init_data:
-                                initData
-                        })
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
+            const resp = await fetch('/api/pti/start', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ truck_number: truckNumber, init_data: telegramInitData }) });
+            const data = await resp.json();
             if (data.success) {
-
-                document.getElementById(
-                    'startPtiBtn'
-                ).classList.add(
-                    'hidden'
-                );
-
-
-                document.getElementById(
-                    'ptiPhotoSection'
-                ).classList.remove(
-                    'hidden'
-                );
-
-
-                document.getElementById(
-                    'ptiStepPrompt'
-                ).textContent =
-                    `Step 1: ${data.first_step[0]}`;
-
-
-                document.getElementById(
-                    'ptiStatus'
-                ).textContent =
-                    `PTI started for Truck ${truckNumber}`;
-
-            } else {
-
-                alert(
-                    '❌ ' + data.error
-                );
-            }
-
-        } catch (e) {
-
-            alert(
-                'Network error'
-            );
-        }
+                document.getElementById('startPtiBtn').classList.add('hidden');
+                document.getElementById('ptiPhotoSection').classList.remove('hidden');
+                document.getElementById('ptiStepPrompt').textContent = `Step 1: ${data.first_step[0]}`;
+                document.getElementById('ptiStatus').textContent = `PTI started for Truck ${truckNumber}`;
+            } else { alert('❌ ' + data.error); }
+        } catch (e) { alert('Network error'); }
     }
-
-
-    /* =========================================================
-       PTI PHOTO
-    ========================================================= */
 
     async function uploadPTIPhoto() {
-
-        const fileInput =
-            document.getElementById(
-                'ptiPhotoInput'
-            );
-
-
-        if (!fileInput.files.length) {
-
-            alert(
-                'Select a photo'
-            );
-
-            return;
-        }
-
-
-        const comment =
-            document.getElementById(
-                'ptiComment'
-            ).value.trim();
-
-
-        const formData =
-            new FormData();
-
-
-        formData.append(
-            'photo',
-            fileInput.files[0]
-        );
-
-
-        formData.append(
-            'step_index',
-            ptiStep.toString()
-        );
-
-
-        formData.append(
-            'comment',
-            comment
-        );
-
-
-        formData.append(
-            'init_data',
-            initData
-        );
-
-
+        const fileInput = document.getElementById('ptiPhotoInput');
+        if (!fileInput.files.length) { alert('Select a photo'); return; }
+        const comment = document.getElementById('ptiComment').value.trim();
+        const formData = new FormData();
+        formData.append('photo', fileInput.files[0]);
+        formData.append('step_index', ptiStep.toString());
+        formData.append('comment', comment);
+        formData.append('init_data', telegramInitData);
         try {
-
-            const resp =
-                await fetch(
-                    '/api/pti/photo',
-                    {
-                        method: 'POST',
-                        body: formData
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
-            if (data.error) {
-
-                alert(
-                    '❌ ' + data.error
-                );
-
-                return;
-            }
-
-
+            const resp = await fetch('/api/pti/photo', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.error) { alert('❌ ' + data.error); return; }
             if (data.complete) {
-
-                document.getElementById(
-                    'ptiStepPrompt'
-                ).textContent =
-                    'All photos collected! Press Submit.';
-
-
-                document.getElementById(
-                    'submitPtiBtn'
-                ).classList.remove(
-                    'hidden'
-                );
-
+                document.getElementById('ptiStepPrompt').textContent = 'All photos collected! Press Submit.';
+                document.getElementById('submitPtiBtn').classList.remove('hidden');
             } else {
-
-                ptiStep =
-                    data.next_step;
-
-
-                document.getElementById(
-                    'ptiStepPrompt'
-                ).textContent =
-                    `Step ${ptiStep + 1}: ${data.step_info[0]}`;
+                ptiStep = data.next_step;
+                document.getElementById('ptiStepPrompt').textContent = `Step ${ptiStep + 1}: ${data.step_info[0]}`;
             }
-
-
             fileInput.value = '';
-
-            document.getElementById(
-                'ptiComment'
-            ).value = '';
-
-        } catch (e) {
-
-            alert(
-                'Network error'
-            );
-        }
+            document.getElementById('ptiComment').value = '';
+        } catch (e) { alert('Network error'); }
     }
-
-
-    /* =========================================================
-       PTI SUBMIT
-    ========================================================= */
 
     async function submitPTI() {
-
         try {
-
-            const resp =
-                await fetch(
-                    '/api/pti/submit',
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            init_data:
-                                initData
-                        })
-                    }
-                );
-
-
-            const data =
-                await resp.json();
-
-
+            const resp = await fetch('/api/pti/submit', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ init_data: telegramInitData }) });
+            const data = await resp.json();
             if (data.success) {
-
-                document.getElementById(
-                    'ptiResult'
-                ).classList.remove(
-                    'hidden'
-                );
-
-
-                document.getElementById(
-                    'ptiResult'
-                ).innerHTML =
-                    `<div class="success">✅ ${data.message}</div>`;
-
-
-                document.getElementById(
-                    'startPtiBtn'
-                ).classList.remove(
-                    'hidden'
-                );
-
-
-                document.getElementById(
-                    'ptiPhotoSection'
-                ).classList.add(
-                    'hidden'
-                );
-
-
-                document.getElementById(
-                    'ptiStatus'
-                ).textContent =
-                    'Not started';
-
-            } else {
-
-                alert(
-                    '❌ ' + data.error
-                );
-            }
-
-        } catch (e) {
-
-            alert(
-                'Network error'
-            );
-        }
+                document.getElementById('ptiResult').classList.remove('hidden');
+                document.getElementById('ptiResult').innerHTML = `<div class="success">✅ ${data.message}</div>`;
+                document.getElementById('startPtiBtn').classList.remove('hidden');
+                document.getElementById('ptiPhotoSection').classList.add('hidden');
+                document.getElementById('ptiStatus').textContent = 'Not started';
+            } else { alert('❌ ' + data.error); }
+        } catch (e) { alert('Network error'); }
     }
-
 </script>
-
 </body>
 </html>
